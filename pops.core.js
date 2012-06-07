@@ -1,6 +1,13 @@
-var z,o=O={};
+var z,o=O={},G=global;
 //Array.From=function(item){return item==null?[]:TypeOf(item)=='array'?item:[item];};
 //Array.prototype.$type='array';
+if(2){//-Setup system nodes.
+   if(!G.$$modes){
+      z=G.$$modes={};
+      z.$os=process.platform;
+   };
+};
+
 Function.Extend=function(key,val){
    if(typeof key=='string')eval("key={"+key+":val};");
    for(mb in key)this[mb]=key[mb];
@@ -17,137 +24,145 @@ Function.prototype.Implement=function(key,val){
    if(typeof key=='string')eval("key={"+key+":val};");
    for(mb in key)this.prototype[mb]=key[mb];
 };
+Function.ExtImp=function(key,val){
+   if(typeof key=='string')eval("key={"+key+":val};");
+   for(mb in key){this[mb]=key[mb];this.prototype[mb]=key[mb];};
+};
+Function.prototype.ExtImp=function(key,val){
+   if(typeof key=='string')eval("key={"+key+":val};");
+   for(mb in key){this[mb]=key[mb];this.prototype[mb]=key[mb];};
+};
 
-String.Implement({
-   LCase:String.prototype.toLowerCase,
-   UCase:String.prototype.toUpperCase,
-   Trim:function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');},
-   TrimL:function(){return this.replace(/^\s+/,'');},
-   TrimR:function(){return this.replace(/\s+$/,'');},
-   TrimFull:function(){return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');},
-   TrimCR:function(){
-      var S=this.Val(),s=S.charCodeAt(S.length-1)==10?S.substr(0,S.length-1):S;
-      return s.charCodeAt(s.length-1)==13?s.substr(0,s.length-1):s
-   },
-   Pad:function(len,pad,dir){
-      var t=this,lf,rt,s=t.valueOf(),sl=s.length,
-         d=(dir==0||dir==2)?dir:1,l=def(len)?len:0,p=def(pad)?pad:' '
-      ;
-      if(l + 1 >= sl){
-         if(d==1){//Pad
-            rt=Math.ceil((padlen=l-sl) / 2);
-            lf=padlen-rt;
-            s=Array(lf+1).join(p)+s+Array(rt+1).join(p);
-         }
-         else if(d==2)s=s+Array(l+1-sl).join(p);//PadR
-         else s=Array(l+1-sl).join(p)+s;//PadL
-      };
-      return s;
-   },
-   PadL:function(len,pad,dir) {return this.Pad(len,pad,0);},
-   PadR:function(len,pad){return this.Pad(len,pad,2);},
-   Proper:function(){
-      var n=this.valueOf()+'',
-         x=n.split('.'),
-         x1=x[0],
-         x2=x.length > 1 ? '.' + x[1] : '',
-         rgx=/(\d+)(\d{3})/
-      ;
-      while (rgx.test(x1)){
-         x1=x1.replace(rgx, '$1' + ',' + '$2');
-      };
-      return x1+x2;
-   },
-   Val:String.prototype.valueOf
-});
-Function.Implement({
-   $Run:function(){this.$run=2;return this;},
-   Bind:function(that){
-      var t=this,
-         args=arguments.length>1?Array.slice(arguments, 1):null,
-         F=function(){},
-         bound=function(){
-            var context=that,length=arguments.length;
-            if(this instanceof bound){
-               F.prototype=t.prototype;
-               context=new F;
-            };
-            var result=(!args&&!length)
-               ? t.call(context)
-               : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
-            return context==that?result:context;
-         }
-      ;
-      bound.$$bound=2;
-      return bound;
-   },
-   ACall:function(){
-      var fn=this,a=arguments;
-      process.nextTick(function(){
-         var t=this,a=t.a;
-         eval('t.fn('+$ArgsStr(a,'a')+');');
-      }.Bind({a:a,fn:fn}));
-   },
-});
-Number.Implement({
-   Str:Number.prototype.toString,
-   Proper:String.prototype.Proper,
-   Val:String.prototype.valueOf
-});
-Array.Extend({
-   Clone:function(v){
-      var rv=[];
-      for(lp=0;lp<v.length;lp++)rv.push(Clone(v[lp]));
-      return rv;
-   },
-   From:function(item){return item==null?[]:TypeOf(item)=='array'?item:[item];},
-   HasStr:function(arr,str,matchCase){
-      var rv=false,a=arr,z,mc=matchCase,s=mc?str:str.LCase();
-      for(lp=0;lp<a.length;lp++){
-         if(IsStr(a[lp]))
-            if(s==mc?a[lp]:a[lp].LCase())return true;
-      };
-      return rv;
-   }
-});
-z=Array.prototype;
-Array.Implement({
-   $type:'array',
-   PopL:z.shift,
-   PopR:z.pop,
-   PushL:z.unshift,
-   PushR:z.push,
-});
-Object.Extend({
-   Clone:function(v){
-      var rv={};
-      for(mb in v)rv[mb]=Clone(v[mb]);
-      return rv;
-   },
-   Merge:function(ob,ob2){
-      var rv=ob?Object.Clone(ob):{};
-      if(ob2)for(mb in ob2)rv[mb]=ob2[mb];
-      return rv;
-   },
-   CopyTo:function(src,dest){
-      var rv=dest,s=typeof rv;
-      if((s=='object'||s=='function')&&src)
-         for(mb in src)rv[mb]=src[mb];
-      return rv;
-   },
-   HasVar:function(ob,nam,matchCase){
-      var s,ss,z,mc=matchCase,n=IsArr(nam)?nam:[nam];
-      for(lp=0;lp<n.length;lp++){
-         z=0;s=mc?n[lp]:n[lp].LCase();
-         for(mb in ob)if(s==(ss=mc?mb:mb.LCase()))z=2;
-         if(!z)return false;
-      };
-      return true;
-   }
-});
-
+if(2){//-Native.
+   String.Implement({
+      LCase:String.prototype.toLowerCase,
+      UCase:String.prototype.toUpperCase,
+      Trim:function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');},
+      TrimL:function(){return this.replace(/^\s+/,'');},
+      TrimR:function(){return this.replace(/\s+$/,'');},
+      TrimFull:function(){return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');},
+      TrimCR:function(){
+         var S=this.Val(),s=S.charCodeAt(S.length-1)==10?S.substr(0,S.length-1):S;
+         return s.charCodeAt(s.length-1)==13?s.substr(0,s.length-1):s
+      },
+      Pad:function(len,pad,dir){
+         var t=this,lf,rt,s=t.valueOf(),sl=s.length,
+            d=(dir==0||dir==2)?dir:1,l=def(len)?len:0,p=def(pad)?pad:' '
+         ;
+         if(l + 1 >= sl){
+            if(d==1){//Pad
+               rt=Math.ceil((padlen=l-sl) / 2);
+               lf=padlen-rt;
+               s=Array(lf+1).join(p)+s+Array(rt+1).join(p);
+            }
+            else if(d==2)s=s+Array(l+1-sl).join(p);//PadR
+            else s=Array(l+1-sl).join(p)+s;//PadL
+         };
+         return s;
+      },
+      PadL:function(len,pad,dir) {return this.Pad(len,pad,0);},
+      PadR:function(len,pad){return this.Pad(len,pad,2);},
+      Proper:function(){
+         var n=this.valueOf()+'',
+            x=n.split('.'),
+            x1=x[0],
+            x2=x.length > 1 ? '.' + x[1] : '',
+            rgx=/(\d+)(\d{3})/
+         ;
+         while (rgx.test(x1)){
+            x1=x1.replace(rgx, '$1' + ',' + '$2');
+         };
+         return x1+x2;
+      },
+      Val:String.prototype.valueOf
+   });
+   Function.Implement({
+      $Run:function(){this.$run=2;return this;},
+      Bind:function(that){
+         var t=this,
+            args=arguments.length>1?Array.slice(arguments, 1):null,
+            F=function(){},
+            bound=function(){
+               var context=that,length=arguments.length;
+               if(this instanceof bound){
+                  F.prototype=t.prototype;
+                  context=new F;
+               };
+               var result=(!args&&!length)
+                  ? t.call(context)
+                  : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
+               return context==that?result:context;
+            }
+         ;
+         bound.$$bound=2;
+         return bound;
+      },
+      ACall:function(){
+         var fn=this,a=arguments;
+         process.nextTick(function(){
+            var t=this,a=t.a;
+            eval('t.fn('+$ArgsStr(a,'a')+');');
+         }.Bind({a:a,fn:fn}));
+      },
+   });
+   Number.Implement({
+      Str:Number.prototype.toString,
+      Proper:String.prototype.Proper,
+      Val:String.prototype.valueOf
+   });
+   Array.Extend({
+      Clone:function(v){
+         var rv=[];
+         for(lp=0;lp<v.length;lp++)rv.push(Clone(v[lp]));
+         return rv;
+      },
+      From:function(item){return item==null?[]:TypeOf(item)=='array'?item:[item];},
+      HasStr:function(arr,str,matchCase){
+         var rv=false,a=arr,z,mc=matchCase,s=mc?str:str.LCase();
+         for(lp=0;lp<a.length;lp++){
+            if(IsStr(a[lp]))
+               if(s==mc?a[lp]:a[lp].LCase())return true;
+         };
+         return rv;
+      }
+   });
+   z=Array.prototype;
+   Array.Implement({
+      $type:'array',
+      PopL:z.shift,
+      PopR:z.pop,
+      PushL:z.unshift,
+      PushR:z.push,
+   });
+   Object.Extend({
+      Clone:function(v){
+         var rv={};
+         for(mb in v)rv[mb]=Clone(v[mb]);
+         return rv;
+      },
+      Merge:function(ob,ob2){
+         var rv=ob?Object.Clone(ob):{};
+         if(ob2)for(mb in ob2)rv[mb]=ob2[mb];
+         return rv;
+      },
+      CopyTo:function(src,dest){
+         var rv=dest,s=typeof rv;
+         if((s=='object'||s=='function')&&src)
+            for(mb in src)rv[mb]=src[mb];
+         return rv;
+      },
+      HasVar:function(ob,nam,matchCase){
+         var s,ss,z,mc=matchCase,n=IsArr(nam)?nam:[nam];
+         for(lp=0;lp<n.length;lp++){
+            z=0;s=mc?n[lp]:n[lp].LCase();
+            for(mb in ob)if(s==(ss=mc?mb:mb.LCase()))z=2;
+            if(!z)return false;
+         };
+         return true;
+      }
+   });
+};
 var z,
-   //cout=o.cout=function(str){console.log(str);},
    $cr=o.$cr='\n',
    cout=o.cout=console.log,
    sout=o.sout=function(s){
@@ -335,12 +350,20 @@ var Class=o.Class=function(op,onld){
    var z=2,zz,
       rv=function(op,onld){return Class.$$InitClass(this,op,onld);},
       o=op?op:{},pp,
-      z=o.Extends,extd=z?z:null;
-      v=o.Implements;impl=v?Array.From(v):0
+      z=o.Extends,extd=z?z:null,
+      v=o.Implements,impl=v?Array.From(v):0,
+      z=o.$name,nm=z?z:''
    ;
    
-   rv.$type='Class';
    z=extd;rv.$extends=z;rv.prototype.$extends=z;
+   rv.ExtImp({
+      $extends:extd,
+      $name:nm,
+      $type:'Class',
+      Kill:function(){
+         
+      }
+   });
    if(z){
       for(mm in z.prototype){
          if(mm=='$extends'||mm=='$op'){}
@@ -356,6 +379,8 @@ var Class=o.Class=function(op,onld){
          SetOptions:function(op,op2){return Class.$$SetOptions(this,op,op2);},
          FireEvent:function(e){$$evtSys.Fire(this,e);},
          Fire:function(e){$$evtSys.Fire(this,e);}
+      });
+      rv.ExtImp({
       });
       if(O.IsStr(o.$name)){pp=o.$name.Trim();if(pp!='')rv.$name=pp;};
       rv.Extend({

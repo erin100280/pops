@@ -6,7 +6,6 @@ exports.Load=function(op){
    if(typeof $$POPS=='undefined'){
       $$POPS=global.$$POPS=require('pops/pops.core.js');
       $$POPS.Global($$POPS);
-      $$POPS.$$modes.$os=process.platform;
    };
    return $$POPS;
 };
