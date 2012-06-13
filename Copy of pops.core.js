@@ -80,38 +80,36 @@ if(2){//-Native.
          };
          return x1+x2;
       },
-      Repeat:function(x){var l,rv='';for(l=0;l<x;l++)rv+=this.valueOf();return rv;},
       Val:String.prototype.valueOf
    });
    Function.Implement({
-         $$Sys:function(){this.$$sys=2;return this;}
-      ,  $Run:function(){this.$run=2;return this;}
-      ,  ACall:function(){
-            var fn=this,a=arguments;
-            process.nextTick(function(){
-               var t=this,a=t.a;
-               eval('t.fn('+$ArgsStr(a,'a')+');');
-            }.Bind({a:a,fn:fn}));
-         }
-      ,  Bind:function(that){
-            var t=this,
-               args=arguments.length>1?Array.slice(arguments, 1):null,
-               F=function(){},
-               bound=function(){
-                  var context=that,length=arguments.length;
-                  if(this instanceof bound){
-                     F.prototype=t.prototype;
-                     context=new F;
-                  };
-                  var result=(!args&&!length)
-                     ? t.call(context)
-                     : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
-                  return context==that?result:context;
-               }
-            ;
-            bound.$$bound=2;
-            return bound.$$Sys();
-         }
+      $Run:function(){this.$run=2;return this;},
+      Bind:function(that){
+         var t=this,
+            args=arguments.length>1?Array.slice(arguments, 1):null,
+            F=function(){},
+            bound=function(){
+               var context=that,length=arguments.length;
+               if(this instanceof bound){
+                  F.prototype=t.prototype;
+                  context=new F;
+               };
+               var result=(!args&&!length)
+                  ? t.call(context)
+                  : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
+               return context==that?result:context;
+            }
+         ;
+         bound.$$bound=2;
+         return bound;
+      },
+      ACall:function(){
+         var fn=this,a=arguments;
+         process.nextTick(function(){
+            var t=this,a=t.a;
+            eval('t.fn('+$ArgsStr(a,'a')+');');
+         }.Bind({a:a,fn:fn}));
+      },
    });
    Number.Implement({
       Str:Number.prototype.toString,
@@ -362,41 +360,8 @@ O.Class=function(specs,onReady){
       ,  z=o.Private,$p=z?z:{}
       ,  z=o.Shared,$s=z?z:{}
       ,  z=o.$name,nm=z?z:''
-      ,  z=o.options,$o=z?z:{}
       ,  rv=function(op,onld){
-            var t=this,rv,mb,$p=t.$$private,s='',$fp,$fn,f;
-      
-            for(mb in $p){
-               if(s=='')s='var ';
-               else s+=',';
-               if(O.IsFun($p[mb]))s+=mb+'='+$p[mb].toString();
-               else s+=mb+'=$p.'+mb;
-            };
-            //cout('-- s='+s);
-            eval(s+';');
-            for(mb in t){
-               f=t[mb];
-               if(s==''){}
-               else s+=',';
-               if(O.IsFun(f)){
-                  if(!f.$$sys){
-                     $fp=f.$fParent;$fn=f.$fName;
-                     eval('t.'+mb+'='+f.toString());
-                     t[mb].$fParent=$fp;t[mb].$fName=$fn;
-                     //else s+=mb+'=$p['+mb+']';
-                     cout('t.'+mb+'='+t[mb].toString());
-                  };
-               };
-            };
-            
-            rv=t.Init?t.Init(op,onld):t;
-            for(mb in t)
-               if(O.IsFun(t[mb]))t[mb].$pInst=t; 
-            
-            t.FireEvent(O.Event('load'));
-            t.FireEvent(O.Event('ready'));
-            return rv;
-            //return O.Class.$$InitClass(this,op,onld);
+            return O.Class.$$InitClass(this,op,onld);
          }
    ;
 
@@ -408,82 +373,104 @@ O.Class=function(specs,onReady){
          else zz=z;
          if(zz){
             z2.push(zz);
-            O.Class.$$AddAll(zz,rv);
+            for(mm in zz){
+               z=zz[mm];
+               
+               //rv.
+            };
          };
       };
    };
    rv.ExtImp({
-         $extends:$e
-      ,  $implements:z2
-      ,  $name:nm
-      ,  $type:'class'
-      ,  $op:$o
-      ,  Kill:function(){
+      $extends:$e,
+      $implements:z2,
+      $name:nm,
+      $type:'class',
+      Kill:function(){
          
-         }.$$Sys()
+      }
    });
 
    if($e){
-      O.Class.$$AddAll($e,rv,{Shared:true});
-      O.Class.$$AddAll($e,rv);
+      for(mm in $e){
+         if(mm=='$extends'||mm=='$op'){}
+         else{rv[mm]=$e[mm];};
+      };
+      for(mm in $e.prototype){
+         if(mm=='$extends'||mm=='$op'){}
+         else{rv.prototype[mm]=$e.prototype[mm];};
+      };
    }
    else{
       rv.Implement({
          $inst:true,
-         On:function(evt,fn){return $$evtSys.On(this,evt,fn);}.$$Sys(),
-         $On:function(evt,fn){return $$evtSys.On(this,evt,fn,2);}.$$Sys(),
-         SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);}.$$Sys(),
-         FireEvent:function(e){$$evtSys.Fire(this,e);}.$$Sys(),
-         Fire:function(e){$$evtSys.Fire(this,e);}.$$Sys()
+         On:function(evt,fn){return $$evtSys.On(this,evt,fn);},
+         $On:function(evt,fn){return $$evtSys.On(this,evt,fn,2);},
+         SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);},
+         FireEvent:function(e){$$evtSys.Fire(this,e);},
+         Fire:function(e){$$evtSys.Fire(this,e);}
+      });
+      rv.ExtImp({
       });
       if(O.IsStr(o.$name)){pp=o.$name.Trim();if(pp!='')rv.$name=pp;};
       rv.Extend({
-         $Reg:function(nam){O.Class.Reg(this,nam)}.$$Sys()
+         $Reg:function(nam){O.Class.Reg(this,nam)}.Bind(rv)
       });
    };
 
 
 
    
-   O.Class.$$AddAll(o,rv);
+   for(mm in o){
+      if(mm=='Extends'||mm=='Implements'){}
+      else if(mm=='options')rv.prototype.$op=o[mm];
+      else{
+         z=o[mm];zz=TypeOf(z);
+         if(zz=='function'){z.$fParent=rv;z.$fName=mm;};
+         rv.prototype[mm]=z;
+      };
+   };
    
-   return rv.Bind(rv);
+   return rv;
 }.Extend({
    $$Add:function(nm,v,cls,op){
-      var c=cls,o=op?op:{},lm,mm,z,p,sh,ya,$p,$s;
-      if(!c.$$private)c.$$private=c.prototype.$$private={};
-      if(!c.$$shared)c.$$shared={};
+      var o=op?op:{},lm,mm,z,p,sh,ya,kc=cls,$p;
+      if(!cls.$$private)cls.$$private={};
 
-      ya=2;lm=nm.LCase();
+      ya=2;lm=mm.LCase();
       
-      if((nm=='Init'&&!o[nm])||(nm=='Extends'&&!o[nm])
-         ||(nm=='Implements'&&!o[nm])||(nm=='op'&&!o[nm])
-         ||(nm=='options'&&!o[nm])||(nm=='$extends'&&!o[nm])
-         ||(nm=='$implements'&&!o[nm])||(nm=='$op'&&!o[nm])
+      if((nm=='Init'&&!o[nm])||(nm=='Extends'&&!!o[nm])
+         || (nm=='Implements'&&!!o[nm])
       )ya=0;
 
       $p=o.Private||v.$private;
-      $s=o.Shared||v.$shared;
-      if(O.IsFun(v)){
-         //cout('v='+v.toString());
-         v.$fParent=c;v.$fName=nm;
-         //if(!v.$$bound)v=v.Bind(c);
-      };
+      if(IsFun(v)&&!$p&&!v.$$bound)v=v.Bind(c);
+
       if(ya){
-         if($p){c.$$private[nm]=v;}
-         else if($s)c[nm]=v;
-         else c.Implement(nm,v);
+         if($p)c.$$private[nm]=v;
+         else if(o.Shared||v.$shared)c[nm]=v;
+         else c.prototype[nm]=v;
       };
    },
    $$AddAll:function(v,cls,op){
-      var c=cls,o=op?op:{},lm,mm,z,p,sh,ya,$p,$o;
-      if(O.IsOBJ(v)||O.IsFun(v)){
+      var o=op?op:{},lm,mm,z,p,sh,ya,kc=cls,$p;
+      if(!cls.$$private)cls.$$private={};
+      if(IsObj(v)||IsFun(v)){
          for(mm in v){
-            $o=Object.Clone(o);
-            z=v[mm];
-            if(mm=='Private'){cout('priv');$o.Private=true;O.Class.$$AddAll(z,c,$o)}
-            else if(mm=='Shared'){$o.Shared=true;O.Class.$$AddAll(z,c,$o)}
-            else O.Class.$$Add(mm,z,c,$o);
+            z=v[mm];ya=2;lm=mm.LCase();
+            if((mm=='Init'&&!o[mm])||(mm=='Extends'&&!!o[mm])
+               || (mm=='Implements'&&!!o[mm])
+            )ya=0;
+
+            $p=o.Private||z.$private;
+            if(IsFun(z)&&!$p&&!z.$$bound)z=z.Bind(c);
+
+            if(ya){
+               if($p)c.$$private[mm]=z;
+               else if(o.Shared||z.$shared)c[mm]=z;
+               else c.prototype[mm]=z;
+            };
+            
          };
       };
    },

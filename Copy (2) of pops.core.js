@@ -84,34 +84,33 @@ if(2){//-Native.
       Val:String.prototype.valueOf
    });
    Function.Implement({
-         $$Sys:function(){this.$$sys=2;return this;}
-      ,  $Run:function(){this.$run=2;return this;}
-      ,  ACall:function(){
-            var fn=this,a=arguments;
-            process.nextTick(function(){
-               var t=this,a=t.a;
-               eval('t.fn('+$ArgsStr(a,'a')+');');
-            }.Bind({a:a,fn:fn}));
-         }
-      ,  Bind:function(that){
-            var t=this,
-               args=arguments.length>1?Array.slice(arguments, 1):null,
-               F=function(){},
-               bound=function(){
-                  var context=that,length=arguments.length;
-                  if(this instanceof bound){
-                     F.prototype=t.prototype;
-                     context=new F;
-                  };
-                  var result=(!args&&!length)
-                     ? t.call(context)
-                     : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
-                  return context==that?result:context;
-               }
-            ;
-            bound.$$bound=2;
-            return bound.$$Sys();
-         }
+      $Run:function(){this.$run=2;return this;},
+      Bind:function(that){
+         var t=this,
+            args=arguments.length>1?Array.slice(arguments, 1):null,
+            F=function(){},
+            bound=function(){
+               var context=that,length=arguments.length;
+               if(this instanceof bound){
+                  F.prototype=t.prototype;
+                  context=new F;
+               };
+               var result=(!args&&!length)
+                  ? t.call(context)
+                  : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
+               return context==that?result:context;
+            }
+         ;
+         bound.$$bound=2;
+         return bound;
+      },
+      ACall:function(){
+         var fn=this,a=arguments;
+         process.nextTick(function(){
+            var t=this,a=t.a;
+            eval('t.fn('+$ArgsStr(a,'a')+');');
+         }.Bind({a:a,fn:fn}));
+      },
    });
    Number.Implement({
       Str:Number.prototype.toString,
@@ -364,30 +363,17 @@ O.Class=function(specs,onReady){
       ,  z=o.$name,nm=z?z:''
       ,  z=o.options,$o=z?z:{}
       ,  rv=function(op,onld){
-            var t=this,rv,mb,$p=t.$$private,s='',$fp,$fn,f;
+            cout('NEW cls');
+            var t=this,rv,mb,$p=t.$$private,s='';
       
             for(mb in $p){
                if(s=='')s='var ';
                else s+=',';
                if(O.IsFun($p[mb]))s+=mb+'='+$p[mb].toString();
-               else s+=mb+'=$p.'+mb;
+               else s+=mb+'=$p['+mb+']';
+               cout('mb='+mb);
             };
-            //cout('-- s='+s);
             eval(s+';');
-            for(mb in t){
-               f=t[mb];
-               if(s==''){}
-               else s+=',';
-               if(O.IsFun(f)){
-                  if(!f.$$sys){
-                     $fp=f.$fParent;$fn=f.$fName;
-                     eval('t.'+mb+'='+f.toString());
-                     t[mb].$fParent=$fp;t[mb].$fName=$fn;
-                     //else s+=mb+'=$p['+mb+']';
-                     cout('t.'+mb+'='+t[mb].toString());
-                  };
-               };
-            };
             
             rv=t.Init?t.Init(op,onld):t;
             for(mb in t)
@@ -420,7 +406,7 @@ O.Class=function(specs,onReady){
       ,  $op:$o
       ,  Kill:function(){
          
-         }.$$Sys()
+         }
    });
 
    if($e){
@@ -430,15 +416,17 @@ O.Class=function(specs,onReady){
    else{
       rv.Implement({
          $inst:true,
-         On:function(evt,fn){return $$evtSys.On(this,evt,fn);}.$$Sys(),
-         $On:function(evt,fn){return $$evtSys.On(this,evt,fn,2);}.$$Sys(),
-         SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);}.$$Sys(),
-         FireEvent:function(e){$$evtSys.Fire(this,e);}.$$Sys(),
-         Fire:function(e){$$evtSys.Fire(this,e);}.$$Sys()
+         On:function(evt,fn){return $$evtSys.On(this,evt,fn);},
+         $On:function(evt,fn){return $$evtSys.On(this,evt,fn,2);},
+         SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);},
+         FireEvent:function(e){$$evtSys.Fire(this,e);},
+         Fire:function(e){$$evtSys.Fire(this,e);}
+      });
+      rv.ExtImp({
       });
       if(O.IsStr(o.$name)){pp=o.$name.Trim();if(pp!='')rv.$name=pp;};
       rv.Extend({
-         $Reg:function(nam){O.Class.Reg(this,nam)}.$$Sys()
+         $Reg:function(nam){O.Class.Reg(this,nam)}.Bind(rv)
       });
    };
 
@@ -465,9 +453,9 @@ O.Class=function(specs,onReady){
       $p=o.Private||v.$private;
       $s=o.Shared||v.$shared;
       if(O.IsFun(v)){
-         //cout('v='+v.toString());
+         cout('v='+v.toString());
          v.$fParent=c;v.$fName=nm;
-         //if(!v.$$bound)v=v.Bind(c);
+         if(!v.$$bound)v=v.Bind(c);
       };
       if(ya){
          if($p){c.$$private[nm]=v;}
