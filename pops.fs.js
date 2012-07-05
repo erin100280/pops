@@ -1,6 +1,6 @@
 var G=global,X=exports,
    fs=require('fs'),
-   pp=require('pops/pops.base.js'),
+   pp=require('pops/pops.core.js'),
    MkDir=X.MkDir=function(path,fn){
       cout('-MkDir-');
       var p=path,f=fn?fn:function(){},ff,f2;

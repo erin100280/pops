@@ -1,4 +1,4 @@
-var z,z2,z3,z4,zz,o=O=pops={},G=global,x,l,p,fn=Function;
+var z,z2,z3,z4,zz,x,l,p,fn=Function,G=global,o=O=pops=G.$_P_=G.$pops={};
 
 if(2){//-Setup system nodes.
    if(!G.$$modes){
@@ -7,29 +7,28 @@ if(2){//-Setup system nodes.
    };
 };
 
-var z,
-   $cr=o.$cr='\n',
-   cout=o.cout=console.log,
-   sout=o.sout=function(s){
-      s=(typeof s=='string')?s:(s.toString)?s.toString():'';
-      process.stdout.write(s);
-   },
-   Cls=console.Cls=o.Cls=function(){cout('\033[2J');},
-   def=o.def=function(v){return typeof v!='undefined'?true:false;},
-   udef=o.udef=undefined,
-   typeOf=o.typeOf=function(v){
-      return v==null?null:v&&v.$type?v.$type:typeof v;
-   },
-   TypeOf=o.TypeOf=function(v){
-      return v==null?null:v&&v.$type?
-         v.$type=='class'&&v.$name&&v.$name!=''?v.$name:v.$type:typeof v;
-   }
-;
-
+if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
+   var z,$cr=o.$cr='\n'
+      ,  _t=O._t=true , _f=O._f=false
+      ,  Blank=O.Blank=function(){return function(){}}
+      ,  cout=o.cout=console.log
+      ,  Cls=console.Cls=o.Cls=function(){cout('\033[2J');}
+      ,  def=o.def=function(v){return typeof v!='undefined'?_t:_f;} , udef=o.udef=undefined
+      ,  sout=o.sout=function(s){
+            s=(typeof s=='string')?s:(s.toString)?s.toString():s;
+            process.stdout.write(s);
+         }
+      ,  typeOf=o.typeOf=function(v){return v==null?v:v&&v.$type?v.$type:typeof v}
+      ,  TypeOf=o.TypeOf=function(v){
+            return v==null?null:v&&v.$type?
+               v.$type=='class'&&v.$name&&v.$name!=''?v.$name:v.$type:typeof v;
+         }
+   ;
+}
 if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
    z=Function;z2=z.prototype;
    zz=z2.Prim=function(){this.$prim=2;return this;};zz.$prim=2;
-   z.Bind=z2.Bind=function(that){
+   z4=z.Bind=z2.Bind=function(that){
       var t=this,
          args=arguments.length>1?Array.slice(arguments, 1):null,
          F=function(){},
@@ -48,7 +47,7 @@ if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
       bound.$$bound=2;
       return bound;
    };
-
+   z4.$prim=2;
 //*
    z.Extend=z2.Extend=function(key,val,prim){
       var mb,k=key,p=prim;
@@ -101,15 +100,29 @@ if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
 if(2){//-Native.
    Function.Implement({
       $Prim:{
-            $$Sys:function(){this.$$sys=2;return this;}
-         ,  $Run:function(){this.$run=2;return this;}
-         ,  ACall:function(){
-               var fn=this,a=arguments;
+            $$Sys:function(){this.$$sys=2;return this}
+         ,  $Run:function(){this.$run=2;return this}
+         ,  aApply:function(args,This){
+               var fn=this,t=This;
                process.nextTick(function(){
-                  var t=this,a=t.a;
-                  eval('t.fn('+$ArgsStr(a,'a')+');');
-               }.Bind({a:a,fn:fn}));
+                  eval('fn'+(t)?'.Bind(t)':''+'('+$ArgsStr(args,'args')+');');
+               });
+               return this;
             }
+         ,  aCall:function(){this.aAply(arguments)}
+/*         ,  ACall:function(){
+               var fn=this,args=arguments;
+               process.nextTick(function(){eval('fn('+$ArgsStr(args,'args')+');');});
+               return this;
+            }
+//*/
+         ,  Hidden:function(){this.$hidden=2;return this}
+         ,  Private:function(){this.$private=2;return this}
+         ,  Protected:function(){this.$protected=2;return this}
+         ,  Shared:function(){this.$shared=2;return this}
+         ,  PrivShare:function(){this.$private=this.$shared=2;return this}
+         ,  Reg:function(nam){_.Reg(nam,this)}
+         ,  Str:Function.prototype.toString
       }
    });
    String.Implement({
@@ -200,10 +213,19 @@ if(2){//-Native.
    Array.Implement({
          $type:'array'
       ,  $Prim:{
-               PopL:z.shift
-            ,  PopR:z.pop
-            ,  PushL:z.unshift
-            ,  PushR:z.push
+               Has:function(v,CaSe){
+                  var t=this,l,s=CaSe,z,ss;
+                  if(typeof v=='string'){ss=2;s=0;v=CaSe?v:v.LCase();}
+                  for(l=0;l<t.length;l++){
+                     z=t[l];z=(typeof z=='string'&&!s)?CaSe?z:z.LCase():z;
+                     if((s&&v===z)||(!s&&v==z))return true;
+                  }
+                  return false;
+               }
+            ,  PopL:z.shift , PopB:z.shift
+            ,  PopR:z.pop , PopT:z.pop , Pop:z.pop
+            ,  PushL:z.unshift , PushB:z.unshift
+            ,  PushR:z.push , PushT:z.push , Push:z.push
          }
    });
    Object.Extend({
@@ -237,6 +259,114 @@ if(2){//-Native.
       }
    });
 };
+if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
+   var z
+      ,  $Str=O.$Str=function(v,recursive,spacing,times,rMax,tim){
+            var r=recursive,z=spacing,sp=z?z:0
+               ,  T=typeOf(v),rv='',z=times,x=def(z)?z:3
+               ,  r=rMax,rm=def(r)?r:1,tm=def(tim)?tim:0,r=(recursive&&tm<rm)?2:0
+            ;
+            //cout(' '.Repeat(sp*x)+'$Str | T='+T)
+            rv+=' '.Repeat(sp*x);
+            z=v.$$type;
+            if(T=='string'||T=='number'||T=='boolean')rv+=T+': '+v+'\n';
+            else if(T=='function'||T=='class'||z=='type'||z=='struct'){
+               rv+=T+':\n';if(r)rv+=$Str.Fun(v,r,sp+1,x);
+            }
+            else{rv+=T+':\n';if(r)rv+=$Str.Obj(v,r,sp+1,x);}
+            
+            return rv;
+         }.Extend({
+               Fun:function(v,recursive,spacing,times,rMax,tim){
+                  cout('FUN');
+                  var z,prm=0,k,m,zz,s,l,sp=spacing,T=typeOf(v),rv='',x=times
+                     ,  rm=rMax,tm=tim,r=recursive
+                  ;
+                  z='';zz=v.Str().split('\n');k=' '.Repeat((sp+1)*x);
+                  for(l=0,s=zz.length;l<s;l++)z+=k+zz[l]+'\n';
+                  rv+=' '.Repeat(sp*x)+'code:\n'+z+'\n';
+                  rv+=' '.Repeat(sp*x)+'members:\n';
+                  for(m in v){
+                     z=v[m];k=typeOf(z);
+                     if(!z.$prim||prm){
+                        rv+=' '.Repeat((sp+1)*x)+m+':\n';
+                        rv+=r?$Str(z,r,sp+2,x,rm,tm+1):' '.Repeat((sp+2)*x)+k+':\n';
+                     }
+                  }
+               
+                  return rv;                  
+               }
+            ,  Obj:function(v,recursive,spacing,times,rMax,tim){
+                  cout('OBJ');
+                  //var r=recursive,z,k,m,zz,s,z=spacing,sp=z?z:0,T=typeOf(v),rv='',x=times;
+                  var z,k,m,zz,s,l,sp=spacing,T=typeOf(v),rv='',x=times
+                     ,  rm=rMax,tm=tim,r=recursive
+                  ;
+                  rv+=' '.Repeat(sp*x)+'members:\n';
+                  for(m in v){
+                     z=v[m];k=typeOf(z);
+                     rv+=' '.Repeat((sp+1)*x)+m+':\n';
+                     rv+=r?$Str(z,r,sp+2,x,rm,tm+1):' '.Repeat((sp+2)*x)+k+':\n';
+                  }
+               
+                  return rv;                  
+               }
+         })
+      ,  Obj=O.Obj=function(v){
+            var rv={},n,z,hs=['$$ob','Obj','$type','$$type'];
+            for(n in v){
+               z=v[n];
+               if(!z.$prim&&!hs.Has(n,2))rv[n]=z;
+            }
+            return rv;
+         }
+      ,  _=O._=O._$=function(v){
+            var vs=_.$$vals,z,o,k;
+            if(O.IsStr(v)){
+               v=v.LCase();
+               for(z in vs)if(z==v)return vs[z];
+            }
+            else
+               for(z in vs){
+                  o=vs[z];k=typeof o;
+                  if(k=='boolean'||k=='number'||k=='string')if(vs[z]==v)return z;
+                  else if(vs[z]===v)return z;
+               }
+            return udef;
+         }.Extend({
+               $$vals:{}
+            ,  Reg:function(nam,v){
+                  var n=nam,v=v?v:{},j=v.$$type,k=v.$type,l=v.$name;
+                  n=(n&&n!='')?n:(j=='type')?k:(k=='class'||k=='struct')?l:'!!';
+                  _.$$vals[n]=v;
+               }
+               
+         })
+      ,  Type=O.Type=function(nam,ob,$$t){
+            //var ob=obj?obj:{},rv=(retain)?ob:{},op=ob.prototype,p=rv.prototype,z=proto?op:ob;
+            var o=ob?ob:{},op=o.prototype,p,z=o.$Init,i=z?z:Blank,T=$$t?$$t.LCase():'type';
+            return function(){
+               i.apply(this,arguments);
+               return this;
+            }.Extend(ob).Implement(ob.prototype).ExtImp({$type:nam.LCase(),$$type:T,$$ob:ob});
+         }
+      ,  Struct=O.Struct=function(nam,v){
+            return Type(nam,Blank().Implement(v),'struct').Implement({
+               Obj:function(){return Obj(this)}
+            });
+         }
+   ;
+}
+if(2){//-Property Setters [Prim(),Private(),PrivShare(),Shared()]
+   Object.CopyTo(O,{
+         Hidden:function(v){v.$hidden=2;return v;}
+      ,  Prim:function(v){v.$prim=2;return v;}
+      ,  Private:function(v){v.$private=2;return v;}
+      ,  PrivShare:function(v){v.$private=v.$shared=2;return v;}
+      ,  Protected:function(v){v.$protected=2;return v;}
+      ,  Shared:function(v){v.$shared=2;return v;}
+   });
+}
 O.SS=function(v){//-SmallScript
    var rv='',l,b=false,i,s,q,d,z=O.SS.BreakDown(v),ln=z.length;
    for(l=0;l<ln;l++){
@@ -280,20 +410,12 @@ if(2){//-Is??? functions[$$Is(),IsArr(),IsCls(),IsNum(),IsStr(),IsObj()]
       ,  IsNum:$Is.Bind({typ:'number'})
       ,  IsObj:$Is.Bind({typ:'object'})
       ,  IsOl:$Is.Bind({typ:'overload'})
+      ,  IsProp:$Is.Bind({typ:'property'})
       ,  IsStr:$Is.Bind({typ:'string'})
       ,  IsFUN:function(v){var z=typeof v;return z=='function'||z=='overload'?true:false;}
       ,  IsOBJ:function(v){var z=typeof v;return z=='function'||z=='object'?true:false;}
    });
 };
-
-if(2){//-Property Setters [Prim(),Private(),PrivShare(),Shared()]
-   Object.CopyTo(O,{
-         Prim:function(v){v.$prim=2;return v;}
-      ,  Private:function(v){v.$private=2;return v;}
-      ,  PrivShare:function(v){v.$private=v.$shared=2;return v;}
-      ,  Shared:function(v){v.$shared=2;return v;}
-   });
-}
 
 o.Clone=function(v){
    switch (typeOf(v)){
@@ -309,14 +431,17 @@ o.$ArgsStr=function(args,nam){
    if(a)for(lp=0;lp<a.length;lp++)rv+=n+'['+lp+']'+(lp!=a.length-1?',':'');
    return rv
 };
-o.Global=function(ob){Object.CopyTo(global,ob);};
-o.Parent=function(){
-   var a=arguments,ce=a.callee,cl=ce.caller,pi=cl.$pInst,p=cl.$fParent,
-      nm=cl.$fName,z,zz,rv
-   ;
-   z=p.$extends;
-   return O.Class.$$RunFn(z,nm,a,pi)
-};
+O.$VarStr=function(ob,nam){
+   var rv='',n,i;
+   for(n in ob){
+      if(rv=='')rv='var ';else rv+=',';
+      rv+=n+'='+nam+'.'+n;
+   }
+   return rv+';';
+}
+o.Global=function(ob){Object.CopyTo(global,ob);}.Extend({
+   Pops:function(doIt){if(!G.$$_P_||doIt){O.Global(O);G.$$_P_=2}}
+});
 
 if(2){//mode system[Choose(),IsMode(),Modal(),Mode()]
    o.$$modes=global.$$modes={};
@@ -454,36 +579,73 @@ o.Overload=function(val){
       }
 });
 o.Property=function(val){
-   var t=this,v=val?val:{},mb,rv=O.Overload.$Base();
-   for(mb in v)rv.fns[mb]=v[mb];
+   var f,z,mb,rv,ps='',v=val,p=v.Private;
+   
+   eval(O.Property.$Init(v,'v'));
+   eval(O.Property.$GetSet(v,'v'));
+   
+   eval(O.Property.$Base(v,'v','rv'));
+   
+   //for(mb in v)rv.fns[mb]=v[mb];
    return rv;
 }.Extend({
-      $Base:function(){
-         var ff={},rv=function(){
-            var t=this,fn=t.fns,A=arguments,z,oS,rv,aS=o.Overload.ArgSig(A),mmb;
-            for(mmb in fn){
-               if(!rv){
-                  oS=o.Overload.ObjSig(mmb);
-                  if(o.Overload.MatchSigs(aS,oS))
-                     eval('rv=fn.'+mmb+'('+o.$ArgsStr(A,'A')+');');
-               };
-            };
-            return rv
-         }.Bind({$type:'overload',fns:ff});
-         rv.Extend({
-               //Bind:function(v){var t=this,f=t.fns;mb;for(mb in f)f[mb]=f[mb].Bind(v);return t;}
-               $$bound:0
-            ,  $type:'overload'
-            ,  Bind:function(v){
-                  var t=this,f=t.fns,rv=O.Property.$Base();
-                  rv.Get=t.Get.Bind(v);rv.Set=t.Set.Bind(v);
-                  //for(mb in f)rv.fns[mb]=f[mb].Bind(v);
-                  rv.$$bound=2;
-                  return rv
-               }
-            ,  fns:ff
-         });
-         return rv;
+      $Init:function(v,vNam,cr){
+         cr=cr?cr:'';
+         return(''
+            +  "var $n$="+vNam+";"+cr
+            +  "if(!$n$)$n$={};"+cr
+            +  "if(!$n$.Private)$n$.Private={};"+cr
+            +  "if(!$n$.Private.$val)$n$.Private.$val=$n$.$val?$n$.$val:undefined;"+cr
+            +  "if(!$n$.Get){"
+            +     "$n$.Get=function(){return $val};"
+            +     "if(!$n$.Set&&!$n$.readonly)$n$.Set=function(vl){$val=vl;return vl};"
+            +  "}"
+            +  "if($n$.Set=='auto')$n$.Set=function(vl){$val=vl;return $val};"
+            +  "eval($VarStr($n$.Private,'$n$.Private'));"
+            +  vNam+"=$n$"+cr
+         );
+
+      }
+   ,  $Base:function(v,vNam,nam,cr){
+         cr=cr?cr:'';
+         return(''
+            +  nam+'=function(vl){'+cr
+            +     'var a=arguments,rv;'+cr
+            +     "if(a.length)rv=_Set(vl);"+cr
+            +     "else rv=_Get();"+cr
+            +     "return rv;"+cr
+            +  "}.Extend({"+cr
+            +     "   $$v:"+vNam+cr
+            +     ",  $type:'property'"+cr
+            +     ",  Bind:function(v){"+cr
+            +           "var t=this,vv=t.$$v,_Get=t.Get.Bind(v),_Set=t.Set;"+cr
+            +           "if(_Set)_Set=_Set.Bind(v);"+cr
+            +           "eval(Property.$Base(vv,'vv','rv','\\n'));"+cr
+            +           "rv.readonly=t.readonly;"+cr
+            +           "rv.$$bound=2;"+cr
+            +           "return rv;"+cr
+            +        "}"+cr
+            +     ",  Get:_Get"+cr
+            +     ",  Set:_Set"+cr
+            +     ",  readonly:v.readonly"+cr
+            +  "});"+cr
+         );
+      }
+   ,  $GetSet:function(v,vNam,nam,cr){
+         var z='var _Get=',f; 
+         
+         f=v.Get;
+         if(f.$$bound)z+=vNam+'.Get';
+         else z+=f.Str();
+                  
+         z+=';var _Set=';
+         if(v.Set&&!v.readonly){
+            f=v.Set;
+            if(f.$$bound)z+=vNam+'.Set';
+            else z+=f.toString();
+         }
+         else z+='function(){}';
+         return z+';';
       }
    ,  ArgSig:function(args){
          var rv=[],a,z,ln=args.length;
@@ -543,15 +705,17 @@ o.Property=function(val){
       }
 });
 
-O.Class=function(specs,onReady){
-   var z=2,z2,zz,mm,pp,l2,r,sh,rv,$ini,kk
+var Class=O.Class=function(nam,specs,onReady){
+   if(typeof nam!='string'){onReady=specs;specs=nam;nam=0;}
+   else{onReady=specs;}
+   var z=2,z2,zz,mm,pp,l2,r,sh,rv,$ini,kk,pr
       ,  o=specs?specs:{}
       ,  z=o.Extends,$e=z?z:null
       ,  z=o.Implements,$i=z?Array.From(z):0
       ,  lni=$i.length
       ,  z=o.Private,$p=z?z:{}
       ,  z=o.Shared,$s=z?z:{}
-      ,  z=o.$name,nm=z?z:''
+      ,  z=o.$name,nm=nam?nam:z?z:''
       ,  z=o.options,$o=z?z:{}
    ;
 
@@ -592,10 +756,10 @@ O.Class=function(specs,onReady){
    else{
       rv.Implement({
          $inst:true,
-         On:function(evt,fn){return $$evtSys.On(this,evt,fn);}.$$Sys(),
-         $On:function(evt,fn){return $$evtSys.On(this,evt,fn,2);}.$$Sys(),
+         On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.$$Sys(),
+         $On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,2,bnd);}.$$Sys(),
          SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);}.$$Sys(),
-         Fire:function(e,onDone){$$evtSys.Fire(this,e,onDone);}.$$Sys()
+         Fire:function(e,onDone){O.Event.Fire(this,e,onDone);}.$$Sys()
       });
       if(O.IsStr(o.$name)){pp=o.$name.Trim();if(pp!='')rv.$name=pp;};
       rv.Extend({
@@ -604,19 +768,17 @@ O.Class=function(specs,onReady){
    };
    z=o.Init;rv.prototype.Init=z?z:0;
    if(2){//-Shared
-      zz='';z3={};
-      for(mm in sh){
-         z2=sh[mm];
-         if(z2.$private){
-            if(zz=='')zz='var ';
-            else zz+=',';
-            zz+=mm+'=sh['+mm+']';
-         }
-         else z3[mm]=z2;;
+      zz='';z3={};pr=sh.Private;
+      for(mm in pr){
+         z2=pr[mm];
+         if(zz=='')zz='var ';
+         else zz+=',';
+         zz+=mm+'=pr.'+mm;
       }
       eval(zz+';');
-      for(mm in z3){
-         z2=z3[mm];z4='z2';
+      delete sh.Private;
+      for(mm in sh){
+         z2=sh[mm];z4='z2';
          if(O.IsFun(z2)&&!z2.$$bound)z4=z2.toString();
          eval('rv.'+mm+'='+z4+';');
       }
@@ -666,11 +828,11 @@ O.Class=function(specs,onReady){
          };
       }
    ,  $$InitClass:function(v,args){
-         var rv=v,mm,s='',z,f,ff,l,l2$fp,$fn
+         var rv=v,mm,mb,s='',z,f,ff,l,l2$fp,$fn,$v,k
             ,  p=v.$$private,p=p?p:{}
             ,  pb=v.$$public,pb=pb?pb:{}
          ;
-         
+
          for(mm in p){
             z=p[mm];s='var '+mm+'='
             if(O.IsFun(z)&&!z.$$bound)s+=z.toString();
@@ -687,11 +849,19 @@ O.Class=function(specs,onReady){
                      z=ff[l2];
                      if(!z.$$bound){
                         $fp=z.$fParent;$fn=z.$fName;
-                        eval('z=ff.'+l2+'='+z.toString()+';');
+                        eval('z=ff.'+l2+'='+z.toString()+'.Bind(v);');
                         ff[l2].$fParent=$fp;ff[l2].$fName=$fn;
                      };
                   }
                   eval('v.'+mb+'=f;');
+               }
+               else if(O.IsProp(f)){
+                  $v=f.$$v?Object.Clone(f.$$v):{};
+                  eval(O.Property.$Init($v,'$v'));
+                  eval(O.Property.$GetSet($v,'$v'));
+                  k=_Get;if((k)&&!k.$$bound){$v.Get=f.Get=_Get=k.Bind(v)};
+                  k=_Set;if((k)&&!k.$$bound){$v.Set=f.Set=_Set=k.Bind(v)};
+                  eval(O.Property.$Base($v,'$v','v.'+mb));
                }
                else{
                   if(!f.$$bound){
@@ -712,12 +882,33 @@ O.Class=function(specs,onReady){
          return v;
       }
    ,  $$PullShared:function(v,priv,all){
-         var rv={},nm,z,tk=[],l,ln;
-         if(v.Shared){rv=v.Shared;delete v.Shared;};
+         var rv={Private:{}},nm,z,tk=[],l,ln,zz;
+         if(v.Shared){
+            zz={};
+            Object.CopyTo(zz,O.Class.$$PullShared(v.Shared,priv,2));
+            Object.CopyTo(rv.Private,zz.Private);delete zz.Private;
+            Object.CopyTo(rv,zz);
+            delete v.Shared;
+         };
+         
          for(nm in v){
             z=v[nm];
-            if(nm=='Private')Object.CopyTo(rv,O.Class.$$PullShared(z,2));
-            else if(z.$shared||all){z.$shared=2;if(priv)z.$private=2;rv[nm]=z;tk.push(nm);}
+            if(nm=='Private'){
+               zz={};
+               Object.CopyTo(zz,O.Class.$$PullShared(z,2,all));
+               Object.CopyTo(rv.Private,zz.Private);delete zz.Private;
+               Object.CopyTo(rv,zz);
+               //tk.push(nm);
+            }
+            else if(z.$shared||all){
+               z.$shared=2;
+               if(priv||z.$private){
+                  z.$private=2;
+                  rv.Private[nm]=z;
+               }
+               else rv[nm]=z;
+               tk.push(nm);
+            }
          }
          ln=tk.length;
          for(l=0;l<ln;l++)delete v[tk[l]];
@@ -737,6 +928,11 @@ O.Class=function(specs,onReady){
    ,  $$SetOptions:function(v,op,op2){
          if(!op2&&(v.$op||v.options)){op2=op;op=v.$op?v.$op:v.options;};
          v.op=v.options=Object.Merge(op,op2);
+         var m,n,o=v.op,z=o.Events,e=z?z:0,z=o.$Events,E=z?z:0;
+         //if(e){for(n in e){z=e[n];if(!z.$$bound)e[n]=z.Bind(v)};v.On(e);delete o.Events}
+         //if(E){for(n in E){z=E[n];if(!z.$$bound)E[n]=z.Bind(v)};v.$On(E);delete o.$Events}
+         if(e){v.On(e,0,v);delete o.Events}
+         if(E){v.$On(E,0,v);delete o.$Events}
          return v;
       }
    ,  $$classes:{}
@@ -746,77 +942,38 @@ O.Class=function(specs,onReady){
          n=n.Trim();
          if(n!='')O.Class.$$classes[n]=t;
       }
-});
-
-var $$evtSys={
-   On:function(v,evt,fn,sys){
-      var z=sys?'sys':'std',zz,ev=v.$$evts,mb,z2,ar;
-      if(!ev)ev=v.$$evts={};
-      
-      
-      if(typeof evt=='string'){zz=evt;evt={};evt[zz]=fn;};
-      for(mb in evt){
-         z2=ev[mb];if(!z2)z2=ev[mb]={};
-         ar=z2[z];if(!ar)ar=z2[z]=[];
-         //ar=z2[z]=ar?ar:[];
-         ar.push(evt[mb]);
-      };
-   },
-   Fire:function(v,ee,onDone){
-      var k,z,zz,z2,ar,ev,e,g=Array.From(ee),l,ln=g.length;//g=O.IsArr(e)?e:[e];
-
-      for(l=0;l<ln;l++){
-         e=g[l];
-         if(O.IsStr(e))e=g[l]=O.Event(e);
-         e.caller=v;
-         if(ev=v.$$evts){
-            if(z2=ev[e.$$nam]){
-               e.$sy=z2.sys?Array.Clone(z2.sys):[];
-               k=z2.sys;if(!k)k=[];e.$sy=k;
-               k=z2.std;if(!k)k=[];e.$st=k;
-            };
-         };
-      }
-
-      z=function(){
-         if(g.length){
-            var aa=g.PopL(),f=aa.$$Fire;
-            if(f)f(aa.$sy,aa.$st,z);
-            else z();
-         }
-         else if(onDone)onDone();
-      };
-      z();
-   
-
-
-      
-   },
+});var c=Class,$$Add=c.$$Add,$$AddAll=c.$$AddAll,$$classes=c.$$classes,$$RunFn=c.$$RunFn;
+O.Parent=function(){
+   var a=arguments,cl=a.callee.caller,pi=cl.$pInst,p=cl.$fParent,nm=cl.$fName,z=p.$extends;
+   return $$RunFn(z,nm,a,pi)
 };
+
 O.Event=function(nam,args){
-   var rv=function(){};
-   rv.Extend({
+   return function(){}.Extend({
       args:args,
       $$nam:nam,
       $_std:[],
       $_sys:[],
       $$Fire:function($sys,$std,onDone){
-         var t=this,st=t.$_std,sy=t.$_sys,z,zz;
-         if($sys)sy=t.$_sys=$sys;
-         if($std)st=t.$_std=$std;
+         var t=this,st=t.$_std,sy=t.$_sys,z,zz
+            ,  f=function(v,$){
+                  if(v){
+                     $=$?v.PopL:v.PopR;
+                     while(z=$()){
+                        zz=z(t);
+                        if(t.$$async){t.$$rng=0;return 2};
+                        if(t.$$stop){return 2};
+                     };
+                  }
+                  return 0;
+               }
+         ;
+         if($sys)sy=t.$_sys=$sys;if($std)st=t.$_std=$std;
          if(onDone)t.$$done=onDone;
          if(t.$$rng)return;
          t.$$rng=2;t.$$async=0;
-         if(sy)while(z=sy.PopR()){
-            zz=z(t);
-            if(t.$$async){t.$$rng=0;return;};
-            if(t.$$stop){return;};
-         };
-         if(st)while(z=st.PopL()){
-            zz=z(t);
-            if(t.$$async){t.$$rng=0;return;};
-            if(t.$$stop){return;};
-         };
+         if(f(sy))return;
+         if(f(st))return;
          t.$$rng=0;
          if(t.$$done)t.$$done();
       },
@@ -824,60 +981,50 @@ O.Event=function(nam,args){
       Async:function(){this.$$async=2},
       Stop:function(){this.$$stop=2}
    });
-   return rv;
-};
-
-if(2){//-loaders[PLoad()]
-   z=o.PLoad=function(nam){
-      var zz=PLoad.$$sys[nam.LCase()],fn=IsStr(zz)?zz:'';
-      return fn.length?require(fn):{};
-   };
-   z.$$sys={};
-   z.$$loaded={};
-};
-if(2){//-object builder[BuildOb(),oBuild]
-/*
-   z=o.BuildOb=function(op){
-
-   };
-   z=o.oBuild2=function(op){
-      var t=this;
-      t.op=op=Object.Merge({
-         inputs:1
+}.Extend({
+      On:function(v,evt,fn,sys,bnd){
+         var z=sys?'sys':'std',zz,ev=v.$$evts,mb,z2,ar,g,d,l,ln;
+         if(!ev)ev=v.$$evts={};
          
-      },op);
-      
-      
-   };
-   z=o.oBuild=new O.Class({
-      options:{
-         inputs:1,
-         onDone:0,
+         if(O.IsStr(evt)){zz=evt;evt={};evt[zz]=fn;};
+         for(mb in evt){
+            z2=ev[mb];if(!z2)z2=ev[mb]={};
+            ar=z2[z];if(!ar)ar=z2[z]=[];
+            g=Array.From(evt[mb])
+            ln=g.length;
+            for(l=0;l<ln;l++){
+               d=g[l];
+               if(bnd&&!d.$$bound)d=d.Bind(v);
+               ar.push(d);
+            }
+         };
+      }
+   ,  Fire:function(v,ee,onDone){
+         var k,z,zz,z2,ar,ev,e,g=Array.From(ee),l,ln=g.length;//g=O.IsArr(e)?e:[e];
+   
+         for(l=0;l<ln;l++){
+            e=g[l];
+            if(O.IsStr(e))e=g[l]=O.Event(e);
+            e.caller=v;
+            if(ev=v.$$evts){
+               if(z2=ev[e.$$nam]){
+                  e.$sy=z2.sys?Array.Clone(z2.sys):[];
+                  k=z2.sys;if(!k)k=[];e.$sy=k;
+                  k=z2.std;if(!k)k=[];e.$st=k;
+               };
+            };
+         }
+   
+         z=function(){
+            if(g.length){
+               var aa=g.PopL(),f=aa.$$Fire;
+               if(f)f(aa.$sy,aa.$st,z);
+               else z();
+            }
+            else if(onDone)onDone();
+         };
+         z();
       },
-      Init:function(op,rdy){
-         var t=this.SetOptions(op),od=t.op.onDone;
-         if(IsFun(od))t.On('done',od);
-      },
-      Get:function(key){
-         return(arguments.length)?IsStr(key)?this.dat[key.LCase()]:udef:this.dat;
-      },
-      Set:function(key,val){
-         var t=this,d=t.dat,k=key;
-         if(IsStr(k))d[k]=val;
-         else if(IsOBJ(k))
-            for(mb in k)d[mb]=k[mb];
-         t.iCnt++;
-         return t;
-      },
-      $Check:function(){
-         var t=this,d=t.dat,i=t.op.inputs,zz=0,z=IsNum(i)?i:0;
-         if(IsArr(i))zz=Object.HasVar(d,i);
-         else zz=t.iCnt>=z?2:0;
-         if(zz)t.Fire(Event('done',{builder:t,ob:d}));
-      },
-      dat:{},
-      iCnt:0,
-   });
-//*/
-};
+});
+
 Object.CopyTo(exports,O);
