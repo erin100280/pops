@@ -8,7 +8,7 @@ if(2){//-Setup system nodes.
 };
 
 if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
-   var z,$cr=o.$cr='\n'
+   var z,$cr=O.$cr='\n'
       ,  _t=O._t=true , _f=O._f=false
       ,  Blank=O.Blank=function(){return function(){}}
       ,  cout=o.cout=console.log
@@ -28,13 +28,13 @@ if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
 if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
    z=Function;z2=z.prototype;
    zz=z2.Prim=function(){this.$prim=2;return this;};zz.$prim=2;
-   z4=z.Bind=z2.Bind=function(that){
-      var t=this,
-         args=arguments.length>1?Array.slice(arguments, 1):null,
+   z4=z.Bind=z2.Bind=function(that,meta){
+      var t=this,m=meta,mm,
+         args=arguments.length>2?Array.slice(arguments, 1):null,
          F=function(){},
-         bound=function(){
+         rv=function(){
             var context=that,length=arguments.length;
-            if(this instanceof bound){
+            if(this instanceof rv){
                F.prototype=t.prototype;
                context=new F;
             };
@@ -44,8 +44,9 @@ if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
             return context==that?result:context;
          }
       ;
-      bound.$$bound=2;
-      return bound;
+      rv.$$bound=2;
+      if(m)for(mm in m)rv[mm]=m[mm];
+      return rv;
    };
    z4.$prim=2;
 //*
@@ -105,23 +106,26 @@ if(2){//-Native.
          ,  aApply:function(args,This){
                var fn=this,t=This;
                process.nextTick(function(){
-                  eval('fn'+(t)?'.Bind(t)':''+'('+$ArgsStr(args,'args')+');');
+			         eval('fn'+((t)?'.Bind(t)':'')+'('+$ArgsStr(args,'args')+');');
                });
                return this;
             }
-         ,  aCall:function(){this.aAply(arguments)}
-/*         ,  ACall:function(){
-               var fn=this,args=arguments;
-               process.nextTick(function(){eval('fn('+$ArgsStr(args,'args')+');');});
-               return this;
+         ,  aCall:function(){this.aApply(arguments)}
+         ,  Call:function(args){
+               var a=args?args:{},rv;
+               eval('rv=this('+$ArgsStr(a,'a')+');');
+               return rv;
             }
-//*/
+         ,  Caller:function(){
+               var t=this,f=t.$isCaller?t.fn:t;
+               return function(){return f.Call(arguments)}.Extend({$isCaller:2})               
+            }
          ,  Hidden:function(){this.$hidden=2;return this}
          ,  Private:function(){this.$private=2;return this}
          ,  Protected:function(){this.$protected=2;return this}
          ,  Shared:function(){this.$shared=2;return this}
          ,  PrivShare:function(){this.$private=this.$shared=2;return this}
-         ,  Reg:function(nam){_.Reg(nam,this)}
+         ,  Reg:function(nam){return _.Reg(nam,this)}
          ,  Str:Function.prototype.toString
       }
    });
@@ -232,7 +236,7 @@ if(2){//-Native.
       Clone:function(v){
          var rv=O.IsFun(v)?function(){}:{};
          for(mb in v)
-            if(!v[mb].$prim&&!rv[mb]){
+            if((v[mb])&&!v[mb].$prim&&!rv[mb]){
                rv[mb]=O.Clone(v[mb]);
             };
          return rv;
@@ -282,13 +286,13 @@ if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),ude
                   var z,prm=0,k,m,zz,s,l,sp=spacing,T=typeOf(v),rv='',x=times
                      ,  rm=rMax,tm=tim,r=recursive
                   ;
-                  z='';zz=v.Str().split('\n');k=' '.Repeat((sp+1)*x);
+                  z='';zz=v.toString().split('\n');k=' '.Repeat((sp+1)*x);
                   for(l=0,s=zz.length;l<s;l++)z+=k+zz[l]+'\n';
                   rv+=' '.Repeat(sp*x)+'code:\n'+z+'\n';
                   rv+=' '.Repeat(sp*x)+'members:\n';
                   for(m in v){
                      z=v[m];k=typeOf(z);
-                     if(!z.$prim||prm){
+                     if(z&&(!z.$prim||prm)){
                         rv+=' '.Repeat((sp+1)*x)+m+':\n';
                         rv+=r?$Str(z,r,sp+2,x,rm,tm+1):' '.Repeat((sp+2)*x)+k+':\n';
                      }
@@ -339,6 +343,7 @@ if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),ude
                   var n=nam,v=v?v:{},j=v.$$type,k=v.$type,l=v.$name;
                   n=(n&&n!='')?n:(j=='type')?k:(k=='class'||k=='struct')?l:'!!';
                   _.$$vals[n]=v;
+                  return v
                }
                
          })
@@ -417,7 +422,7 @@ if(2){//-Is??? functions[$$Is(),IsArr(),IsCls(),IsNum(),IsStr(),IsObj()]
    });
 };
 
-o.Clone=function(v){
+O.Clone=function(v){
    switch (typeOf(v)){
       case 'array':
          v=Array.Clone(v);break;
@@ -426,22 +431,25 @@ o.Clone=function(v){
    };
    return v
 };
-o.$ArgsStr=function(args,nam){
+O.$ArgsStr=function(args,nam){
    var rv='',a=args,n=nam?nam:'arguments';
    if(a)for(lp=0;lp<a.length;lp++)rv+=n+'['+lp+']'+(lp!=a.length-1?',':'');
    return rv
 };
 O.$VarStr=function(ob,nam){
-   var rv='',n,i;
+   var rv='',n;
    for(n in ob){
-      if(rv=='')rv='var ';else rv+=',';
-      rv+=n+'='+nam+'.'+n;
+      //if(rv=='')rv='var ';else rv+=',';
+      //rv+=n+'='+nam+'.'+n;
+      rv+=((rv=='')?'var ':',')+n+'='+nam+'.'+n;
    }
    return rv+';';
 }
-o.Global=function(ob){Object.CopyTo(global,ob);}.Extend({
-   Pops:function(doIt){if(!G.$$_P_||doIt){O.Global(O);G.$$_P_=2}}
+O.Global=function(ob){Object.CopyTo(global,ob);}.Extend({
+   Pops:function(doIt){if(!G.$$_P_||doIt){O.Global(O);G.$$_P_=2}; return O;}
 });
+if(!G.$$iid)G.$$iid=2;
+O.IID=function(){return G.$$iid++;};
 
 if(2){//mode system[Choose(),IsMode(),Modal(),Mode()]
    o.$$modes=global.$$modes={};
@@ -490,7 +498,7 @@ if(2){//mode system[Choose(),IsMode(),Modal(),Mode()]
    };
 };
 
-o.Overload=function(val){
+O.Overload=function(val){
    var t=this,v=val?val:{},mb,rv=O.Overload.$Base();
    for(mb in v)rv.fns[mb]=v[mb];
    return rv;
@@ -530,7 +538,7 @@ o.Overload=function(val){
          return rv
       }
    ,  ObjSig:function(str){
-         var rv=[],z,zz,nez2,a=str.split('_or_'),ln=a.length,lp,lp2,ln2;
+         var rv=[],k,z,zz,nez2,a=str.split('_or_'),ln=a.length,lp,lp2,ln2;
          
          for(lp=0;lp<ln;lp++){
             ne=[];
@@ -539,16 +547,19 @@ o.Overload=function(val){
             for(lp2=0;lp2<ln2;lp2++){
                z2=z[lp2];
                zz=(z2=='$')?['?']:z2.split('$');
-               zz[0]=o.Choose(zz[0].LCase(),{
-                  a_or_array:'array',
-                  c_or_class:'class',
-                  f_or_function:'function',
-                  n_or_number:'number',
-                  o_or_object:'object',
-                  s_or_string:'string',
-                  $_or_any:'any',
-                  $else:'$other'
-               });
+               k=zz[0];
+               if(k=='a'||k=='array')k='array';
+               else if(k=='c'||k=='class')k='class';
+               else if(k=='C'||k=='CLASS')k='CLASS';
+               else if(k=='f'||k=='function')k='function';
+               else if(k=='n'||k=='number')k='number';
+               else if(k=='o'||k=='object')k='object';
+               else if(k=='s'||k=='string')k='string';
+               else if(k=='S'||k=='STRING')k='STRING';
+               else if(k=='any'){}
+               else k='$other';
+               zz[0]=k;
+
                ne.push(zz);
             };
             rv.push(ne);
@@ -556,29 +567,42 @@ o.Overload=function(val){
          return rv
       }
    ,  MatchSigs:function(aSig,oSig){
-         var as=aSig,os=oSig,z,zz,z1,z2,gd,a,o,aa,oo,a2,o2,lp,l2,ol,ln=os.length;
+         var as=aSig,os=oSig,ln=os.length
+            ,  z,zz,z1,z2,gd,a,o,aa,oo,lp,l2,ol
+            ,  a2l,o2l
+         ;
          
          for(lp=0;lp<ln;lp++){
             o=os[lp];gd=2;ol=o.length;
             if(as.length!=ol)gd=0;
-            if(gd)for(l2=0;l2<ol;l2++){
-               a2=as[l2];o2=o[l2];
-               if((a2&&o2)&&a2.length&&o2.length){
-                  aa=a2[0];oo=o2[0];
-                  if(aa!=oo)gd=0;
-                  if(gd&&aa=='class'){
-                     if(a2.length!=o2.length)gd=0;
-                     if(a2.length>1)
-                        if(a2[1]!=o2[1])gd=0;
-                  };
+            if(gd)
+               for(l2=0;l2<ol;l2++){
+                  a2=as[l2];o2=o[l2];
+                  a2l=a2.length;o2l=o2.length;
+                  if((a2&&o2)&&a2l&&o2l){
+                     aa=a2[0];oo=o2[0];
+                     
+                     //if(aa!=oo)gd=0;
+                     
+                     if(oo=='string'||oo=='number'){
+                        if(a2.length!=o2.length)gd=0;
+                        else if(a2.length>1)
+                           if(a2[1]!=o2[1])gd=0;
+                     }
+                     else if(gd&&aa=='class'){
+                        if(a2.length!=o2.length)gd=0;
+                        if(a2.length>1)
+                           if(a2[1]!=o2[1])gd=0;
+                     };
+                  }
+                  else gd=0;
                };
-            };
             if(gd)return true;
          };
          return false;
       }
 });
-o.Property=function(val){
+O.Prop=function(val){
    var f,z,mb,rv,ps='',v=val,p=v.Private;
    
    eval(O.Property.$Init(v,'v'));
@@ -601,12 +625,13 @@ o.Property=function(val){
             +     "if(!$n$.Set&&!$n$.readonly)$n$.Set=function(vl){$val=vl;return vl};"
             +  "}"
             +  "if($n$.Set=='auto')$n$.Set=function(vl){$val=vl;return $val};"
-            +  "eval($VarStr($n$.Private,'$n$.Private'));"
+            +  "eval($_P_.$VarStr($n$.Private,'$n$.Private'));"
+            
             +  vNam+"=$n$"+cr
          );
 
       }
-   ,  $Base:function(v,vNam,nam,cr){
+   ,  $Base:function(v,vNam,nam,prnt,cr){
          cr=cr?cr:'';
          return(''
             +  nam+'=function(vl){'+cr
@@ -631,7 +656,7 @@ o.Property=function(val){
             +  "});"+cr
          );
       }
-   ,  $GetSet:function(v,vNam,nam,cr){
+   ,  $GetSet:function(v,vNam,nam,prnt,cr){
          var z='var _Get=',f; 
          
          f=v.Get;
@@ -705,20 +730,78 @@ o.Property=function(val){
       }
 });
 
+O.Property=function(val){
+   var f,z,mb,rv,ps='',v=val,p=v.Private;
+   cout("------1");
+   f=O.Blank().Extend({$isProp:2,$$v:v});
+   cout("------2");
+   return f;
+   
+   eval(O.Property.$Init(v,'v'));
+   eval(O.Property.$GetSet(v,'v'));
+   
+   eval(O.Property.$Base(v,'v','rv'));
+   
+   //for(mb in v)rv.fns[mb]=v[mb];
+   return rv;
+}.Extend({
+      $Init:function(v,vNam,cr){
+         cr=cr?cr:'';
+         return(''
+            +  "var $n$="+vNam+";"+cr
+            +  "if(!$n$)$n$={};"+cr
+            +  "if(!$n$.Private)$n$.Private={};"+cr
+            +  "if(!$n$.Private.$val)$n$.Private.$val=$n$.$val?$n$.$val:undefined;"+cr
+            +  "if(!$n$.Get){"
+            +     "$n$.Get=function(){return $val};"
+            +  "}"
+            +  "if(!$n$.Set&&$n$.Set=='auto')$n$.Set=function(vl){$val=vl;return $val};"
+            +  "eval($_P_.$VarStr($n$.Private,'$n$.Private'));"
+            +  vNam+"=$n$"+cr
+         );
+      }
+   ,  $Base:function(v,vNam,nam,prntNam,cr){
+         cr=cr?cr:'';
+         return(''
+            +  'Object.defineProperty('+prntNam+',"'+nam+'",{'+cr
+            +     '   get:_Get'+cr
+            +     ',  set:_Set'+cr
+            +  '});'
+         );
+      }
+   ,  $GetSet:function(v,vNam,nam,prnt,cr){
+         var z='var _Get=',f; 
+         
+         f=v.Get;
+         if(f.$$bound)z+=vNam+'.Get';
+         else z+=f.Str();
+                  
+         z+=';var _Set=';
+         if(v.Set&&!v.readonly){
+            f=v.Set;
+            if(f.$$bound)z+=vNam+'.Set';
+            else z+=f.toString();
+         }
+         else z+='function(){}';
+         return z+';';
+      }
+});
+
 var Class=O.Class=function(nam,specs,onReady){
    if(typeof nam!='string'){onReady=specs;specs=nam;nam=0;}
    else{onReady=specs;}
-   var z=2,z2,zz,mm,pp,l2,r,sh,rv,$ini,kk,pr
-      ,  o=specs?specs:{}
-      ,  z=o.Extends,$e=z?z:null
-      ,  z=o.Implements,$i=z?Array.From(z):0
-      ,  lni=$i.length
-      ,  z=o.Private,$p=z?z:{}
-      ,  z=o.Shared,$s=z?z:{}
-      ,  z=o.$name,nm=nam?nam:z?z:''
-      ,  z=o.options,$o=z?z:{}
-   ;
-
+   if(2){//- Vars
+      var z=2,z2,zz,mm,pp,l,l2,r,sh,rv,$ini,kk,pr,ze,zr,ln
+         ,  o=specs?specs:{}
+         ,  z=o.Extends,$e=z?z:null
+         ,  z=o.Implements,$i=z?Array.From(z):[]
+         ,  z=o.PreImp,$pi=z?Array.From(z):[]
+         ,  z=o.Private,$p=z?z:{}
+         ,  z=o.Shared,$s=z?z:{}
+         ,  z=o.$name,nm=nam?nam:z?z:''
+         ,  z=o.options,$o=z?z:{}
+      ;
+   }
    sh=O.Class.$$PullShared(o);
 
    rv=function(op,onld){
@@ -726,40 +809,38 @@ var Class=O.Class=function(nam,specs,onReady){
    }
 
    O.Class.$$AddAll(o,rv);
-   z2=[];
-   if($i&&lni){
-      for(l2=0;l2<lni;l2++){
-         z=$i[l2];
-         if(O.IsString(z))zz=O.Class.$$classes[z.LCase()];
-         else zz=z;
-         if(zz){
-            z2.push(zz);
-            O.Class.$$AddAll(zz,rv);
+   if(o.$preval){
+      r=[[$i],[$pi]];
+      for(l=0;l<2;l++){
+         kk=r[l][0];ln=kk.length;
+         for(l2=0;l2<ln;l2++){
+            z=kk[l2];
+            z=(O.IsStr(z))?_(z):z;
+            kk[l2]=z;
          };
-      };
-   };
-   rv.ExtImp({
-         $extends:$e
-      ,  $implements:z2
-      ,  $name:nm
-      ,  $type:'class'
-      ,  $op:$o
-      ,  Kill:function(){
-         
-         }.$$Sys()
-   });
-
+      }
+   }   
    if($e){
-      O.Class.$$AddAll($e,rv,{Shared:true});
-      O.Class.$$AddAll($e,rv);
+      $e=(O.IsStr($e))?_($e):$e;
+      zz=$e.$$shared;
+      if(zz)for(mm in zz){
+         z=zz[mm];
+      }
    }
    else{
       rv.Implement({
-         $inst:true,
-         On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.$$Sys(),
-         $On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,2,bnd);}.$$Sys(),
-         SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);}.$$Sys(),
-         Fire:function(e,onDone){O.Event.Fire(this,e,onDone);}.$$Sys()
+            $inst:true
+         ,  On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.$$Sys()
+         ,  Once:function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.$$Sys()
+         ,  $On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,2,bnd);}.$$Sys()
+         ,  SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);}.$$Sys()
+         ,  Fire:function(e,onDone){O.Event.Fire(this,e,onDone);}.$$Sys()
+         ,  Parent:function(){
+               var a=arguments,cl=a.callee.caller,pi=cl.$pInst,p=cl.$fParent,nm=cl.$fName,z=p.$extends;
+               //return $$RunFn(z,nm,a,pi); 
+               cout('nm='+nm);              
+               
+            }
       });
       if(O.IsStr(o.$name)){pp=o.$name.Trim();if(pp!='')rv.$name=pp;};
       rv.Extend({
@@ -777,12 +858,26 @@ var Class=O.Class=function(nam,specs,onReady){
       }
       eval(zz+';');
       delete sh.Private;
+      rv.$$shared={};
       for(mm in sh){
          z2=sh[mm];z4='z2';
          if(O.IsFun(z2)&&!z2.$$bound)z4=z2.toString();
          eval('rv.'+mm+'='+z4+';');
+         rv.$$shared[mm]=rv[mm];
       }
    }
+   rv.ExtImp({
+         $extends:$e
+      ,  $implements:$i
+      ,  $preImp:$pi
+      ,  $name:nm
+      ,  $type:'class'
+      ,  $op:$o
+      ,  Kill:function(){
+         
+         }.$$Sys()
+      ,  $iid:O.$$iid++
+   });
 
    return rv;}.Extend({
       $$Add:function(nm,v,cls,op){
@@ -816,22 +911,91 @@ var Class=O.Class=function(nam,specs,onReady){
          if(O.IsOBJ(v)||O.IsFun(v)){
             for(mm in v){
                z=v[mm];
-               if((def(z))&&!z.$prim){
+               if(z==null||!def(z)){}
+               else if(!z.$prim){
+                  //cout('YES - '+mm);
                   $o=Object.Clone(o);
-                  if(mm=='Private'&&IsObj(z)){$o.Private=true;O.Class.$$AddAll(z,c,$o)}
+                  if(mm=='Private'&&O.IsObj(z)){$o.Private=true;O.Class.$$AddAll(z,c,$o)}
                   else if(mm=='Shared'){}
                   else if(z.$shared)sh[nm]=z;
                   else O.Class.$$Add(mm,z,c,$o);
                };
+               //cout('NO');
             };
             c.$$sh=sh;
          };
       }
    ,  $$InitClass:function(v,args){
-         var rv=v,mm,mb,s='',z,f,ff,l,l2$fp,$fn,$v,k
+         var rv=v,mm,mb,s='',z,zz,z1,z2,z3,z4,f,ff,f2,l,ll,l2,ln,$fp,$fn,$v,k,x
+            ,  $e=v.$extends
+            ,  $i=v.$implements, $ii=v.$iInst=[]
+            ,  $pi=v.$preImp, $pii=v.$piInst=[]
             ,  p=v.$$private,p=p?p:{}
             ,  pb=v.$$public,pb=pb?pb:{}
+            ,  noInit=args&&args.length?args[0].$$noInit:0
          ;
+         x=v.$iid=O.$$iid++;
+         v.$inst=2;
+         
+         if($pi){
+            ln=$pi.length;
+            for(ll=0;ll<ln;ll++){
+               f=$pi[ll];
+               if(typeof f=='string')f=_(f);
+               if(f){
+                  zz=new f();
+                  for(mm in zz){
+                     z=zz[mm];
+                     if((z)&&!z.$prim&&!z.$$sys){
+                        if(IsFun(z)&&!z.$$bound)z=z.Bind(v);
+                        v[mm]=z;
+                        $pii.push(z);
+                     }
+                  }
+               }
+            }
+         };
+         if($e){
+            zz=v.$$exInst=new $e({$$noInit:2});
+            for(mm in zz){
+               z=zz[mm];
+               if((z)&&!z.$prim){
+                  if(IsFun(z)&&!z.$$bound&&!z.$$sys)z=z.Bind(v);
+                  v[mm]=z;
+               }
+            }
+         };
+         if($i){
+            ln=$i.length;
+            for(ll=0;ll<ln;ll++){
+               f=$i[ll];
+               if(typeof f=='string')f=_(f);
+               if(f){
+                  zz=new f();
+                  for(mm in zz){
+                     z=zz[mm];
+                     if((z)&&!z.$prim&&!z.$$sys){
+                        if(IsFun(z)&&!z.$$bound)z=z.Bind(v);
+                        v[mm]=z;
+                        $ii.push(z);
+                     }
+                  }
+               }
+            }
+         };
+
+         v.Parent=function(){
+            var a=arguments
+               ,  cl=a.callee.caller
+               ,  pi=cl.$pInst
+               ,  p=cl.$fParent
+               ,  nm=cl.$fName
+               ,  z=p.$extends
+            ;
+            //return $$RunFn(z,nm,a,pi); 
+            cout('nm='+nm);              
+            cout('cl.$$addType'+v.$iid.Str()+'='+cl['$$addType'+v.$iid.Str()]);
+         }
 
          for(mm in p){
             z=p[mm];s='var '+mm+'='
@@ -841,8 +1005,9 @@ var Class=O.Class=function(nam,specs,onReady){
          }
          
          for(mb in pb){
-            f=pb[mb];
+            f=pb[mb];f2=v[mb];
             if(O.IsFUN(f)&&f.$$added&&!f.$$sys){
+               
                if(O.IsOl(f)){
                   ff=f.fns;
                   for(l2 in ff){
@@ -855,13 +1020,15 @@ var Class=O.Class=function(nam,specs,onReady){
                   }
                   eval('v.'+mb+'=f;');
                }
-               else if(O.IsProp(f)){
+               else if(f.$isProp){
                   $v=f.$$v?Object.Clone(f.$$v):{};
+                  cout('hrrrrrrrrrrrrrrrrrrrrr');
                   eval(O.Property.$Init($v,'$v'));
-                  eval(O.Property.$GetSet($v,'$v'));
+                  eval(O.Property.$GetSet($v,'$v',mb,v));
+                  cout('hrrrrrrrrrrrrrrrrrrrrr2');
                   k=_Get;if((k)&&!k.$$bound){$v.Get=f.Get=_Get=k.Bind(v)};
                   k=_Set;if((k)&&!k.$$bound){$v.Set=f.Set=_Set=k.Bind(v)};
-                  eval(O.Property.$Base($v,'$v','v.'+mb));
+                  eval(O.Property.$Base($v,'$v',mb,'v'));
                }
                else{
                   if(!f.$$bound){
@@ -871,14 +1038,15 @@ var Class=O.Class=function(nam,specs,onReady){
                   }
                   else v[mb]=f;
                };
-               f.$pInst=v;
+               v[mb].$pFn=f2;
             }
             else v[mb]=f;
          };
 
-         if(v.Init)eval('v.Init('+O.$ArgsStr(args,'args')+');');
-         v.Fire(['load','ready']);
-
+         if(!noInit){
+            if(v.Init)eval('v.Init('+O.$ArgsStr(args,'args')+');');
+            v.Fire(['load','ready']);
+         }
          return v;
       }
    ,  $$PullShared:function(v,priv,all){
@@ -900,7 +1068,7 @@ var Class=O.Class=function(nam,specs,onReady){
                Object.CopyTo(rv,zz);
                //tk.push(nm);
             }
-            else if(z.$shared||all){
+            else if(((z)&&z.$shared)||all){
                z.$shared=2;
                if(priv||z.$private){
                   z.$private=2;
@@ -915,14 +1083,10 @@ var Class=O.Class=function(nam,specs,onReady){
          
          return rv;
       }
-   ,  $$RunFn:function(v,nam,args,pInst,notRecursive){
-         var rv=null,a=args,s='',xt=0,z=0,zz=pInst,pi=zz?zz:v;
-         if(v){
-            xt=v.$extends;
-            zz=pInst==v?v[nam]:v.prototype[nam];
-            if(zz){z=2;eval("rv=zz.Bind(pi)("+$ArgsStr(a,'a')+");");};
-         };
-         if(!z&&xt&&!notRecursive)rv=O.Class.RunFn(xt,nam,args,pi);
+   ,  $$RunFn:function(v,nam,args,notRecursive,noBase){
+         var rv=null,v=v?v:{},a=args,pi,xt=v.$$exInst,zz=v[nam];
+         if(zz&&!noBase)eval("rv=zz.Bind(pi)("+$ArgsStr(a,'a')+");");
+         else if(xt&&!notRecursive)rv=O.Class.$$RunFn(xt,nam,a,0,0);
          return rv;
       }
    ,  $$SetOptions:function(v,op,op2){
@@ -944,43 +1108,48 @@ var Class=O.Class=function(nam,specs,onReady){
       }
 });var c=Class,$$Add=c.$$Add,$$AddAll=c.$$AddAll,$$classes=c.$$classes,$$RunFn=c.$$RunFn;
 O.Parent=function(){
-   var a=arguments,cl=a.callee.caller,pi=cl.$pInst,p=cl.$fParent,nm=cl.$fName,z=p.$extends;
-   return $$RunFn(z,nm,a,pi)
+   var a=arguments/*,cl=a.callee.caller*/,z=a.callee.caller.$pFn;
+   return(z)?z.Call(a):undefined;
 };
 
 O.Event=function(nam,args){
+   var std=[],sys=[],async=0,stop=0,running=0,done=0,a=args
+      ,  args={
+            
+         }
+   ;
+   if(a)args.Extend(a);
    return function(){}.Extend({
-      args:args,
-      $$nam:nam,
-      $_std:[],
-      $_sys:[],
-      $$Fire:function($sys,$std,onDone){
-         var t=this,st=t.$_std,sy=t.$_sys,z,zz
-            ,  f=function(v,$){
-                  if(v){
-                     $=$?v.PopL:v.PopR;
-                     while(z=$()){
-                        zz=z(t);
-                        if(t.$$async){t.$$rng=0;return 2};
-                        if(t.$$stop){return 2};
-                     };
+         args:args
+      ,  nam:nam
+      ,  $$Fire:function($sys,$std,onDone){
+            var t=this,st=t.$_std,sy=t.$_sys,z,zz
+               
+               ,  f=function(v,$){
+                     if(v){
+                        $=$?v.PopL:v.PopR;
+                        while(z=$()){
+                           zz=z(t);
+                           if(async){running=0;return 2};
+                           if(stop){return 2};
+                        };
+                     }
+                     return 0;
                   }
-                  return 0;
-               }
-         ;
-         if($sys)sy=t.$_sys=$sys;if($std)st=t.$_std=$std;
-         if(onDone)t.$$done=onDone;
-         if(t.$$rng)return;
-         t.$$rng=2;t.$$async=0;
-         if(f(sy))return;
-         if(f(st))return;
-         t.$$rng=0;
-         if(t.$$done)t.$$done();
-      },
-      Done:function(){this.$$async=0;if(!this.$$rng)this.$$Fire();},
-      Async:function(){this.$$async=2},
-      Stop:function(){this.$$stop=2}
-   });
+            ;
+            if($sys)sys=$sys;if($std)std=$std;
+            if(onDone)done=onDone;
+            if(running)return;
+            running=2;async=0;
+            if(f(sys))return;
+            if(f(std,2))return;
+            running=0;
+            if(done)done();
+         },
+         Done:function(){async=0;if(!running)this.$$Fire();},
+         Async:function(){async=2},
+         Stop:function(){stop=2}
+      });
 }.Extend({
       On:function(v,evt,fn,sys,bnd){
          var z=sys?'sys':'std',zz,ev=v.$$evts,mb,z2,ar,g,d,l,ln;
@@ -994,22 +1163,35 @@ O.Event=function(nam,args){
             ln=g.length;
             for(l=0;l<ln;l++){
                d=g[l];
-               if(bnd&&!d.$$bound)d=d.Bind(v);
+               if(bnd&&!d.$$bound){zz=d;d=d.Bind(v);d.fn=zz};
+               if(once){d=d.Caller();d.$once=2}
                ar.push(d);
             }
          };
       }
    ,  Fire:function(v,ee,onDone){
-         var k,z,zz,z2,ar,ev,e,g=Array.From(ee),l,ln=g.length;//g=O.IsArr(e)?e:[e];
+         var k,z,zz,z2,ar,ev,e,g=Array.From(ee),l,l2,ll,ln=g.length;
    
          for(l=0;l<ln;l++){
             e=g[l];
             if(O.IsStr(e))e=g[l]=O.Event(e);
             e.caller=v;
+            
             if(ev=v.$$evts){
                if(z2=ev[e.$$nam]){
+                  e.$st=[];
                   e.$sy=z2.sys?Array.Clone(z2.sys):[];
-                  k=z2.sys;if(!k)k=[];e.$sy=k;
+                  
+                  ar=e.sys=[];
+                  k=z2.sys;if(!k)k=[],zz=[];
+                  for(ll=0,l2=k.length;ll<l2;ll++){
+                     kk=k[ll];
+                     ar[ll]=kk;
+                     if(!kk.$once)zz.push(kk);
+                  }
+                  z2.sys=zz;
+
+
                   k=z2.std;if(!k)k=[];e.$st=k;
                };
             };
