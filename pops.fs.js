@@ -1,3 +1,10 @@
+(function(){
+   var pc=require('pops.core'),f='local';
+   eval(pc.$VarStr(pc,'pc'));   
+   
+   Array.CopyTo(exports,require('fs/pops.fs.'+f+'.js'));
+}())
+
 var G=global,X=exports,
    fs=require('fs'),
    pp=require('pops/pops.core.js'),
