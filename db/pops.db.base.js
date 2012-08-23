@@ -1,5 +1,5 @@
 (function(){
-   var pc=require('pops.core'), f='mongo', X=exports, dbi;
+   var pc=require('../pops.core'), f='mongo', X=exports, dbi;
    eval(pc.$VarStr(pc,'pc'));   
    
    dbi=X.dbInterface=Interface({
@@ -11,5 +11,5 @@
       ,  type: 'property'
    });
    
-   Array.CopyTo(exports,require('db/pops.db.'+f+'.js'));
+   //Array.CopyTo(exports,require('db/pops.db.'+f+'.js'));
 }())

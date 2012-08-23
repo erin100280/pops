@@ -12,7 +12,7 @@
             
          }
       ,  Private: {
-         
+               pc: pc
          }
       ,  Shared: {
                Private: {
@@ -20,8 +20,31 @@
                }
          }
       ,  Init: function(ops, OnRdy) {
-            var t=this.SetOptions(ops), o=t.op;
+            var z, zz, k, nm
+               ,  o2=ops?Object.CopyTo({}, ops, 2):{}
+               ,  z=o2.$from
+               ,  o1=((pc.IsObj(z))?
+                        (z.$isSchema)? Object.CopyTo({}, z.options, 2) : z
+                     :  {}
+                  )
+               ,  t=this.SetOptions(Object.CopyTo(o1, o2, 2)), o=t.op
+               ,  f=this.$fields=[]
+            ;
+            for(nm in o) {
+               z=o[nm];
+               if(0){}
+               else {
+                  z=(pc.IsObj(z))?Object.CopyTo({}, z, 2) : { type: z };
+                  if(!z.type) z.type=String;
+                  if(!z.Default) z.Default=undefined;
+               };
+               f[nm]=z;
+
+               k=z.Default;
+               t[nm]=k;
+            }
             
+            t.$isSchema=2;
          }
       ,  Public: {
          

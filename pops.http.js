@@ -42,7 +42,7 @@ var hs=X.server=Class('popsHttpServer',{$$zz:0
          var t=this.SetOptions(op),o=t.op,l,cnt;
          $nm=o.name;
          $srv=$http.createServer(function(req, res) {
-            cout('req.url='+req.url);
+            //out('req.url='+req.url);
             var z
                ,  rt=t.$router, or=o.OnRequest
                ,  rq=$Req(req)

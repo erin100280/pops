@@ -57,13 +57,13 @@ var rt=X.router=xx.rtr=Class(nm,{$$zz:0
             ,  od=OnDone, go=2
          ;
          
-         cout($nm+':  Process  | u='+u);
+         //out($nm+':  Process  | u='+u);
          
          
          while(l<ln&&go){
             z=i[l]; zp=mc?z.path:z.path.LCase();
             if(z.path==u){
-               cout('z.path='+z.path);
+               //out('z.path='+z.path);
                if(z.mode=='STATIC'){go=0}
                else{
                   if(z.handler){
@@ -86,14 +86,14 @@ var rt=X.router=xx.rtr=Class(nm,{$$zz:0
             ,  od=OnDone, go=2, ya=2
          ;
          
-         cout($nm+':  Process  | u='+u);
+         //out($nm+':  Process  | u='+u);
          
          
          while(l<ln&&go){
             z=i[l]; rx=z.regex; 
             zp=z.path||''; zp=mc?zp:zp.LCase(); ya=2;
             if((u==zp)||((rx)&&((zz=u.match(rx))&&zz.index==0))){
-               go=0; cout('!ya');
+               go=0; //out('!ya');
                if(z.mode=='STATIC'){}
                else if(z.handler)
                   z.handler(req,res,function(){t.Process(req,res,od,l+1)})
