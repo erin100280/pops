@@ -10,7 +10,7 @@ var ai=X.appInterface=Interface({z:0
 
 X.Outline=function(ops){
    var i1=iidd++,op=Object.CopyTo({},ops||{})
-      ,  o=G.$$gfdjgh=CreateOptions(
+      ,  o=G.$$gfdjgh=CreateOptions([
                {
                      appVar: 'app'
                   ,  core: {
@@ -59,7 +59,7 @@ X.Outline=function(ops){
                   ,  vars:{}
                   ,  values:{}
                }
-            ,  ops||{}
+            ,  ops||{}]
          )
       ,  oc=o.core
       ,  s=function(){
@@ -142,7 +142,7 @@ X.Outline=function(ops){
                   
                   eval('var '+$_nm_+'=$_z1_.val');
                   $_z4_[$_nm_]=$_z1_.val;
-                  if(_$_z1_.appRootVar)$_app_[$_nm_]=$_z1_.val;
+                  if($_z1_.appRootVar)$_app_[$_nm_]=$_z1_.val;
                };
             }
          
@@ -160,7 +160,7 @@ X.Outline=function(ops){
             }
 
             if($_z_=$_ops_.databases){//-databases
-               $_z_=Object.CopyTo({}, $_z_1);
+               $_z_=Object.CopyTo({}, $_z_);
                $_zz_=function(dbs){
                   var z, zz, z2, z3, i=0, l, nm, d=dbs||{};
                   for(nm in d) {

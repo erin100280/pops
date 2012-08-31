@@ -148,7 +148,6 @@
       ,  Public: {
          
          }
-      ,  FUNCTION: function() { pc.cout('POOL'); }
    });
    X.db=Class('popsDbMongo', {
          options: {
@@ -166,10 +165,6 @@
             ,  $host: ''
             ,  $name: ''
             ,  $port: -2
-
-            ,  $SetupSchemas: function() {
-               
-               }
          }
       ,  Shared: {
                Private: {X: X, pc: pc}
@@ -179,47 +174,46 @@
       ,  Init: function(ops,onRdy) {
             var t=this.SetOptions(ops), o=t.op, ac=o.autoConnect;
             
-            $SetupSchemas();
+            if(2){//-do options
+               $host=o.host||'';
+               $port=o.port||'';
+            };
+         
             if(ac)t.Connect();
          }
-      ,  Public: {   
-            Schemas: function(nam) {
-               
-            }.Extend({
-                  Add:0
-            })
-         ,  Connect: function(host, name, port, callback) {
-               var t=this, o=t.op, cb=callback
-                  ,  a=arguments, al=a.length
-                  ,  h=$host=(!al)?o.host:host
-                  ,  n=$name=(al<2)?o.name:name
-                  ,  p=$port=(al<3)?o.port:port
-                  ,  s=$server=new mdb.Server(h, p)
-                  ,  d=$db=new mdb.Db(n, s)
-               ;
    
-               $connecting=2;
-               d.open(function(err, db){
-                  if(err) {
-                     $server=$db=$connected=$connecting=0;
-                     $host='';
-                     $port=-2;
-                     throw(err);
-                  }
-                  else {
-                     $db=db;
-                     $connected=2;
-                  };
+      ,  Connect: function(host, name, port, callback) {
+            var t=this, o=t.op, cb=callback
+               ,  a=arguments, al=a.length
+               ,  h=$host=(!al)?o.host:host
+               ,  n=$name=(al<2)?o.name:name
+               ,  p=$port=(al<3)?o.port:port
+               ,  s=$server=new mdb.Server(h, p)
+               ,  d=$db=new mdb.Db(n, s)
+            ;
+
+            $connecting=2;
+            d.open(function(err, db){
+               if(err) {
+                  $server=$db=$connected=$connecting=0;
+                  $host='';
+                  $port=-2;
+                  throw(err);
+               }
+               else {
+                  $db=db;
+                  $connected=2;
+               };
+
+               $connecting=0;
+               if(cb)cb({ error: err, db: t }, t);
+               
+            });
+            
+            
+            
+         }
    
-                  $connecting=0;
-                  if(cb)cb({ error: err, db: t }, t);
-                  
-               });
-               
-               
-               
-            }
-         }   
       ,  connected: Property({ readonly: 2, Get: function(){return $connected} })
       ,  type: Property({ readonly: 2, Get: function(){return 'popsDbMongo'} })
       ,  host: Property({ readonly: 2, Get: function(){return $host;} })

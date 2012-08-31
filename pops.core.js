@@ -7,7 +7,9 @@ exports.SandBox=function(code,vars){
    if(typeof code=='string')eval(code);
    else throw('pops.SandBox: code must be string.');
 };
-var z,z2,z3,z4,zz,x,l,p,fn=Function,G=global,o=O=pops=G.$_P_=G.$pops={};
+var z,z2,z3,z4,zz,x,l,p,fn=Function,G=global,o=O=pops=G.$_P_=G.$pops={}
+   ,  Ex, Im, ExIm
+;
 
 if(2){//-Setup system nodes.
    if(!G.$$modes){
@@ -35,8 +37,10 @@ if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
    ;
 }
 if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
-   z=Function;z2=z.prototype;
-   zz=z2.Prim=function(){this.$prim=2;return this;};zz.$prim=2;
+   z=Function; z2=z.prototype;
+   zz=z2.Prim=function(){this.$$prim=2;return this;};zz.$$prim=zz.$$sys=2;
+   zz=z2.Sys=function(){this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
+   zz=z2.PrimSys=function(){this.$$prim=this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
    z4=z.Bind=z2.Bind=function(that,meta){
       var t=this,m=meta,mm,
          args=arguments.length>2?Array.slice(arguments, 1):null,
@@ -57,198 +61,196 @@ if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
       if(m)for(mm in m)rv[mm]=m[mm];
       return rv;
    };
-   z4.$prim=2;
-//*
-   z.Extend=z2.Extend=function(key,val,prim){
-      var mb,k=key,p=prim;
-      if(typeof k=='string'){k={};k[key]=val;}
-      else p=val;
-      for(mb in k){
-         zz=k[mb];
-         if(mb=='$Prim')this.Extend(zz,2);
-         else{
-            if(p)zz.$prim=2;
-            this[mb]=zz;
-         };
-      };
-      return this;
-   }.Prim();
-   z.ExtImp=z2.ExtImp=function(key,val,prim){
-      var t=this,mb,k=key,p=prim,m=t.$$md,m=m==0||m==2?m:1
-         ,  fn=[t.Extend,t.ExtImp,t.Implement][m]
-      ;
-      if(typeof k=='string'){k={};k[key]=val;}
-      else p=val;
-      for(mb in k){
-         zz=k[mb];
-         if(mb=='$Prim')fn(zz,2);
-         else{
-            if(p)zz.$prim=2;
-            if(m==0||m==1)t[mb]=zz;
-            if(m==1||m==2)t.prototype[mb]=zz;
-         };
-      };
-      return this;
-   }.Prim();
-   //z.Extend=z2.Extend=z.ExtImp.Bind({$$md:0}).Prim();
+   z4.$$prim=z4.$$sys=2;
+   z.$$prim=z.$$sys=2;
 
-   z.Implement=z2.Implement=function(key,val,prim){
-      var mb,k=key,p=prim;
-      if(typeof k=='string'){k={};k[key]=val;}
-      else p=val;
-      for(mb in k){
-         zz=k[mb];
-         if(mb=='$Prim')this.Implement(zz,2);
-         else{
-            if(zz)if(p)zz.$prim=2;
-            this.prototype[mb]=zz;
+   ExIm=z.ExtImp=z2.ExtImp=function(val, ops) {
+      var t=this, mb, k=val, o=ops, op, ex, im, l, i, z;
+      
+      o=o||{};
+      if(o.extimp || (!o.ext && !o.imp)) o.ext=o.imp=2;
+      ex=o.ext; im=o.imp;
+      k=(k instanceof Array)? k : [k];
+
+      for(l=k.length, i=0; i<l; i++) {
+         z=k[i];
+         for(mb in z){
+            zz=z[mb];
+            op={ ext: ex, imp: im };
+            if(mb=='Prim') { op.prim=2; t.ExtImp(zz, op); }
+            else if(mb=='Sys') { op.sys=2; t.ExtImp(zz, op); }
+            else if(mb=='PrimSys') { op.prim=op.sys=2; t.ExtImp(zz, op); }
+            else{
+               if(o.prim) zz.$$prim=2;
+               if(o.sys) zz.$$sys=2;
+               if(ex) t[mb]=zz;
+               if(im) t.prototype[mb]=zz;
+            };
          };
       };
-      return this;
-   }.Prim();
+
+      return t;
+   }.PrimSys();
+   z.Extend=z2.Extend=function(val) { return this.ExtImp(val, {ext: 2}); };
+   z.Implement=z2.Implement=function(val) { return this.ExtImp(val, {imp: 2}); };
+   
+   O.Extend=function(obj, val) { return ExIm.Bind(obj)(val, {ext: 2}); };
+   O.ExtImp=function(obj, val) { return ExIm.Bind(obj)(val, {extimp: 2}); };
+   O.Implement=function(obj, val) { return ExIm.Bind(obj)(val, {imp: 2}); };
+   
 };
 if(2){//-Native.
+   z=Array.prototype;
+
    Function.Implement({
-      $Prim:{
-            $$Sys:function(){this.$$sys=2;return this}
-         ,  $Run:function(){this.$run=2;return this}
-         ,  aApply:function(args,This){
-               var fn=this,t=This;
-               process.nextTick(function(){
-			         eval('fn'+((t)?'.Bind(t)':'')+'('+$ArgsStr(args,'args')+');');
-               });
-               return this;
-            }
-         ,  aCall:function(){this.aApply(arguments)}
-         ,  Call:function(args){
-               var a=args||{},rv;
-               eval('rv=this('+O.ArgStr(a,'a')+');');
-               return rv;
-            }
-         ,  Caller:function(){
-               var t=this,f=t.$isCaller?t.fn:t;
-               return function(){return f.Call(arguments)}.Extend({$isCaller:2})               
-            }
-         ,  Hidden:function(){this.$hidden=2;return this}
-         ,  InnerStr:function(){
-               return this.toString().replace(/^function.*\{/,'').replace(/\}$/,'');
-            }
-         ,  Private:function(){this.$private=2;return this}
-         ,  Protected:function(){this.$protected=2;return this}
-         ,  Shared:function(){this.$shared=2;return this}
-         ,  PrivShare:function(){this.$private=this.$shared=2;return this}
-         ,  Reg:function(nam){return _.Reg(nam,this)}
-         ,  Str:Function.prototype.toString
-      }
+         $class: Function
+      ,  PrimSys: {
+               $Run:function(){this.$run=2;return this}
+            ,  aApply:function(args,This){
+                  var fn=this,t=This;
+                  process.nextTick(function(){
+   			         eval('fn'+((t)?'.Bind(t)':'')+'('+$ArgsStr(args,'args')+');');
+                  });
+                  return this;
+               }
+            ,  aCall:function(){this.aApply(arguments)}
+            ,  Call:function(args){
+                  var a=args||{},rv;
+                  eval('rv=this('+O.ArgStr(a,'a')+');');
+                  return rv;
+               }
+            ,  Caller:function(){
+                  var t=this,f=t.$isCaller?t.fn:t;
+                  return function(){return f.Call(arguments)}.Extend({$isCaller:2})               
+               }
+            ,  Hidden:function(){this.$hidden=2;return this}
+            ,  InnerStr:function(){
+                  return this.toString().replace(/^function.*\{/,'').replace(/\}$/,'');
+               }
+            ,  Private:function(){this.$private=2;return this}
+            ,  Protected:function(){this.$protected=2;return this}
+            ,  Shared:function(){this.$shared=2;return this}
+            ,  PrivShare:function(){this.$private=this.$shared=2;return this}
+            ,  Reg:function(nam){return _.Reg(nam,this)}
+            ,  Str:Function.prototype.toString
+         }
    });
-   String.Implement({
-      $Prim:{
-            Fun:function(op){
-               var z=this.valueOf().split('|'),rv,a='',s=z[0],o=op||{};
-               if(z.length>1){a=s;s=z[1];}
-               eval('rv=function('+a+'){'+s+'};');
-               return rv.Extend(o);
-            }
-         ,  FunRun:function(op){return this.Fun(Object.CopyTo({$run:2},op||{}))}
-         ,  LCase:String.prototype.toLowerCase
-         ,  Pad:function(len,pad,dir){
-               var t=this,lf,rt,s=t.valueOf(),sl=s.length,
-                  d=(dir==0||dir==2)?dir:1,l=def(len)?len:0,p=def(pad)?pad:' '
-               ;
-               if(l + 1 >= sl){
-                  if(d==1){//Pad
-                     rt=Math.ceil((padlen=l-sl) / 2);
-                     lf=padlen-rt;
-                     s=Array(lf+1).join(p)+s+Array(rt+1).join(p);
+   String.PrimSys().Implement({
+         $class: String
+      ,  PrimSys:{
+               Fun:function(op){
+                  var z=this.valueOf().split('|'),rv,a='',s=z[0],o=op||{};
+                  if(z.length>1){a=s;s=z[1];}
+                  eval('rv=function('+a+'){'+s+'};');
+                  return rv.Extend(o);
+               }
+            ,  FunRun:function(op){return this.Fun(Object.CopyTo({$run:2},op||{}))}
+            ,  LCase:String.prototype.toLowerCase
+            ,  Pad:function(len,pad,dir){
+                  var t=this,lf,rt,s=t.valueOf(),sl=s.length,
+                     d=(dir==0||dir==2)?dir:1,l=def(len)?len:0,p=def(pad)?pad:' '
+                  ;
+                  if(l + 1 >= sl){
+                     if(d==1){//Pad
+                        rt=Math.ceil((padlen=l-sl) / 2);
+                        lf=padlen-rt;
+                        s=Array(lf+1).join(p)+s+Array(rt+1).join(p);
+                     }
+                     else if(d==2)s=s+Array(l+1-sl).join(p);//PadR
+                     else s=Array(l+1-sl).join(p)+s;//PadL
+                  };
+                  return s;
+               }
+            ,  PadL:function(len,pad,dir) {return this.Pad(len,pad,0);}
+            ,  PadR:function(len,pad){return this.Pad(len,pad,2);}
+            ,  Proper:function(){
+                  var n=this.valueOf()+'',
+                     x=n.split('.'),
+                     x1=x[0],
+                     x2=x.length > 1 ? '.' + x[1] : '',
+                     rgx=/(\d+)(\d{3})/
+                  ;
+                  while (rgx.test(x1)){
+                     x1=x1.replace(rgx, '$1' + ',' + '$2');
+                  };
+                  return x1+x2;
+               }
+            ,  Repeat:function(x){var l,rv='';for(l=0;l<x;l++)rv+=this.valueOf();return rv;}
+            ,  Replace:function(old,val,all){
+                  var l,a=(old.$type=='array')?old:[[old,val]],rv=this.valueOf(),ln=a.length;
+                  for(l=0;l<ln;l++){
+                     if(all)while(rv.search(a[l][0])>-1)rv=rv.replace(a[l][0],a[l][1]);
+                     else rv=rv.replace(a[l][0],a[l][1]);
                   }
-                  else if(d==2)s=s+Array(l+1-sl).join(p);//PadR
-                  else s=Array(l+1-sl).join(p)+s;//PadL
-               };
-               return s;
-            }
-         ,  PadL:function(len,pad,dir) {return this.Pad(len,pad,0);}
-         ,  PadR:function(len,pad){return this.Pad(len,pad,2);}
-         ,  Proper:function(){
-               var n=this.valueOf()+'',
-                  x=n.split('.'),
-                  x1=x[0],
-                  x2=x.length > 1 ? '.' + x[1] : '',
-                  rgx=/(\d+)(\d{3})/
+                  return rv;
+               }
+            ,  ReplaceAll:function(old,val){return this.Replace(old,val,2);}
+            ,  SS:function(){return O.SS(this.valueOf())}
+            ,  Trim:function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');}
+            ,  TrimCR:function(){
+                  var S=this.Val(),s=S.charCodeAt(S.length-1)==10?S.substr(0,S.length-1):S;
+                  return s.charCodeAt(s.length-1)==13?s.substr(0,s.length-1):s
+               }
+            ,  TrimFull:function(){return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');}
+            ,  TrimL:function(){return this.replace(/^\s+/,'');}
+            ,  TrimR:function(){return this.replace(/\s+$/,'');}
+            ,  UCase:String.prototype.toUpperCase
+            ,  Val:String.prototype.valueOf
+   
+            ,  RemoveComments:function(){
+                  var t=this,v=t.valueOf();
+                  
+               }
+         }
+   });
+   Number.PrimSys().Implement({
+         $class: Number
+      ,  PrimSys:{
+               Str:Number.prototype.toString
+            ,  Proper:String.prototype.Proper
+            ,  Val:String.prototype.valueOf
+         }
+   });
+   Array.PrimSys().Extend({
+      PrimSys: {
+            Clone: function(v, recursive) {
+               var rv=[],ln=v.length;
+               for(lp=0;lp<ln;lp++)rv.push((recursive)?Clone(v[lp]):v[lp]);
+               return rv;
+            }.Extend({
+                  Recursive:function(){
+                     
+                  }
+            })
+         ,  Merge: function(dest, src, recursive) {
+               var i,ii,l,ll,z,zz, a=arguments, rv=dest, sr=src||[]
+                  ,  notFirst=(a.length>3)?a[3]:0;
                ;
-               while (rgx.test(x1)){
-                  x1=x1.replace(rgx, '$1' + ',' + '$2');
-               };
-               return x1+x2;
-            }
-         ,  Repeat:function(x){var l,rv='';for(l=0;l<x;l++)rv+=this.valueOf();return rv;}
-         ,  Replace:function(old,val,all){
-               var l,a=(old.$type=='array')?old:[[old,val]],rv=this.valueOf(),ln=a.length;
-               for(l=0;l<ln;l++){
-                  if(all)while(rv.search(a[l][0])>-1)rv=rv.replace(a[l][0],a[l][1]);
-                  else rv=rv.replace(a[l][0],a[l][1]);
+
+               s=sr;
+               for(i=0, l=s.length; i<l; i++) {
+                  z=s[i];
+                  if(z.$type=='array'&&recursive)
+                     z=Array.Merge([], z);
+                  rv.Push(z);
                }
                return rv;
             }
-         ,  ReplaceAll:function(old,val){return this.Replace(old,val,2);}
-         ,  SS:function(){return O.SS(this.valueOf())}
-         ,  Trim:function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');}
-         ,  TrimCR:function(){
-               var S=this.Val(),s=S.charCodeAt(S.length-1)==10?S.substr(0,S.length-1):S;
-               return s.charCodeAt(s.length-1)==13?s.substr(0,s.length-1):s
-            }
-         ,  TrimFull:function(){return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');}
-         ,  TrimL:function(){return this.replace(/^\s+/,'');}
-         ,  TrimR:function(){return this.replace(/\s+$/,'');}
-         ,  UCase:String.prototype.toUpperCase
-         ,  Val:String.prototype.valueOf
-
-         ,  RemoveComments:function(){
-               var t=this,v=t.valueOf();
-               
+         ,  From: function(v){return(typeof v=='undefined'||v==null)?[]:(v.$type=='array')?v:[v];}
+         ,  HasStr: function(arr,str,matchCase) {
+               var rv=false,a=arr,z,mc=matchCase,s=mc?str:str.LCase(),ln=a.length;
+               for(lp=0;lp<ln;lp++){
+                  if(IsStr(a[lp]))
+                     if(s==mc?a[lp]:a[lp].LCase())return true;
+               };
+               return rv;
             }
       }
    });
-   Number.Implement({
-      $Prim:{
-            Str:Number.prototype.toString
-         ,  Proper:String.prototype.Proper
-         ,  Val:String.prototype.valueOf
-      }
-   });
-   Array.Extend({
-         Clone: function(v) {
-            var rv=[],ln=v.length;
-            for(lp=0;lp<ln;lp++)rv.push(Clone(v[lp]));
-            return rv;
-         }
-      ,  Merge: function(dest, src, recursive) {
-            var i,ii,l,ll,z,zz, a=arguments, rv=dest, sr=src||[]
-               ,  notFirst=(a.length>3)?a[3]:0;
-            ;
-
-            s=sr;
-            for(i=0, l=s.length; i<l; i++) {
-               z=s[i];
-               if(z.$type=='array'&&recursive)
-                  z=Array.Merge([], z);
-               rv.Push(z);
-            }
-            return rv;
-         }
-      ,  From: function(v){return(typeof v=='undefined'||v==null)?[]:(v.$type=='array')?v:[v];}
-      ,  HasStr: function(arr,str,matchCase) {
-            var rv=false,a=arr,z,mc=matchCase,s=mc?str:str.LCase(),ln=a.length;
-            for(lp=0;lp<ln;lp++){
-               if(IsStr(a[lp]))
-                  if(s==mc?a[lp]:a[lp].LCase())return true;
-            };
-            return rv;
-         }
-   });
-   z=Array.prototype;
    Array.Implement({
-         $type:'array'
-      ,  $Prim:{
+         $class: Array
+      ,  $type:'array'
+      ,  PrimSys:{
                Has:function(v,CaSe){
                   var t=this,l,s=CaSe,z,ss;
                   if(typeof v=='string'){ss=2;s=0;v=CaSe?v:v.LCase();}
@@ -264,56 +266,67 @@ if(2){//-Native.
             ,  PushR:z.push , PushT:z.push , Push:z.push
          }
    });
-   Object.Extend({
-         Clone:function(v){
-            //var rv=O.IsFun(v)?function(){}:{};
-            var rv={},mb;
-            for(mb in v)
-               if((v[mb])&&!v[mb].$prim&&!rv[mb]){
-                  rv[mb]=O.Clone(v[mb]);
-               };
-            return rv;
-         }
-      ,  CopyTo:function(dest,src,recursive){
-            var mb,rv=dest||{},s=typeof rv,sr=Array.From(src),i,z,zz,k,ln=sr.length;
-            for(i=0;i<ln;i++){
-               z=sr[i];
-               for(mb in z){
-                  k=zz=z[mb];
-                  if(typeof zz=='object' && recursive){
-                     k=rv[mb] || {};
-                     Object.CopyTo(k,zz,2)
-                  }
-                  rv[mb]=k;
-               };
-            }
+   Object.PrimSys().Extend({
+      PrimSys: {
+            Clone:function(v, recursive){
+               if(!recursive) return Object.CopyTo({}, v);
+               //var rv=O.IsFun(v)?function(){}:{};
+               var rv={}, mb, r=recursive;
                
-            return rv;
-         }
-      ,  HasVar:function(ob,nam,matchCase){
-            var s,ss,z,mc=matchCase,n=IsArr(nam)?nam:[nam],ln=n.length;
-            for(lp=0;lp<ln;lp++){
-               z=0;s=mc?n[lp]:n[lp].LCase();
-               for(mb in ob)if(s==(ss=mc?mb:mb.LCase()))z=2;
-               if(!z)return false;
-            };
-            return true;
-         }
-      ,  LCase:function(obj, recursive, upper){
-            var z,z2,nm,o=obj||{},rv={}, fn=(upper)?'UCase':'LCase';
-            for(nm in o){
-               z=o[nm];
-               rv[nm[fn]()]=(typeof z=='object'&&recursive)?Object[fn](z,2,upper):z;
+               for(mb in v)
+                  if((v[mb])&&!v[mb].$$prim&&!rv[mb]){
+                     rv[mb]=O.Clone(v[mb]);
+                  };
+               return rv;
             }
-            return rv;
-         }
-      ,  UCase:function(obj, recursive){return Object.LCase(obj, recursive,2)}
-      ,  Merge:function(ob,ob2){
-            var rv=ob?Object.Clone(ob):{};
-            if(ob2)for(mb in ob2)rv[mb]=ob2[mb];
-            return rv;
-         }
+         ,  CopyTo:function(dest,src,recursive){
+               var mb,rv=dest||{},s=typeof rv,sr=Array.From(src),i,z,zz,k,ln=sr.length;
+               for(i=0;i<ln;i++){
+                  z=sr[i];
+                  for(mb in z){
+                     k=zz=z[mb];
+                     if(typeof zz=='object' && recursive){
+                        k=rv[mb] || {};
+                        Object.CopyTo(k,zz,2)
+                     }
+                     rv[mb]=k;
+                  };
+               }
+                  
+               return rv;
+            }
+         ,  From: function(v, nam) {
+               var rv=v;
+               if(typeof v!='object') { rv={}; rv[n]=v; };
+               return rv; 
+            }
+         ,  HasVar: function(ob,nam,matchCase){
+               var s,ss,z,mc=matchCase,n=IsArr(nam)?nam:[nam],ln=n.length;
+               for(lp=0;lp<ln;lp++){
+                  z=0;s=mc?n[lp]:n[lp].LCase();
+                  for(mb in ob)if(s==(ss=mc?mb:mb.LCase()))z=2;
+                  if(!z)return false;
+               };
+               return true;
+            }
+         ,  LCase:function(obj, recursive, upper){
+               var z,z2,nm,o=obj||{},rv={}, fn=(upper)?'UCase':'LCase';
+               for(nm in o){
+                  z=o[nm];
+                  rv[nm[fn]()]=(typeof z=='object'&&recursive)?Object[fn](z,2,upper):z;
+               }
+               return rv;
+            }
+         ,  UCase:function(obj, recursive){return Object.LCase(obj, recursive,2)}
+         ,  Merge:function(ob,ob2){
+               var rv=ob?Object.Clone(ob):{};
+               if(ob2)for(mb in ob2)rv[mb]=ob2[mb];
+               return rv;
+            }
+      }
    });
+   Boolean.PrimSys().Implement({$class: Boolean});
+   Date.PrimSys().Implement({$class: Date});
 };
 if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
    var z
@@ -343,7 +356,7 @@ if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),ude
                   rv+=' '.Repeat(sp*x)+'members:\n';
                   for(m in v){
                      z=v[m];k=typeOf(z);
-                     if(z&&(!z.$prim||prm)){
+                     if(z&&(!z.$$prim||prm)){
                         rv+=' '.Repeat((sp+1)*x)+m+':\n';
                         rv+=r?$Str(z,r,sp+2,x,rm,tm+1):' '.Repeat((sp+2)*x)+k+':\n';
                      }
@@ -369,7 +382,7 @@ if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),ude
             var rv={},n,z,hs=['$$ob','Obj','$type','$$type'];
             for(n in v){
                z=v[n];
-               if(!z.$prim&&!hs.Has(n,2))rv[n]=z;
+               if(!z.$$prim&&!hs.Has(n,2))rv[n]=z;
             }
             return rv;
          }
@@ -445,7 +458,7 @@ if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),ude
 if(2){//-Property Setters [Prim(),Private(),PrivShare(),Shared()]
    Object.CopyTo(O,{
          Hidden:function(v){v.$hidden=2;return v;}
-      ,  Prim:function(v){v.$prim=2;return v;}
+      ,  Prim:function(v){v.$$prim=2;return v;}
       ,  Private:function(v){v.$private=2;return v;}
       ,  PrivShare:function(v){v.$private=v.$shared=2;return v;}
       ,  Protected:function(v){v.$protected=2;return v;}
@@ -812,36 +825,35 @@ O.Property=function(val){
    return O.Blank().Extend({$isProp:2,$$v:val});
 }.Extend({
       $Init:function(v,vNam,cr){
-         cr=cr?cr:'';
+         cr=cr||'';
          return(''
-            +  "var $n$="+vNam+";"+cr
-            +  "if(!$n$)$n$={};"+cr
-            +  "if(!$n$.Private)$n$.Private={};"+cr
-            +  "if(!$n$.Private.$val)$n$.Private.$val=$n$.$val?$n$.$val:undefined;"+cr
-            +  "if(!$n$.Get){"
-            +     "$n$.Get=function(){return $val};"
-            +  "}"
-            +  "if(!$n$.Set&&$n$.Set=='auto')$n$.Set=function(vl){$val=vl;return $val};"
-            +  "eval($_P_.$VarStr($n$.Private,'$n$.Private'));"
-            +  vNam+"=$n$"+cr
+            +  "var $n$="+vNam+"||{}"
+            +     ",    $p$=$n$.Private=$n$.Private||{}"
+            +     ",    $v$=$p$.$val=(typeof $p$.$val!='undefined')?" 
+            +              "     $p$.$val"
+            +              ":    (typeof $n$.$val!='undefined')? $n$.$val : $n$.val"
+            +     ",    $g$=$n$.Get=$n$.Get || function() { return $val; }"
+            +     ",    $s$=$n$.Set=($n$.Set && $n$.Set!='auto')?"
+            +              "     $n$.Set"
+            +              ":    function(vl) { $val=vl; return $val; }"
+            +  ";"
+            +  "eval($_P_.$VarStr($p$, '$p$'));"
+            +  vNam+"=$n$"
          );
       }
-   ,  $Base:function(v,vNam,nam,prntNam,cr){
-         cr=cr?cr:'';
+   ,  $Base:function(v,vNam,nam,prntNam){
          return(''
-            +  'Object.defineProperty('+prntNam+',"'+nam+'",{'+cr
-            +     '   get:_Get'+cr
-            +     ',  '+(v.readonly?'':'writable:true,set:_Set')+cr
-            //+     ',  '+(v.readonly?'writable:false':'writable:true,set:_Set')+cr
+            +  'Object.defineProperty('+prntNam+',"'+nam+'",{'
+            +     '   get:_Get'
+            +     ',  '+(v.readonly?'':'writable:true, set:_Set')
             +  '});'
          );
       }
-   ,  $GetSet:function(v,vNam,nam,prnt,cr){
+   ,  $GetSet:function(v, vNam){
          var z='var _Get=',f; 
          
          f=v.Get;
-         if(f.$$bound)z+=vNam+'.Get';
-         else z+=f.Str();
+         z+=((f.$$bound)? (vNam+'.Get') : f.Str());
                   
          if(v.Set&&!v.readonly){
             z+=';var _Set=';
@@ -857,91 +869,54 @@ O.Property=function(val){
 var Class=O.Class=function(nam,specs,onReady){
    if(typeof nam!='string'){onReady=specs;specs=nam;nam=0;}
    else{onReady=specs;}
-   var z=2,z2,zz,mm,pp,l,l2,r,sh,rv,$ini,kk,pr,ze,zr,ln,vs
-      //,  o=specs?Object.Clone(specs):{}
-      ,  o=specs?specs:{}
-      ,  z=o.Extends,$e=z?z:null
-      ,  z=o.Implements,$i=z?Array.From(z):[]
-      ,  z=o.PreImp,$pi=z?Array.From(z):[]
-      ,  z=o.Private,$p=z?z:{}
-      ,  z=o.Shared,$s=z?z:{}
-      ,  z=o.$name,nm=nam?nam:z?z:''
-      ,  z=o.options,$o=z?z:{}
+   var z=2, z1, z2,zz,mm, nm,pp,l,l2,r,sh,rv,$ini, k, kk,pr,ze,zr,ln,vs, spc={}
+      ,  is={}
+      ,  o=specs||{}
+      ,  $e=o.Extends
+      ,  $i=o.Implements
+      ,  $pi=Array.From(o.PreImp||[])
+      ,  $p=o.Private
+      ,  $s=o.Shared
+      ,  nm=nam||(o.$name||'')
+      ,  $o=o.options
    ;
    vs=Class.Pull(o);
 
    rv=function(op,onld){
       return ((this instanceof rv)?
-            O.Class.$$InitClass(this, arguments)
+            O.Class.InitClass(is, arguments)
          :  rv.Create.Call(arguments)
       );
-   }
-
-   if(o.$preval){
-      r=[[$i],[$pi]];
-      for(l=0;l<2;l++){
-         kk=r[l][0];ln=kk.length;
-         for(l2=0;l2<ln;l2++){
-            z=kk[l2];
-            z=(O.IsStr(z))?_(z):z;
-            kk[l2]=z;
-         };
-      }
-   }   
-   if($e){
-      $e=(O.IsStr($e))?_($e):$e;
-      zz=$e.$$shared;
-      if(zz)for(mm in zz){
-         z=zz[mm];
-      }
-   }
-   else{
-      rv.Implement({
-            $inst:true
-         ,  On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.$$Sys()
-         ,  Once:function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.$$Sys()
-         ,  $On:function(evt,fn,bnd){return O.Event.On(this,evt,fn,2,bnd);}.$$Sys()
-         ,  SetOptions:function(op,op2){return O.Class.$$SetOptions(this,op,op2);}.$$Sys()
-         ,  Fire:function(e,onDone){O.Event.Fire(this,e,onDone);}.$$Sys()
-         ,  Parent:function(){
-               var a=arguments,cl=a.callee.caller,pi=cl.$pInst,p=cl.$fParent,nm=cl.$fName,z=p.$extends;
-            }
-      });
-      if(O.IsStr(o.$name)){pp=o.$name.Trim();if(pp!='')rv.$name=pp;};
-      rv.Extend({
-         $Reg:function(nam){O.Class.Reg(this,nam)}.$$Sys()
-      });
    };
-   z=o.Init;rv.prototype.Init=z?z:0;
+
+   if($e) {
+      z=(O.IsStr($e))?_($e):$e;
+      if(!z) throw('Error with Extends: '+$e);
+      
+      if(zz=z.$$shared)
+         for(nm in zz) rv[nm]=zz[nm];
+   };
+
    if(2){//-Shared
-      z=vs.PrivShare,zz='';
-      for(mm in z){
-         z2=',';
-         if(zz=='')z2='var ';
-         zz+=z2+mm+'=z.'+mm;
-      }
-      eval(zz+';');
-      z=vs.Shared,zz='';
-      rv.$$shared={};
-      for(mm in z){
-         z2=z[mm];z4='z2';
-         if(O.IsFun(z2)&&!z2.$$bound)z4=z2.toString();
-         //out('mm='+mm);
-         eval('rv.'+mm+'='+z4+';');
-         rv.$$shared[mm]=rv[mm];
-      }
-   }
-   rv.Implement({
-         $class: rv
-   });
-   rv.Extend({
-         $specs: {}
-      ,  Create: function() {
-            eval('RV=new rv('+O.ArgStr(arguments, 'arguments')+')');
-            return RV;
-         }
-   });
-   rv.ExtImp({
+      zz=vs.PrivShare; zz=''; z1={};
+      for(nm in zz){
+         z=zz[nm];
+         if(typeof z=='function' && !z.$$sys && !z.$$bound) z1[nm]=z;
+         else { eval('var '+nm+'=z;'); };
+      };
+      var thisClass=rv;
+      for(nm in z1) eval('var '+nm+'='+z1[nm].Str()+';');
+
+      zz=vs.Shared; z1={};
+      k=rv.$$shared={};
+      for(nm in zz) {
+         z=z2=zz[nm];
+         if(typeof z=='function' && !z.$$sys && !z.$$bound) eval('z2='+z.Str()+';');
+         eval('var '+nm+'=k[nm]=z2;');
+      };
+   };
+
+   is={
          $extends:$e
       ,  $implements:$i
       ,  $preImp:$pi
@@ -949,222 +924,203 @@ var Class=O.Class=function(nam,specs,onReady){
       ,  $type:'class'
       ,  $op:$o
       ,  $vs:vs
-      ,  Kill:function(){
-         
-         }.$$Sys()
       ,  $iid:O.$$iid++
-   });
+   }
+   rv.Extend( [
+         is
+      ,  {
+               $specs: o
+            ,  $Reg:function(nam) { O.Class.Reg(this, nam); return this; }.Sys()
+            ,  Create: function() {
+                  eval('RV=new rv('+O.ArgStr(arguments, 'arguments')+')');
+                  return RV;
+               }
+         }
+   ]);
 
-   return rv;}.Extend({
-      $$Add:function(nm,v,cls,op){
-         var c=cls,o=op?op:{},lm=nm.LCase(),mm,z,p,sh,ya=2,$p,$s;
-         if(!c.$$private)c.$$private=c.prototype.$$private={};
-         if(!c.$$public)c.$$public=c.prototype.$$public={};
+   is.$class=rv;
+
+   return rv;
+}.Extend({
+      InitClass:function(v,args){
+         if(v.$InitState) return v.FUNCTION? v.FUNCTION.Call(args): undefined;
          
-         if((nm=='Init'&&!o[nm])||(nm=='Extends'&&!o[nm])
-            ||(nm=='Implements'&&!o[nm])||(nm=='op'&&!o[nm])
-            ||(nm=='options'&&!o[nm])||(nm=='$extends'&&!o[nm])
-            ||(nm=='$implements'&&!o[nm])||(nm=='$op'&&!o[nm])
-         )ya=0;
-   
-         $p=o.Private||v.$private;
-         $s=o.Shared||v.$shared;
-         
-         if(v&&O.IsFun(v)){
-            v.$fParent=c;v.$fName=nm;
-            if(O.IsOl(v))for(mm in v.fns){z=v.fns[mm];z.$fParent=c;z.$fName=mm;};
-         };
-         
-         if(ya){
-            v.$$added=2;
-            if($p){c.$$private[nm]=v;}
-            else if($s)c.Extend(nm,v);
-            else c.$$public[nm]=v;
-         };
-      }
-   ,  $$AddAll:function(v,cls,op){
-         var c=cls,o=op?op:{},lm,mm,p,z=v.Shared,sh=z?z:{},ya,$p,$o;
-         if(O.IsOBJ(v)||O.IsFun(v)){
-            for(mm in v){
-               z=v[mm];
-               if(z==null||!def(z)){}
-               else if(!z.$prim){
-                  $o=Object.Clone(o);
-                  if(mm=='Private'&&O.IsObj(z)){$o.Private=true;O.Class.$$AddAll(z,c,$o)}
-                  else if(mm=='Shared'){}
-                  else if(z.$shared)sh[nm]=z;
-                  else O.Class.$$Add(mm,z,c,$o);
-               };
-            };
-            c.$$sh=sh;
-         };
-      }
-   ,  $$InitClass:function(v,args){
-         var rv=v,mm,mb,s='',zz,z1,z2,z3,z4,f,ff,f2,l,ll,l2,ln,$fp,$fn,$v,k,x
-            ,  $e=v.$extends
-            ,  $i=v.$implements, $ii=v.$iInst=[]
+         var nm,mb,s='',z,zz,z1,z2,z3,z4,f,ff,f2,l,ll,l2,ln,$fp,$fn,$v,k,x, FUN
+            ,  vs=v.$vs
+            ,  $e=Array.From(v.$extends)
+            ,  $i=Array.From(v.$implements), $ii=v.$iInst=[]
             ,  $pi=Array.From(v.$preImp||[]), $pii=v.$piInst=[]
             ,  $pi=Array.Merge($pi, Array.From(v.Interface||[]))
-            ,  p=v.$vs.Private,p=p?p:{}
-            ,  pb=v.$vs.Public,pb=pb?pb:{}
+            ,  p=vs.Private||{}
+            ,  pb=vs.Public||{}
             ,  a=args, noInit=a&&a.length&&a[0]?a[0].$$noInit:0
+
+            ,  rv=Class.Obj((pb.FUNCTION)?
+                     function() { return (FUN)? FUN(arguments) : undefined; }
+                  :  {}
+               )
          ;
-         x=v.$iid=O.$$iid++;
-         v.$inst=2;
-         
+         x=rv.$iid=O.$$iid++;
+         rv.$inst=2;
+         rv.$InitState='start';
+
          if(2){//PreImp & Interface
             ln=$pi.length;
-            for(ll=0;ll<ln;ll++){
+            for(ll=0;ll<ln;ll++) {
                f=$pi[ll];
-               if(typeof f=='string')f=_(f);
-               if(f){
+               if(typeof f=='string') f=_(f);
+               if(f) {
                   zz=new f();
-                  for(mm in zz){
-                     z=zz[mm];
-                     if((z)&&!z.$prim&&!z.$$sys){
-                        if(O.IsFun(z)&&!z.$$bound)z=z.Bind(v);
-                        v[mm]=z;
+                  for(nm in zz){
+                     z=zz[nm];
+                     if((z)&&!z.$$prim){
+                        //if(O.IsFun(z) && !z.$$bound) z=z.Bind(v);
+                        rv[nm]=z;
                         $pii.push(z);
-                     }
-                  }
-               }
-            }
-            if(v.PreImp) delete v.PreImp;
-            if(v.Interface) delete v.Interface;
+                     };
+                  };
+               };
+            };
          };
-         if($e){
-            zz=v.$$exInst=new $e({$$noInit:2});
-            for(mm in zz){
-               z=zz[mm];
-               if((z)&&!z.$prim){
-                  if(IsFun(z)&&!z.$$bound&&!z.$$sys)z=z.Bind(v);
-                  v[mm]=z;
-               }
-            }
+         if(ll=$e.length){
+            rv.$$exInst=[];
+            for(l=0; l<ll; l++) {
+               k=$e[l];
+               zz=rv.$$exInst[l]=new k({$$noInit:2});
+               for(nm in zz){
+                  z=zz[nm];
+                  if((z) && !z.$$prim && nm!='Init'){
+                     //if(IsFun(z)&&!z.$$bound&&!z.$$sys) z=z.Bind(v);
+                     rv[nm]=z;
+                  };
+               };
+            };
          };
-         if($i){
-            ln=$i.length;
+         if(ln=$i.length){
             for(ll=0;ll<ln;ll++){
                f=$i[ll];
                if(typeof f=='string')f=_(f);
                if(f){
                   zz=new f();
-                  for(mm in zz){
-                     z=zz[mm];
-                     if((z)&&!z.$prim&&!z.$$sys){
-                        if(IsFun(z)&&!z.$$bound)z=z.Bind(v);
-                        v[mm]=z;
+                  for(nm in zz){
+                     z=zz[nm];
+                     if((z) && !z.$$prim && nm!='Init') {
+                        //if(IsFun(z)&&!z.$$bound)z=z.Bind(v);
+                        rv[nm]=z;
                         $ii.push(z);
-                     }
-                  }
-               }
-            }
+                     };
+                  };
+               };
+            };
          };
 
-         v.Parent=function(){
-            var a=arguments
-               ,  cl=a.callee.caller
-               ,  pi=cl.$pInst
-               ,  p=cl.$fParent
-               ,  nm=cl.$fName
-               ,  z=p.$extends
-            ;
-            //return $$RunFn(z,nm,a,pi); 
-            //out('nm='+nm);              
-            //out('cl.$$addType'+v.$iid.Str()+'='+cl['$$addType'+v.$iid.Str()]);
-         }
-
-         //out('** Private='+O.$Str(p,2));
-         //out('** Public='+O.$Str(pb,2));
-         for(mm in p){
-            z=p[mm];s='var '+mm+'='
-            //out('*mm='+mm+'  ')
-            if(O.IsFun(z)&&!z.$$bound)s+=z.toString();
-            else s+='z';
-            eval(s+';');
-         }
-         var T=this, op=0;
-         v.$$SetOp=function(ops){ op=ops; };
-         
+         if(2) {//-Private
+            z1={};
+            for(mm in p) {
+               z=p[mm];
+               if(O.IsFun(z)&&!z.$sys&&!z.$$bound) z1[mm]=z;
+               else eval('var '+mm+'=z;');
+            }
+            var T=rv, op=OP=0, thisClass=T.$class=v.$class;
+            rv.$$SetOp=function(ops){ op=OP=ops; };
+            for(nm in z1) eval('var '+nm+'='+z1[nm].toString()+';');
+         };
          for(mb in pb){
-            f=pb[mb];f2=v[mb];
-            if((f.$isProp||O.IsFUN(f))&&!f.$$sys){
-               //out('------------------------');
+            f=pb[mb];f2=rv[mb];
+            if((f.$isProp||O.IsFUN(f))&&!f.$$sys) {
                if(O.IsOl(f)){
                   ff=f.fns;
                   for(l2 in ff){
                      z=ff[l2];
                      if(!z.$$bound){
-                        $fp=z.$fParent;$fn=z.$fName;
+                        $fp=z.$fParent; $fn=z.$fName;
                         eval('z=ff.'+l2+'='+z.toString()+'.Bind(v);');
-                        ff[l2].$fParent=$fp;ff[l2].$fName=$fn;
+                        ff[l2].$fParent=$fp; ff[l2].$fName=$fn;
                      };
-                  }
-                  eval('v.'+mb+'=f;');
+                  };
+                  //eval('v.'+mb+'=f;');
+                  rv[mb]=f;
                }
                else if(f.$isProp){
                   $v=f.$$v?Object.Clone(f.$$v):{};
                   eval(O.Property.$Init($v,'$v'));
-                  eval(O.Property.$GetSet($v,'$v',mb,v));
-                  eval(O.Property.$Base($v,'$v',mb,'v'));
+                  eval(O.Property.$GetSet($v,'$v'));
+                  eval(O.Property.$Base($v,'$v',mb,'rv'));
                }
                else{
-                  if(!f.$$bound){
-                     //out('eval==');
-                     $fp=f.$fParent;$fn=f.$fName;
-                     eval('v.'+mb+'='+f.toString()+';');
-                     v[mb].$fParent=$fp;v[mb].$fName=$fn;
-                  }
-                  else v[mb]=f;
+                  $fp=f.$fParent; $fn=f.$fName;
+                  if(!f.$$bound && !f.$$sys)
+                     eval('f='+f.Str()+';');
+                  zz=rv[mb]=f;
+                  zz.$fParent=$fp; zz.$fName=$fn;
                };
-               v[mb].$pFn=f2;
-               //out('========================');
+               rv[mb].$pFn=f2;
             }
-            else v[mb]=f;
+            else rv[mb]=f;
          };
 
-         if(!noInit){
-            
-            if(v.Init){
-               if(!v.Init.$$bound) v.Init=v.Init.Bind(v);
-               v.Init.Call(a);
-            };
-            v.Fire(['load','ready']);
-         }
+         if(typeof rv.FUNCTION=='function') FUN=rv.FUNCTION;
+
+         if(z=rv.Init)
+            if(!z.$$bound) z=z.Bind(rv);
+         if(!noInit) {
+               if(z) z.Call(a);
+               rv.Fire(['load','ready']);
+         };
+
+         return rv;
+      }
+   ,  Obj: function(v) {
+
+         v.$inst=true;
+         v.On=function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.Sys();
+         v.Once=function(evt,fn,bnd){return O.Event.On(this,evt,fn,0,bnd);}.Sys();
+         v.$On=function(evt,fn,bnd){return O.Event.On(this,evt,fn,2,bnd);}.Sys();
+         v.SetOptions=function(op,op2){return O.Class.SetOptions(this,op,op2);}.Sys();
+         v.Fire=function(e,onDone){O.Event.Fire(this,e,onDone);}.Sys();
+
+         if(typeof v!='function') {
+            var f=Function;
+            v.Extend=f.Extend;
+            v.ExtImp=f.ExtImp;
+            v.Implement=f.Implement;
+         };
+
          return v;
       }
    ,  Pull:function(v,pull,is){
          var nm,z,tk=[],l,ln,zz
             ,  rv={Private:{},Public:{},PrivShare:{},Shared:{}}
             ,  p=v.Private, ps=v.PrivShare, pb=v.Public, s=v.Shared
+            ,  p2=v.PRIVATE
          ;
          if(p)delete v.Private; else p={};
+         if(p2)delete v.PRIVATE;
          if(ps)delete v.PrivShare; else ps={};
          if(pb)delete v.Public; else pb={};
          if(s)delete v.Shared; else s={};
       
+         if(p2) {
+            Object.CopyTo(p, p2);
+            Object.CopyTo(ps, p2);
+         };
+
          if(s.Private){
             Object.CopyTo(ps,s.Private);
             delete s.Private;
-         }
+         };
          if(pb.Shared){
-            z={};
-            Object.CopyTo(z,pb.Shared);
-            Object.CopyTo(z,s);
+            s=Object.CopyTo({}, [pb.Shared, s]);
             delete pb.Shared;
-            s=z;
-         }
+         };
          if(p.Shared){
-            z={};
-            Object.CopyTo(z,p.Shared);
-            Object.CopyTo(z,ps);
+            ps=Object.CopyTo({}, [p.Shared, ps]);
             delete p.Shared;
-            ps=z;
-         }
-      
+         };
+
          for(nm in v){
             z=v[nm];zz=2;
-            if(!z.$prim){
+            if(!z.$$prim){
                if(z.$shared)
                   if(z.$private)ps[nm]=z; else s[nm]=z;
                else if(z.$private)p[nm]=z;
@@ -1172,37 +1128,9 @@ var Class=O.Class=function(nam,specs,onReady){
                
                if(zz)delete v[nm];
             };
-         }
+         };
 
          return {Private:p,Public:pb,PrivShare:ps,Shared:s};
-      }
-   ,  $$PullShared:function(v,priv,all){
-         var rv={Private:{}},nm,z,tk=[],l,ln,zz;
-         if(v.Shared){
-            zz={};
-            Object.CopyTo(zz,O.Class.$$PullShared(v.Shared,priv,2));
-            Object.CopyTo(rv.Private,zz.Private);delete zz.Private;
-            Object.CopyTo(rv,zz);
-            delete v.Shared;
-         };
-         
-         for(nm in v){
-            z=v[nm];
-            if(nm=='Private'){}
-            else if(((z)&&z.$shared)||all){
-               z.$shared=2;
-               if(priv||z.$private){
-                  z.$private=2;
-                  rv.Private[nm]=z;
-               }
-               else rv[nm]=z;
-               tk.push(nm);
-            }
-         }
-         ln=tk.length;
-         for(l=0;l<ln;l++)delete v[tk[l]];
-         
-         return rv;
       }
    ,  $$RunFn:function(v,nam,args,notRecursive,noBase){
          var rv=null,v=v?v:{},a=args,pi,xt=v.$$exInst,zz=v[nam];
@@ -1210,7 +1138,7 @@ var Class=O.Class=function(nam,specs,onReady){
          else if(xt&&!notRecursive)rv=O.Class.$$RunFn(xt,nam,a,0,0);
          return rv;
       }
-   ,  $$SetOptions:function(v,op,op2){
+   ,  SetOptions:function(v,op,op2){
          if(!op2&&(v.$op||v.options)) {op2=op;op=v.$op?v.$op:v.options;};
          v.op=v.options=Object.Merge(op,op2);
          var m, n, o=v.op, e=o.Events, E=o.$Events;
@@ -1219,14 +1147,13 @@ var Class=O.Class=function(nam,specs,onReady){
          if(E) v.$On(E,0,v);
          return v;
       }
-   ,  $$classes:{}
    ,  Reg:function(t,nam){
          var n= (O.IsStr(t.$name))?t.$name:(nam)?nam:'', z;
          z= ((O.IsStr(t.$name))?t.$name:(nam)?nam:'').Trim();
          n= n.Trim();
          if(n!='') O.Class.$$classes[n]= t;
       }
-});var c=Class,$$Add=c.$$Add,$$AddAll=c.$$AddAll,$$classes=c.$$classes,$$RunFn=c.$$RunFn;
+});
 O.Parent=function(){
    var a=arguments/*,cl=a.callee.caller*/,z=a.callee.caller.$pFn;
    return(z)?z.Call(a):undefined;
@@ -1382,6 +1309,19 @@ O.Val=function(val, ops){
       ,  options: Object.LCase(ops)
    }
 }
-O.CreateOptions=function(dflt,ops){return Object.CopyTo(Object.CopyTo({},dflt,2),ops,2)};
+var CC=O.CreateOptions=function(ops, settings){
+   var z, i, nm, z2, k, o=Array.From(ops||[]), l=o.length, s=settings||{}, rv=s.rv||{};
+   
+   for(i=0; i<l; i++) {
+      z=o[i]||{};
+      if(z.$class==Array) z=CC(z);
+      else if(z.$type=='class') z=z.options||{};
+
+      Object.CopyTo(rv, z)
+   };
+   
+   
+   return rv;
+};
 
 Object.CopyTo(exports,O);
