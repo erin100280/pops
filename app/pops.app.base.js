@@ -231,7 +231,7 @@ var ap=X.app=Class('popsAppBaseApp',{
                return rv;
             }
       }
-   ,  PreImp:ai
+   ,  Interface: ai
    ,  Init:function(ops,onRdy){
          var t=this.SetOptions(ops),o=t.op,tp=o.type;
          

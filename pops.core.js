@@ -1,105 +1,69 @@
-exports.SandBox=function(code,vars){
-   var _$g=global,exports=undefined,_$n,_$v=vars?vars:{};
-   for(_$n in _$g)eval('var '+_$n+'=undefined;');
-   for(_$n in _$v)eval('var '+_$n+'=v.'+_$n+';');
-   delete _$v,vars,_$g,_$n;
-   //v=vars=g=n=undefined;
-   if(typeof code=='string')eval(code);
-   else throw('pops.SandBox: code must be string.');
-};
-var z,z2,z3,z4,zz,x,l,p,fn=Function,G=global,o=O=pops=G.$_P_=G.$pops={}
-   ,  Ex, Im, ExIm
-;
-
-if(2){//-Setup system nodes.
-   if(!G.$$modes){
-      z=G.$$modes={};
-      z.os=z.$os=process.platform;
-   };
-};
-
-if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
-   var z,$cr=O.$cr='\n'
-      ,  _t=O._t=true , _f=O._f=false
-      ,  Blank=O.Blank=function(){return function(){}}
-      ,  cout=o.cout=console.log
-      ,  Cls=console.Cls=o.Cls=function(){cout('\033[2J');}
-      ,  def=o.def=function(v){return typeof v!='undefined'?_t:_f;} , udef=o.udef=undefined
-      ,  sout=o.sout=function(s){
-            s=(typeof s=='string')?s:(s.toString)?s.toString():s;
-            process.stdout.write(s);
-         }
-      ,  typeOf=o.typeOf=function(v){return v==null?v:v&&v.$type?v.$type:typeof v}
-      ,  TypeOf=o.TypeOf=function(v){
-            return v==null?null:v&&v.$type?
-               v.$type=='class'&&v.$name&&v.$name!=''?v.$name:v.$type:typeof v;
-         }
-   ;
-}
-if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
-   z=Function; z2=z.prototype;
-   zz=z2.Prim=function(){this.$$prim=2;return this;};zz.$$prim=zz.$$sys=2;
-   zz=z2.Sys=function(){this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
-   zz=z2.PrimSys=function(){this.$$prim=this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
-   z4=z.Bind=z2.Bind=function(that,meta){
-      var t=this,m=meta,mm,
-         args=arguments.length>2?Array.slice(arguments, 1):null,
-         F=function(){},
-         rv=function(){
-            var context=that,length=arguments.length;
-            if(this instanceof rv){
-               F.prototype=t.prototype;
-               context=new F;
-            };
-            var result=(!args&&!length)
-               ? t.call(context)
-               : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
-            return context==that?result:context;
-         }
-      ;
-      rv.$$bound=2;
-      if(m)for(mm in m)rv[mm]=m[mm];
-      return rv;
-   };
-   z4.$$prim=z4.$$sys=2;
-   z.$$prim=z.$$sys=2;
-
-   ExIm=z.ExtImp=z2.ExtImp=function(val, ops) {
-      var t=this, mb, k=val, o=ops, op, ex, im, l, i, z;
-      
-      o=o||{};
-      if(o.extimp || (!o.ext && !o.imp)) o.ext=o.imp=2;
-      ex=o.ext; im=o.imp;
-      k=(k instanceof Array)? k : [k];
-
-      for(l=k.length, i=0; i<l; i++) {
-         z=k[i];
-         for(mb in z){
-            zz=z[mb];
-            op={ ext: ex, imp: im };
-            if(mb=='Prim') { op.prim=2; t.ExtImp(zz, op); }
-            else if(mb=='Sys') { op.sys=2; t.ExtImp(zz, op); }
-            else if(mb=='PrimSys') { op.prim=op.sys=2; t.ExtImp(zz, op); }
-            else{
-               if(o.prim) zz.$$prim=2;
-               if(o.sys) zz.$$sys=2;
-               if(ex) t[mb]=zz;
-               if(im) t.prototype[mb]=zz;
+if(2){//-Native.
+   var __$O_=exports, z, z2, z4, zz, Ex, Im, ExIm;
+   if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
+      z=Function; z2=z.prototype;
+      zz=z2.Prim=function(){this.$$prim=2;return this;};zz.$$prim=zz.$$sys=2;
+      zz=z2.Sys=function(){this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
+      zz=z2.PrimSys=function(){this.$$prim=this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
+      z4=z.Bind=z2.Bind=function(that,meta){
+         var t=this,m=meta,mm,
+            args=arguments.length>2?Array.slice(arguments, 1):null,
+            F=function(){},
+            rv=function(){
+               var context=that,length=arguments.length;
+               if(this instanceof rv){
+                  F.prototype=t.prototype;
+                  context=new F;
+               };
+               var result=(!args&&!length)
+                  ? t.call(context)
+                  : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
+               return context==that?result:context;
+            }
+         ;
+         rv.$$bound=2;
+         if(m)for(mm in m)rv[mm]=m[mm];
+         return rv;
+      };
+      z4.$$prim=z4.$$sys=2;
+      z.$$prim=z.$$sys=2;
+   
+      ExIm=z.ExtImp=z2.ExtImp=function(val, ops) {
+         var t=this, mb, k=val, o=ops, op, ex, im, l, i, z, zz;
+         
+         o=o||{};
+         if(o.extimp || (!o.ext && !o.imp)) o.ext=o.imp=2;
+         ex=o.ext; im=o.imp;
+         k=(k instanceof Array)? k : [k];
+   
+         for(l=k.length, i=0; i<l; i++) {
+            z=k[i];
+            for(mb in z){
+               zz=z[mb];
+               op={ ext: ex, imp: im };
+               if(mb=='Prim') { op.prim=2; t.ExtImp(zz, op); }
+               else if(mb=='Sys') { op.sys=2; t.ExtImp(zz, op); }
+               else if(mb=='PrimSys') { op.prim=op.sys=2; t.ExtImp(zz, op); }
+               else{
+                  if(o.prim) zz.$$prim=2;
+                  if(o.sys) zz.$$sys=2;
+                  if(ex) t[mb]=zz;
+                  if(im) t.prototype[mb]=zz;
+               };
             };
          };
-      };
+   
+         return t;
+      }.PrimSys();
+      z.Extend=z2.Extend=function(val) { return this.ExtImp(val, {ext: 2}); };
+      z.Implement=z2.Implement=function(val) { return this.ExtImp(val, {imp: 2}); };
+      
+      __$O_.Extend=function(obj, val) { return ExIm.Bind(obj)(val, {ext: 2}); };
+      __$O_.ExtImp=function(obj, val) { return ExIm.Bind(obj)(val, {extimp: 2}); };
+      __$O_.Implement=function(obj, val) { return ExIm.Bind(obj)(val, {imp: 2}); };
+      
+   };
 
-      return t;
-   }.PrimSys();
-   z.Extend=z2.Extend=function(val) { return this.ExtImp(val, {ext: 2}); };
-   z.Implement=z2.Implement=function(val) { return this.ExtImp(val, {imp: 2}); };
-   
-   O.Extend=function(obj, val) { return ExIm.Bind(obj)(val, {ext: 2}); };
-   O.ExtImp=function(obj, val) { return ExIm.Bind(obj)(val, {extimp: 2}); };
-   O.Implement=function(obj, val) { return ExIm.Bind(obj)(val, {imp: 2}); };
-   
-};
-if(2){//-Native.
    z=Array.prototype;
 
    Function.Implement({
@@ -109,7 +73,7 @@ if(2){//-Native.
             ,  aApply:function(args,This){
                   var fn=this,t=This;
                   process.nextTick(function(){
-   			         eval('fn'+((t)?'.Bind(t)':'')+'('+$ArgsStr(args,'args')+');');
+                     eval('fn'+((t)?'.Bind(t)':'')+'('+$ArgsStr(args,'args')+');');
                   });
                   return this;
                }
@@ -135,7 +99,7 @@ if(2){//-Native.
             ,  Str:Function.prototype.toString
          }
    });
-   String.PrimSys().Implement({
+   String.Sys().Implement({
          $class: String
       ,  PrimSys:{
                Fun:function(op){
@@ -185,6 +149,7 @@ if(2){//-Native.
                   return rv;
                }
             ,  ReplaceAll:function(old,val){return this.Replace(old,val,2);}
+            ,  Split: String.prototype.split
             ,  SS:function(){return O.SS(this.valueOf())}
             ,  Trim:function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');}
             ,  TrimCR:function(){
@@ -203,7 +168,7 @@ if(2){//-Native.
                }
          }
    });
-   Number.PrimSys().Implement({
+   Number.Sys().Implement({
          $class: Number
       ,  PrimSys:{
                Str:Number.prototype.toString
@@ -211,7 +176,7 @@ if(2){//-Native.
             ,  Val:String.prototype.valueOf
          }
    });
-   Array.PrimSys().Extend({
+   Array.Sys().Extend({
       PrimSys: {
             Clone: function(v, recursive) {
                var rv=[],ln=v.length;
@@ -236,7 +201,12 @@ if(2){//-Native.
                }
                return rv;
             }
-         ,  From: function(v){return(typeof v=='undefined'||v==null)?[]:(v.$type=='array')?v:[v];}
+         ,  From: function(v, NullOnUndef){
+               return (typeof v=='undefined')?
+                     NullOnUndef? NULL : []
+                  :  (v instanceof Array)? v : [v]
+               ;
+            }
          ,  HasStr: function(arr,str,matchCase) {
                var rv=false,a=arr,z,mc=matchCase,s=mc?str:str.LCase(),ln=a.length;
                for(lp=0;lp<ln;lp++){
@@ -251,7 +221,29 @@ if(2){//-Native.
          $class: Array
       ,  $type:'array'
       ,  PrimSys:{
-               Has:function(v,CaSe){
+               Condense: function() {
+                  var t=this, z, i, l=t.length, rv=[];
+
+                  for(i=0; i<l; i++) {
+                     z=t[i];
+                     if(z instanceof Array) Array.Merge(rv, z.Condense());
+                     else rv.Push(z);
+                  };
+
+                  return rv;
+               }
+            ,  FullOf: function(type, recursize) {
+                  var t=this, v=t.valueOf(), i, l=v.length, z;
+                  for(i=0; i<l; i++) {
+                     z=v[i];
+                     if(z instanceof type) {}
+                     else if(z instanceof Array && recursive)
+                        if(!z.FullOf(type, 2)) return false;
+                     else return false;
+                  };
+                  return true;
+               }
+            ,  Has:function(v,CaSe){
                   var t=this,l,s=CaSe,z,ss;
                   if(typeof v=='string'){ss=2;s=0;v=CaSe?v:v.LCase();}
                   for(l=0;l<t.length;l++){
@@ -266,7 +258,7 @@ if(2){//-Native.
             ,  PushR:z.push , PushT:z.push , Push:z.push
          }
    });
-   Object.PrimSys().Extend({
+   Object.Sys().Extend({
       PrimSys: {
             Clone:function(v, recursive){
                if(!recursive) return Object.CopyTo({}, v);
@@ -325,9 +317,162 @@ if(2){//-Native.
             }
       }
    });
-   Boolean.PrimSys().Implement({$class: Boolean});
-   Date.PrimSys().Implement({$class: Date});
+   Boolean.Sys().Implement({$class: Boolean});
+   Date.Sys().Implement({$class: Date});
+   delete z; delete z2; delete z4; delete zz; delete Ex; delete Im; delete ExIm; 
 };
+
+if(2) {//-SandBox
+   var __$SB_, __$O_=exports
+      ,  __$VarString_=function(__$v_, __$name_) {
+            //onsole.log('__$VarString_');
+            var __$rv_='', __$z_, __$z2_, __$k_, __$k2_, __$ev_=__$v_.$eval;
+            if(__$v_ instanceof Array || __$v_.$type=='array') {
+               for(__$z_=0, __$k_=__$v_.length; __$z_<__$k_; __$z_++)
+                  __$rv_+=__$VarString_(__$v_[__$z_], __$name_+'['+__$z_+']');
+            }
+            else {
+               __$v_=Object.CopyTo({}, __$v_);
+               for(__$z_ in __$v_) {
+                  if(__$z_!='$eval') {
+                     __$k_=__$v_[__$z_];
+                     __$rv_+=((__$rv_=='')? 'var ' : ',')+__$z_+'='
+                        +  ((__$ev_ && typeof __$k_=='function')?
+                                 __$k_.Str()
+                              :  __$name_+'.'+__$z_
+                           )
+                        +  '\n'
+                     ;
+                  };
+               };         
+               __$rv_+=';';
+            };
+            return __$rv_;
+         }
+      ,  __$functions_=function() {
+            var __$rvs_, __$V_;
+            __$rv_.Eval=function(__$code_, __$noMod_) { eval(__$code_); if(!__$noMod_) eval(__$functions_); };
+            __$rv_.EvalLib=function(__$code_) {
+               var exports={};
+               eval(__$code_);
+               return exports;
+            };
+            __$rv_.EvalFunction=function(__$fun_) {
+               return __$rv_.EvalLib('exports='+__$fun_.Str()+';');
+            };
+            __$rv_.Add=function(__$v_) {
+               eval(__$VarString(__$v_)+__$functions_);
+               return __$rv_;
+            };
+            __$V_=__$rv_.Value=function(__$v_, __$v2_) {
+               var __$z_, __$r_=__$rv_, __$to_=typeof __$v_
+                  ,  __$a_=arguments
+                  ,  __$l_=__$a_.length
+               ;
+               return (((__$v_ instanceof Array && __$v_.FullOf(String, 2))
+                                 || typeof __$v_=='string')?
+                     __$V_.Get(__$v_)
+                  :  __$V_.Set(__$v_, __$v2_)
+               );
+            };
+            __$V_.Get=function(__$nam_) {
+               var __$v_;
+               if(__$nam_ instanceof Array) {
+                  __$nam_=__$nam_.Condense();
+                  var __$l_=__$nam_.length, __$z_;
+                  __$v_={};
+                  for(__$i_=0; __$i_<__$l_; __$i_++) {
+                     __$z_=__$nam_[__$i_];
+                     eval('__$v_.'+__$z_+'='+__$z_+';');
+                  };
+               }
+               else eval('__$v_='+__$nam_+';');
+               return __$v_;
+            };
+            __$rvs_=__$V_.Set=function(__$nam_, __$val_) {
+               var __$v_=__$nam_;
+               
+               if(typeof __$v_=='string') { __$v_={};__$v_[__$nam_]=__$val_; };
+               eval(__$VarString_(__$v_, '__$v_'));
+               eval(__$functions_);
+               
+               return __$rv_;
+            };
+         }.InnerStr();
+
+   ;
+   __$SB_=__$O_.SB=function(code,vars) {
+      var __$X_=exports; 
+   };
+
+   __$SB_.State=function(vars, __$noGlobal_) {
+      var __$rv_, __$z_, __$z2_, __$k_, __$k2_ 
+         ,  __$v_=(vars instanceof Array || vars.$type=='array')?vars : [vars]
+         ,  __$G_=global
+         ,  __$X_=exports
+      
+         ,  exports=undefined, vars=undefined
+      ;
+
+      if(__$noGlobal_) {
+         for(__$k_ in global) eval('var '+__$k_+'=undefined;');
+         var global=undefined;
+      };
+      //onsole.log('__$VarString_='+__$VarString_(__$v_, '__$v_'));
+      eval(__$VarString_(__$v_, '__$v_'));
+
+      __$rv_=function(__$code_, __$noMod_) { __$rv_.Eval(__$code_, __$noMod_); };
+      eval(__$functions_);
+   
+      return __$rv_;
+   };
+
+
+
+};
+
+exports.SandBox=function(code,vars){
+   var _$g=global,exports=undefined,_$n,_$v=vars?vars:{};
+   for(_$n in _$g)eval('var '+_$n+'=undefined;');
+   for(_$n in _$v)eval('var '+_$n+'=v.'+_$n+';');
+   delete _$v,vars,_$g,_$n;
+   //v=vars=g=n=undefined;
+   if(typeof code=='string')eval(code);
+   else throw('pops.SandBox: code must be string.');
+};
+
+if(2) {//-vars
+   var z, z2, z3, z4, zz, x, l, p, fn=Function
+      ,  G=global
+      ,  o=O=pops=G.$_P_=G.$pops=exports
+      ,  SetupVars
+   ;
+};
+if(2){//-Setup system nodes.
+   if(!G.$$modes){
+      z=G.$$modes={};
+      z.os=z.$os=process.platform;
+   };
+};
+
+if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
+   var z,$cr=O.$cr='\n'
+      ,  _t=O._t=true , _f=O._f=false
+      ,  Blank=O.Blank=function(){return function(){}}
+      ,  cout=o.cout=console.log
+      ,  Cls=console.Cls=o.Cls=function(){cout('\033[2J');}
+      ,  def=o.def=function(v){return typeof v!='undefined'?_t:_f;} , udef=o.udef=undefined
+      ,  sout=o.sout=function(s){
+            s=(typeof s=='string')?s:(s.toString)?s.toString():s;
+            process.stdout.write(s);
+         }
+      ,  typeOf=o.typeOf=function(v){return v==null?v:v&&v.$type?v.$type:typeof v}
+      ,  TypeOf=o.TypeOf=function(v){
+            return v==null?null:v&&v.$type?
+               v.$type=='class'&&v.$name&&v.$name!=''?v.$name:v.$type:typeof v;
+         }
+   ;
+}
 if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
    var z
       ,  $Str=O.$Str=function(v,recursive,spacing,times,rMax,tim){
@@ -869,19 +1014,20 @@ O.Property=function(val){
 var Class=O.Class=function(nam,specs,onReady){
    if(typeof nam!='string'){onReady=specs;specs=nam;nam=0;}
    else{onReady=specs;}
-   var z=2, z1, z2,zz,mm, nm,pp,l,l2,r,sh,rv,$ini, k, kk,pr,ze,zr,ln,vs, spc={}
+   var z=2, z1, z2,zz,mm, nm,pp,l,l2,r,sh,rv,$ini, k, stt, kk,pr,ze,zr,ln,vs, spc={}
       ,  is={}
       ,  o=specs||{}
-      ,  $e=o.Extends
-      ,  $i=o.Implements
-      ,  $pi=Array.From(o.PreImp||[])
+      ,  $if=Array.From(o.Interface)
+      ,  $e=Array.From(o.Extends)
+      ,  $i=Array.From(o.Implements)
+      ,  $pi=Array.From(o.PreImp)
       ,  $p=o.Private
       ,  $s=o.Shared
       ,  nm=nam||(o.$name||'')
       ,  $o=o.options
    ;
+   
    vs=Class.Pull(o);
-
    rv=function(op,onld){
       return ((this instanceof rv)?
             O.Class.InitClass(is, arguments)
@@ -897,28 +1043,12 @@ var Class=O.Class=function(nam,specs,onReady){
          for(nm in zz) rv[nm]=zz[nm];
    };
 
-   if(2){//-Shared
-      zz=vs.PrivShare; zz=''; z1={};
-      for(nm in zz){
-         z=zz[nm];
-         if(typeof z=='function' && !z.$$sys && !z.$$bound) z1[nm]=z;
-         else { eval('var '+nm+'=z;'); };
-      };
-      var thisClass=rv;
-      for(nm in z1) eval('var '+nm+'='+z1[nm].Str()+';');
-
-      zz=vs.Shared; z1={};
-      k=rv.$$shared={};
-      for(nm in zz) {
-         z=z2=zz[nm];
-         if(typeof z=='function' && !z.$$sys && !z.$$bound) eval('z2='+z.Str()+';');
-         eval('var '+nm+'=k[nm]=z2;');
-      };
-   };
+   rv.$$state=SetupVars(rv, vs.PrivShare, vs.Shared, rv); //-Shared
 
    is={
          $extends:$e
       ,  $implements:$i
+      ,  $interface: $if
       ,  $preImp:$pi
       ,  $name:nm
       ,  $type:'class'
@@ -947,18 +1077,20 @@ var Class=O.Class=function(nam,specs,onReady){
          
          var nm,mb,s='',z,zz,z1,z2,z3,z4,f,ff,f2,l,ll,l2,ln,$fp,$fn,$v,k,x, FUN
             ,  vs=v.$vs
-            ,  $e=Array.From(v.$extends)
-            ,  $i=Array.From(v.$implements), $ii=v.$iInst=[]
-            ,  $pi=Array.From(v.$preImp||[]), $pii=v.$piInst=[]
-            ,  $pi=Array.Merge($pi, Array.From(v.Interface||[]))
-            ,  p=vs.Private||{}
-            ,  pb=vs.Public||{}
             ,  a=args, noInit=a&&a.length&&a[0]?a[0].$$noInit:0
-
+            ,  p=vs.Private||{}
+            ,  pb=Object.CopyTo({}, [
+                     vs.Public||{}
+                  , { $$SetOp: function(ops){ op=OP=ops; } }
+               ])
             ,  rv=Class.Obj((pb.FUNCTION)?
-                     function() { return (FUN)? FUN(arguments) : undefined; }
+                     function() { return FUN.Call(arguments); }
                   :  {}
                )
+            ,  $e=v.$extends, $ei=rv.$eInst=[]
+            ,  $i=v.$implements, $ii=rv.$iInst=[]
+            ,  $pi=v.$preImp, $pii=rv.$piInst=[]
+            ,  $if=v.$interface
          ;
          x=rv.$iid=O.$$iid++;
          rv.$inst=2;
@@ -969,7 +1101,7 @@ var Class=O.Class=function(nam,specs,onReady){
             for(ll=0;ll<ln;ll++) {
                f=$pi[ll];
                if(typeof f=='string') f=_(f);
-               if(f) {
+               if(f && f.$$type!='interface') {
                   zz=new f();
                   for(nm in zz){
                      z=zz[nm];
@@ -1000,7 +1132,7 @@ var Class=O.Class=function(nam,specs,onReady){
             for(ll=0;ll<ln;ll++){
                f=$i[ll];
                if(typeof f=='string')f=_(f);
-               if(f){
+               if(f && f.$$type!='interface'){
                   zz=new f();
                   for(nm in zz){
                      z=zz[nm];
@@ -1014,50 +1146,56 @@ var Class=O.Class=function(nam,specs,onReady){
             };
          };
 
-         if(2) {//-Private
-            z1={};
-            for(mm in p) {
-               z=p[mm];
-               if(O.IsFun(z)&&!z.$sys&&!z.$$bound) z1[mm]=z;
-               else eval('var '+mm+'=z;');
-            }
-            var T=rv, op=OP=0, thisClass=T.$class=v.$class;
-            rv.$$SetOp=function(ops){ op=OP=ops; };
-            for(nm in z1) eval('var '+nm+'='+z1[nm].toString()+';');
-         };
-         for(mb in pb){
-            f=pb[mb];f2=rv[mb];
-            if((f.$isProp||O.IsFUN(f))&&!f.$$sys) {
-               if(O.IsOl(f)){
-                  ff=f.fns;
-                  for(l2 in ff){
-                     z=ff[l2];
-                     if(!z.$$bound){
-                        $fp=z.$fParent; $fn=z.$fName;
-                        eval('z=ff.'+l2+'='+z.toString()+'.Bind(v);');
-                        ff[l2].$fParent=$fp; ff[l2].$fName=$fn;
+
+         if(0) v.$$state=SetupVars(v, vs.Private, vs.Public, v.$class);
+
+         if(4) {
+            if(2) {//-Private
+               z1={};
+               for(mm in p) {
+                  z=p[mm];
+                  if(O.IsFun(z)&&!z.$sys&&!z.$$bound) z1[mm]=z;
+                  else eval('var '+mm+'=z;');
+               }
+               var T=rv, op=OP=0, thisClass=T.$class=v.$class;
+               rv.$$SetOp=function(ops){ op=OP=ops; };
+               for(nm in z1) eval('var '+nm+'='+z1[nm].toString()+';');
+            };
+            for(mb in pb){
+               f=pb[mb];f2=rv[mb];
+               if((f.$isProp||O.IsFUN(f))&&!f.$$sys) {
+                  if(O.IsOl(f)){
+                     ff=f.fns;
+                     for(l2 in ff){
+                        z=ff[l2];
+                        if(!z.$$bound){
+                           $fp=z.$fParent; $fn=z.$fName;
+                           eval('z=ff.'+l2+'='+z.toString()+'.Bind(v);');
+                           ff[l2].$fParent=$fp; ff[l2].$fName=$fn;
+                        };
                      };
+                     //eval('v.'+mb+'=f;');
+                     rv[mb]=f;
+                  }
+                  else if(f.$isProp){
+                     $v=f.$$v?Object.Clone(f.$$v):{};
+                     eval(O.Property.$Init($v,'$v'));
+                     eval(O.Property.$GetSet($v,'$v'));
+                     eval(O.Property.$Base($v,'$v',mb,'rv'));
+                  }
+                  else{
+                     $fp=f.$fParent; $fn=f.$fName;
+                     if(!f.$$bound && !f.$$sys)
+                        eval('f='+f.Str()+';');
+                     zz=rv[mb]=f;
+                     zz.$fParent=$fp; zz.$fName=$fn;
                   };
-                  //eval('v.'+mb+'=f;');
-                  rv[mb]=f;
+                  rv[mb].$pFn=f2;
                }
-               else if(f.$isProp){
-                  $v=f.$$v?Object.Clone(f.$$v):{};
-                  eval(O.Property.$Init($v,'$v'));
-                  eval(O.Property.$GetSet($v,'$v'));
-                  eval(O.Property.$Base($v,'$v',mb,'rv'));
-               }
-               else{
-                  $fp=f.$fParent; $fn=f.$fName;
-                  if(!f.$$bound && !f.$$sys)
-                     eval('f='+f.Str()+';');
-                  zz=rv[mb]=f;
-                  zz.$fParent=$fp; zz.$fName=$fn;
-               };
-               rv[mb].$pFn=f2;
-            }
-            else rv[mb]=f;
+               else rv[mb]=f;
+            };
          };
+
 
          if(typeof rv.FUNCTION=='function') FUN=rv.FUNCTION;
 
@@ -1090,9 +1228,13 @@ var Class=O.Class=function(nam,specs,onReady){
       }
    ,  Pull:function(v,pull,is){
          var nm,z,tk=[],l,ln,zz
-            ,  rv={Private:{},Public:{},PrivShare:{},Shared:{}}
             ,  p=v.Private, ps=v.PrivShare, pb=v.Public, s=v.Shared
             ,  p2=v.PRIVATE
+            ,  $p=Array.Clone(Array.From(p?p.EXPAND:[]))
+            ,  $ps=Array.Clone(Array.From(ps?ps.EXPAND:[]))
+            ,  $pb=Array.Clone(Array.From(pb?pb.EXPAND:[]))
+            ,  $s=Array.Clone(Array.From(s?s.EXPAND:[]))
+            ,  $p2=p2? Array.Clone(Array.From(p2.EXPAND)) : []
          ;
          if(p)delete v.Private; else p={};
          if(p2)delete v.PRIVATE;
@@ -1101,20 +1243,38 @@ var Class=O.Class=function(nam,specs,onReady){
          if(s)delete v.Shared; else s={};
       
          if(p2) {
+            p2=Object.Clone(p2);
+            if(z=p2.EXPAND) {
+               Array.Merge($p, z);
+               Array.Merge($ps, z);
+               delete p2.EXPAND;
+            };
             Object.CopyTo(p, p2);
             Object.CopyTo(ps, p2);
          };
 
-         if(s.Private){
-            Object.CopyTo(ps,s.Private);
+         if(z=s.Private) {
+            if(z.EXPAND) {
+               Array.Merge($ps, Array.From(z.EXPAND));
+               delete z.EXPAND;
+            };
+            Object.CopyTo(ps, z);
             delete s.Private;
          };
-         if(pb.Shared){
-            s=Object.CopyTo({}, [pb.Shared, s]);
+         if(z=pb.Shared){
+            if(z.EXPAND) {
+               Array.Merge($s, Array.From(z.EXPAND));
+               delete z.EXPAND;
+            };
+            s=Object.CopyTo({}, [z, s]);
             delete pb.Shared;
          };
-         if(p.Shared){
-            ps=Object.CopyTo({}, [p.Shared, ps]);
+         if(z=p.Shared){
+            if(z.EXPAND) {
+               Array.Merge($ps, Array.From(z.EXPAND));
+               delete z.EXPAND;
+            };
+            ps=Object.CopyTo({}, [z, ps]);
             delete p.Shared;
          };
 
@@ -1130,7 +1290,14 @@ var Class=O.Class=function(nam,specs,onReady){
             };
          };
 
-         return {Private:p,Public:pb,PrivShare:ps,Shared:s};
+         return {
+               Private: p, Public: pb, PrivShare: ps, Shared: s 
+            ,  EXPAND: {
+                     Private: $p,  PrivShare: $ps
+                  ,  Public: $pb,  Shared: $ps
+               }
+         };
+
       }
    ,  $$RunFn:function(v,nam,args,notRecursive,noBase){
          var rv=null,v=v?v:{},a=args,pi,xt=v.$$exInst,zz=v[nam];
@@ -1147,6 +1314,36 @@ var Class=O.Class=function(nam,specs,onReady){
          if(E) v.$On(E,0,v);
          return v;
       }
+   ,  SetupVars: function(obj, priv, pub, thisClass) {
+         var z, z2, zz, k, stt
+               tc=thisClass
+            ,  xt=(tc!==obj)?
+                     {
+                           T: obj
+                        ,  op: 0, OP: 0
+                     }
+                  :  {}
+         ;
+
+         if(tc) obj.$class=tc;
+
+         zz=Object.CopyTo({}, priv); z1={ $eval: 2 };
+         for(nm in zz){
+            z=zz[nm];
+            if(typeof z=='function' && !z.$$sys && !z.$$bound) { z1[nm]=z; zz[nm]=null; };
+         };
+         stt=O.SB.State([zz, { thisClass: tc }, xt, z1]);
+
+         zz=Object.CopyTo({}, pub); z1={};
+         k=obj.$$shared={};
+         for(nm in zz) {
+            z=z2=zz[nm];
+            if(typeof z=='function' && !z.$$sys && !z.$$bound) z2=stt.EvalFunction(z);
+            obj[nm]=k[nm]=z2;
+         };
+      
+         return stt;
+      }
    ,  Reg:function(t,nam){
          var n= (O.IsStr(t.$name))?t.$name:(nam)?nam:'', z;
          z= ((O.IsStr(t.$name))?t.$name:(nam)?nam:'').Trim();
@@ -1159,19 +1356,30 @@ O.Parent=function(){
    return(z)?z.Call(a):undefined;
 };
 
-O.Interface=function(nam,specs){
-   var n=nam,s=specs,l,nm,z,zz,k,a,unk='UNKNOWN'
-      ,  rv=function(){}.ExtImp({$$type:'interface'}).Implement({
-               Private:{}
-         })
+O.Interface=function(nam,specs) {
+   var n=nam, s=specs, l, nm, z, zz, k, a, it={}, unk='UNKNOWN'
+      ,  I=O.Interface
+      ,  rv={
+               $$type: 'interface'
+            ,  members: {}
+            ,  Chech: function(v) {}
+            ,  Refresh: function() { rv.members=Object.CopyTo({}, it); return rv; }
+         }
       ,  pt=rv.prototype;
    ;
-   if(typeof n!='string'){s=n;n=''};
+   if(typeof n!='string') s=n;n='';
    for(nm in s){
       zz=s[nm];
+      it[nm]=I.MakeItem(s[nm]);
+
+   };
+   
+   return rv.Refresh();
+   
+   
+   for(nm in s){
       if(typeof zz=='string'){
          zz=zz.split('|');
-         l=zz.length;
          z=zz[0].LCase();
          if(z=='function'){
             a=(l>1)?zz[1]:'';
@@ -1201,10 +1409,67 @@ O.Interface=function(nam,specs){
          else k='error: Interface spec not set "'+nm+'"';
          pt[nm]=k;
       }
+      
    }
 
    return rv;
-}
+}.Extend( {
+      MakeItem: function(v, isIObj) {
+         var a=arguments, l=a.lenght, rv, i, l ,nm, z, k, to=typeof v, I=O.Interface;
+         
+         if(to=='string') {
+            v=v.split('||');
+            l=v.length;
+            if(l>1) {
+               rv=[];
+               for(i=0; i<l; i++)
+                  rv.Push(I.MakeItem(v[l]));
+            }
+            else {
+               v=v[0].split('|');
+               k=I.NamToTyp(v[0]);
+               rv={ type: k };
+            };
+         }
+         else if(v instanceof Array) {
+            rv=[];
+            for(i=0, l=v.length; i<l; i++) {
+               k=I.MakeItem(v[i]);
+               if(k instanceof Array) Array.Merge(rv, k);
+               else rv.Push(k);
+            };
+         }
+         else if(I.IsIObj(v)) { rv=v; v.type=I.NamToTyp(v.type); }
+         else { rv={ type: v }; };
+         
+         return rv;
+      }
+   ,  StrToObj: function(v) {
+         
+      }
+   ,  NamToTyp: function(v) {
+         var st=typeof v=='string', k=(st)? v.LCase() : v;
+         return( (st)?
+               (k=='array')? Array
+                  : (k=='date')? Date
+                     : (k=='class')? O.Class
+                        : (k=='function')? Function
+                           : (k=='interface')? O.Interface
+                              : (k=='number')? Number
+                                 : (k=='object')? Object
+                                    : (k=='overload')? O.OverLoad
+                                       : (k=='property')? O.Property
+                                          : (k=='string')? String
+                                             : O._(v)
+            :  v
+         );
+      }
+   ,  IsIObj: function(v) {
+         var nm, z;
+         for(nm in v) if(nm!='type' && nm!='args') return 0;
+         return 2;
+      }
+});
 
 O.Event=function(nam,args){
    var std=[],sys=[],async=0,stop=0,running=0,done=0,a=args
@@ -1324,4 +1589,6 @@ var CC=O.CreateOptions=function(ops, settings){
    return rv;
 };
 
-Object.CopyTo(exports,O);
+if(2) {//-Set locals
+   SetupVars=Class.SetupVars;
+};

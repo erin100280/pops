@@ -22,20 +22,15 @@ var ap=X.app=Class('popsAppHttpServerApp',{
       options:{
             autoRun:2
       }
-   ,  Private:{pc:pc,pr:pr,X:X
-         ,  $hs:hs
+   ,  PRIVATE:{pc:pc,X:X}
+   ,  Private: {
+            $hs:hs
          ,  autoRun:2
          ,  server:0
          ,  router:0
       }
-   ,  Shared:{
-            Private:{pc:pc,X:X}
-         ,  Create:function(){
-               eval('var ap=X.app,rv=new ap('+pc.ArgStr(arguments)+');');
-               return rv;
-            }
-      }
-   ,  PreImp:ai
+   ,  Shared:{}
+   ,  Interface: ai
    ,  Init:function(ops,onRdy,deps){
          var t=this.SetOptions(ops),o=t.op,z,zz
             ,  sv=o.server
@@ -60,31 +55,32 @@ var ap=X.app=Class('popsAppHttpServerApp',{
 
          if(o.autoRun)t.Run();
       }
-   
-   ,  Exit:function(){}
-   ,  Run:function(){
-         //require('tty').setRawMode(true);
-         var s=server,o=this.op,$o=o.options
-            ,  stdin=process.openStdin()
-            ,  tty=require('tty')
-            ,  fn=function (chunk, key) {
-                  var k=key?key.name:'-';
-                  //if(k=='q'||k=='Q')process.exit();
-                  if((key&&key.ctrl&&k=='c')||(k==$o.exitKey))process.exit();
+   ,  Public: {
+            Exit:function(){}
+         ,  Run:function(){
+               //require('tty').setRawMode(true);
+               var s=server,o=this.op,$o=o.options
+                  ,  stdin=process.openStdin()
+                  ,  tty=require('tty')
+                  ,  fn=function (chunk, key) {
+                        var k=key?key.name:'-';
+                        //if(k=='q'||k=='Q')process.exit();
+                        if((key&&key.ctrl&&k=='c')||(k==$o.exitKey))process.exit();
+                     }
+               ;
+      
+               if(s){
+                  if($o.useExitKey){
+                     tty.setRawMode(true);
+                     stdin.on('keypress',fn) 
+                  };
+                  //s.on('close',function(){stdin.removeListener(fn)});
+                  s.Start()
                }
-         ;
-
-         if(s){
-            if($o.useExitKey){
-               tty.setRawMode(true);
-               stdin.on('keypress',fn) 
-            };
-            //s.on('close',function(){stdin.removeListener(fn)});
-            s.Start()
-         }
+            }
+      
+         ,  type:Property({readonly:2,Get:function(){return 'httpServer'}})
+         ,  server:Property({readonly:2,Get:function(){return server}})
+         ,  router:Property({readonly:2,Get:function(){return router}})
       }
-
-   ,  type:Property({readonly:2,Get:function(){return 'httpServer'}})
-   ,  server:Property({readonly:2,Get:function(){return server}})
-   ,  router:Property({readonly:2,Get:function(){return router}})
 });
