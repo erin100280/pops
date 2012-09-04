@@ -398,6 +398,14 @@ if(2) {//-SandBox
                
                return __$rv_;
             };
+            __$rv_.Fork=function(__$v_) {
+               var __$rvs_, __$V_
+                  ,  __$rv_=function(__$code_, __$noMod_) { __$rv_.Eval(__$code_, __$noMod_); }
+               ;
+               eval(__$VarString_(__$v_)+__$functions_);
+               
+               return __$rv_;
+            };
          }.InnerStr();
 
    ;
@@ -754,15 +762,16 @@ O.Overload=function(val){
          }.Bind({$type:'overload',fns:ff});
          rv.Extend({
                //Bind:function(v){var t=this,f=t.fns;mb;for(mb in f)f[mb]=f[mb].Bind(v);return t;}
-               $$bound:0
-            ,  $type:'overload'
-            ,  Bind:function(v){
+               $$bound: 0
+            ,  $type: 'overload'
+            ,  $isOverLoad: 2
+            ,  Bind: function(v){
                   var t=this,f=t.fns,rv=O.Overload.$Base(),mb;
                   for(mb in f)rv.fns[mb]=f[mb].Bind(v);
                   rv.$$bound=2;
                   return rv
                }
-            ,  fns:ff
+            ,  fns: ff
          });
          return rv;
       }
@@ -967,7 +976,7 @@ O.Prop=function(val){
       }
 });
 O.Property=function(val){
-   return O.Blank().Extend({$isProp:2,$$v:val});
+   return O.Blank().Extend({ $isProp: 2, $$v: val });
 }.Extend({
       $Init:function(v,vNam,cr){
          cr=cr||'';
@@ -1055,6 +1064,7 @@ var Class=O.Class=function(nam,specs,onReady){
       ,  $op:$o
       ,  $vs:vs
       ,  $iid:O.$$iid++
+      ,  $class: rv
    }
    rv.Extend( [
          is
@@ -1146,57 +1156,7 @@ var Class=O.Class=function(nam,specs,onReady){
             };
          };
 
-
-         if(0) v.$$state=SetupVars(v, vs.Private, vs.Public, v.$class);
-
-         if(4) {
-            if(2) {//-Private
-               z1={};
-               for(mm in p) {
-                  z=p[mm];
-                  if(O.IsFun(z)&&!z.$sys&&!z.$$bound) z1[mm]=z;
-                  else eval('var '+mm+'=z;');
-               }
-               var T=rv, op=OP=0, thisClass=T.$class=v.$class;
-               rv.$$SetOp=function(ops){ op=OP=ops; };
-               for(nm in z1) eval('var '+nm+'='+z1[nm].toString()+';');
-            };
-            for(mb in pb){
-               f=pb[mb];f2=rv[mb];
-               if((f.$isProp||O.IsFUN(f))&&!f.$$sys) {
-                  if(O.IsOl(f)){
-                     ff=f.fns;
-                     for(l2 in ff){
-                        z=ff[l2];
-                        if(!z.$$bound){
-                           $fp=z.$fParent; $fn=z.$fName;
-                           eval('z=ff.'+l2+'='+z.toString()+'.Bind(v);');
-                           ff[l2].$fParent=$fp; ff[l2].$fName=$fn;
-                        };
-                     };
-                     //eval('v.'+mb+'=f;');
-                     rv[mb]=f;
-                  }
-                  else if(f.$isProp){
-                     $v=f.$$v?Object.Clone(f.$$v):{};
-                     eval(O.Property.$Init($v,'$v'));
-                     eval(O.Property.$GetSet($v,'$v'));
-                     eval(O.Property.$Base($v,'$v',mb,'rv'));
-                  }
-                  else{
-                     $fp=f.$fParent; $fn=f.$fName;
-                     if(!f.$$bound && !f.$$sys)
-                        eval('f='+f.Str()+';');
-                     zz=rv[mb]=f;
-                     zz.$fParent=$fp; zz.$fName=$fn;
-                  };
-                  rv[mb].$pFn=f2;
-               }
-               else rv[mb]=f;
-            };
-         };
-
-
+         if(2) v.$$state=SetupVars(rv, vs.Private, vs.Public, v.$class);
          if(typeof rv.FUNCTION=='function') FUN=rv.FUNCTION;
 
          if(z=rv.Init)
@@ -1315,8 +1275,9 @@ var Class=O.Class=function(nam,specs,onReady){
          return v;
       }
    ,  SetupVars: function(obj, priv, pub, thisClass) {
-         var z, z2, zz, k, stt
-               tc=thisClass
+         var z, z2, z4, zz, k, k2, k4, stt, s2, ya
+            ,  vd, nm, jj, $fp, $fn, mb, gt, st, os={}
+            ,  tc=thisClass
             ,  xt=(tc!==obj)?
                      {
                            T: obj
@@ -1335,11 +1296,47 @@ var Class=O.Class=function(nam,specs,onReady){
          stt=O.SB.State([zz, { thisClass: tc }, xt, z1]);
 
          zz=Object.CopyTo({}, pub); z1={};
-         k=obj.$$shared={};
+         k=obj.$$varDat={};
          for(nm in zz) {
+            ya=2;
+            vd=k[nm]={};
             z=z2=zz[nm];
-            if(typeof z=='function' && !z.$$sys && !z.$$bound) z2=stt.EvalFunction(z);
-            obj[nm]=k[nm]=z2;
+
+            if(typeof z=='function' && !z.$$sys && !z.$$bound) {
+               if(z.$isOverload) {
+                  vd.type='overload';
+                  k4=z.fns;
+                  for(mb in k4){
+                     jj=k4[mb];
+                     if(!jj.$$bound){
+                        $fp=jj.$fParent; $fn=jj.$fName;
+                        if(!jj.$$sys) jj=stt.EvalFunction(jj);
+                        k4[mb]=jj=jj.Bind(obj);
+                        jj.$fParent=$fp; jj.$fName=$fn;
+                     };
+                  };
+               }
+               else if(z.$isProp) {
+                  vd.type='property';
+                  k4=Object.Clone(z.$$v||{});
+                  s2=stt.Fork(k4.Private||{});
+                  gt=k4.Get; st=k4.Set;
+                  ya=0;
+
+                  if(gt && !gt.$$sys && !gt.$$bound) gt=s2.EvalFunction(gt);
+                  if(st && !st.$$sys && !st.$$bound) st=s2.EvalFunction(st);
+                  
+                  os.get=gt;
+                  if(!k4.readonly && st) {
+                     os.set=st;
+                     os.writable=true;
+                  };
+                  
+                  Object.defineProperty(obj, nm, os);
+               }
+               else { vd.type='property'; z2=stt.EvalFunction(z); };
+            };
+            if(ya) obj[nm]=k[nm]=z2;
          };
       
          return stt;
