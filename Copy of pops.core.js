@@ -221,7 +221,29 @@ if(2){//-Native.
          $class: Array
       ,  $type:'array'
       ,  PrimSys:{
-               Has:function(v,CaSe){
+               Condense: function() {
+                  var t=this, z, i, l=t.length, rv=[];
+
+                  for(i=0; i<l; i++) {
+                     z=t[i];
+                     if(z instanceof Array) Array.Merge(rv, z.Condense());
+                     else rv.Push(z);
+                  };
+
+                  return rv;
+               }
+            ,  FullOf: function(type, recursize) {
+                  var t=this, v=t.valueOf(), i, l=v.length, z;
+                  for(i=0; i<l; i++) {
+                     z=v[i];
+                     if(z instanceof type) {}
+                     else if(z instanceof Array && recursive)
+                        if(!z.FullOf(type, 2)) return false;
+                     else return false;
+                  };
+                  return true;
+               }
+            ,  Has:function(v,CaSe){
                   var t=this,l,s=CaSe,z,ss;
                   if(typeof v=='string'){ss=2;s=0;v=CaSe?v:v.LCase();}
                   for(l=0;l<t.length;l++){
@@ -328,7 +350,7 @@ if(2) {//-SandBox
             return __$rv_;
          }
       ,  __$functions_=function() {
-            var __$rvs_;
+            var __$rvs_, __$V_;
             __$rv_.Eval=function(__$code_, __$noMod_) { eval(__$code_); if(!__$noMod_) eval(__$functions_); };
             __$rv_.EvalLib=function(__$code_) {
                var exports={};
@@ -342,13 +364,21 @@ if(2) {//-SandBox
                eval(__$VarString(__$v_)+__$functions_);
                return __$rv_;
             };
-            __$rv_.Value=function(__$v_) {
-               eval(__$VarString(__$v_)+__$functions_);
-               return __$rv_;
+            __$V_=__$rv_.Value=function(__$v_, __$v2_) {
+               var __$z_, __$r_=__$rv_, __$to_=typeof __$v_
+                  ,  __$a_=arguments
+                  ,  __$l_=__$a_.length
+               ;
+               return (((__$v_ instanceof Array && __$v_.FullOf(String, 2))
+                                 || typeof __$v_=='string')?
+                     __$V_.Get(__$v_)
+                  :  __$V_.Set(__$v_, __$v2_)
+               );
             };
-            __$rv_.Value.Get=function(__$nam_) {
+            __$V_.Get=function(__$nam_) {
                var __$v_;
                if(__$nam_ instanceof Array) {
+                  __$nam_=__$nam_.Condense();
                   var __$l_=__$nam_.length, __$z_;
                   __$v_={};
                   for(__$i_=0; __$i_<__$l_; __$i_++) {
@@ -359,7 +389,7 @@ if(2) {//-SandBox
                else eval('__$v_='+__$nam_+';');
                return __$v_;
             };
-            __$rvs_=__$rv_.Value.Set=function(__$nam_, __$val_) {
+            __$rvs_=__$V_.Set=function(__$nam_, __$val_) {
                var __$v_=__$nam_;
                
                if(typeof __$v_=='string') { __$v_={};__$v_[__$nam_]=__$val_; };
@@ -368,29 +398,14 @@ if(2) {//-SandBox
                
                return __$rv_;
             };
-/*
-            __$rvs_=__$rv_.Value.Set=function(__$nam_, __$val_) {
-               var __$v_={}, __$z_, __$z2_, __$i_, __$l_
-                  ,  __$to_=typeof __$nam_
-                  ,  __$a_=arguments
-                  ,  __$rec_=(__$val_=='REC!')? 2 : 0
+            __$rv_.Fork=function(__$v_) {
+               var __$rvs_, __$V_
+                  ,  __$rv_=function(__$code_, __$noMod_) { __$rv_.Eval(__$code_, __$noMod_); }
                ;
+               eval(__$VarString_(__$v_)+__$functions_);
                
-               if(__$to_=='string') __$v_[__$nam_]=__$val_;
-               else {
-                  if(__$nam_ instanceof Array)
-                     for(__$i_=0, __$l_=__$nam_.length; __$i_<__$l_; __$i_++)
-                        Object.CopyTo(__$v_, __$rvs_(__$nam_[__$i_], 'REC!'));
-                  else
-                     for(__$i_ in __$nam_) __$v_[__$i_]=__$nam_[__$i_];
-               };               
-            
-               if(__$rec_) return __$v_;
-
-               
-            
+               return __$rv_;
             };
-//*/
          }.InnerStr();
 
    ;
@@ -433,8 +448,14 @@ exports.SandBox=function(code,vars){
    if(typeof code=='string')eval(code);
    else throw('pops.SandBox: code must be string.');
 };
-var z,z2,z3,z4,zz,x,l,p,fn=Function,G=global,o=O=pops=G.$_P_=G.$pops=exports;
 
+if(2) {//-vars
+   var z, z2, z3, z4, zz, x, l, p, fn=Function
+      ,  G=global
+      ,  o=O=pops=G.$_P_=G.$pops=exports
+      ,  SetupVars
+   ;
+};
 if(2){//-Setup system nodes.
    if(!G.$$modes){
       z=G.$$modes={};
@@ -741,15 +762,16 @@ O.Overload=function(val){
          }.Bind({$type:'overload',fns:ff});
          rv.Extend({
                //Bind:function(v){var t=this,f=t.fns;mb;for(mb in f)f[mb]=f[mb].Bind(v);return t;}
-               $$bound:0
-            ,  $type:'overload'
-            ,  Bind:function(v){
+               $$bound: 0
+            ,  $type: 'overload'
+            ,  $isOverLoad: 2
+            ,  Bind: function(v){
                   var t=this,f=t.fns,rv=O.Overload.$Base(),mb;
                   for(mb in f)rv.fns[mb]=f[mb].Bind(v);
                   rv.$$bound=2;
                   return rv
                }
-            ,  fns:ff
+            ,  fns: ff
          });
          return rv;
       }
@@ -954,7 +976,7 @@ O.Prop=function(val){
       }
 });
 O.Property=function(val){
-   return O.Blank().Extend({$isProp:2,$$v:val});
+   return O.Blank().Extend({ $isProp: 2, $$v: val });
 }.Extend({
       $Init:function(v,vNam,cr){
          cr=cr||'';
@@ -1030,26 +1052,7 @@ var Class=O.Class=function(nam,specs,onReady){
          for(nm in zz) rv[nm]=zz[nm];
    };
 
-   if(2){//-Shared
-      zz=Object.CopyTo({}, vs.PrivShare); z1={ $eval: 2 };
-      for(nm in zz){
-         z=zz[nm];
-         if(typeof z=='function' && !z.$$sys && !z.$$bound) { z1[nm]=z; zz[nm]=null; };
-      };
-      stt=O.SB.State([
-            zz
-         ,  { thisClass: rv }
-         ,  z1
-      ]);
-
-      zz=Object.CopyTo({}, vs.Shared); z1={};
-      k=rv.$$shared={};
-      for(nm in zz) {
-         z=z2=zz[nm];
-         if(typeof z=='function' && !z.$$sys && !z.$$bound) z2=stt.EvalFunction(z);
-         rv[nm]=k[nm]=z2;
-      };
-   };
+   rv.$$state=SetupVars(rv, vs.PrivShare, vs.Shared, rv); //-Shared
 
    is={
          $extends:$e
@@ -1061,6 +1064,7 @@ var Class=O.Class=function(nam,specs,onReady){
       ,  $op:$o
       ,  $vs:vs
       ,  $iid:O.$$iid++
+      ,  $class: rv
    }
    rv.Extend( [
          is
@@ -1085,7 +1089,10 @@ var Class=O.Class=function(nam,specs,onReady){
             ,  vs=v.$vs
             ,  a=args, noInit=a&&a.length&&a[0]?a[0].$$noInit:0
             ,  p=vs.Private||{}
-            ,  pb=vs.Public||{}
+            ,  pb=Object.CopyTo({}, [
+                     vs.Public||{}
+                  , { $$SetOp: function(ops){ op=OP=ops; } }
+               ])
             ,  rv=Class.Obj((pb.FUNCTION)?
                      function() { return FUN.Call(arguments); }
                   :  {}
@@ -1104,7 +1111,7 @@ var Class=O.Class=function(nam,specs,onReady){
             for(ll=0;ll<ln;ll++) {
                f=$pi[ll];
                if(typeof f=='string') f=_(f);
-               if(f) {
+               if(f && f.$$type!='interface') {
                   zz=new f();
                   for(nm in zz){
                      z=zz[nm];
@@ -1135,7 +1142,7 @@ var Class=O.Class=function(nam,specs,onReady){
             for(ll=0;ll<ln;ll++){
                f=$i[ll];
                if(typeof f=='string')f=_(f);
-               if(f){
+               if(f && f.$$type!='interface'){
                   zz=new f();
                   for(nm in zz){
                      z=zz[nm];
@@ -1149,51 +1156,7 @@ var Class=O.Class=function(nam,specs,onReady){
             };
          };
 
-         if(2) {//-Private
-            z1={};
-            for(mm in p) {
-               z=p[mm];
-               if(O.IsFun(z)&&!z.$sys&&!z.$$bound) z1[mm]=z;
-               else eval('var '+mm+'=z;');
-            }
-            var T=rv, op=OP=0, thisClass=T.$class=v.$class;
-            rv.$$SetOp=function(ops){ op=OP=ops; };
-            for(nm in z1) eval('var '+nm+'='+z1[nm].toString()+';');
-         };
-         for(mb in pb){
-            f=pb[mb];f2=rv[mb];
-            if((f.$isProp||O.IsFUN(f))&&!f.$$sys) {
-               if(O.IsOl(f)){
-                  ff=f.fns;
-                  for(l2 in ff){
-                     z=ff[l2];
-                     if(!z.$$bound){
-                        $fp=z.$fParent; $fn=z.$fName;
-                        eval('z=ff.'+l2+'='+z.toString()+'.Bind(v);');
-                        ff[l2].$fParent=$fp; ff[l2].$fName=$fn;
-                     };
-                  };
-                  //eval('v.'+mb+'=f;');
-                  rv[mb]=f;
-               }
-               else if(f.$isProp){
-                  $v=f.$$v?Object.Clone(f.$$v):{};
-                  eval(O.Property.$Init($v,'$v'));
-                  eval(O.Property.$GetSet($v,'$v'));
-                  eval(O.Property.$Base($v,'$v',mb,'rv'));
-               }
-               else{
-                  $fp=f.$fParent; $fn=f.$fName;
-                  if(!f.$$bound && !f.$$sys)
-                     eval('f='+f.Str()+';');
-                  zz=rv[mb]=f;
-                  zz.$fParent=$fp; zz.$fName=$fn;
-               };
-               rv[mb].$pFn=f2;
-            }
-            else rv[mb]=f;
-         };
-
+         if(2) v.$$state=SetupVars(rv, vs.Private, vs.Public, v.$class);
          if(typeof rv.FUNCTION=='function') FUN=rv.FUNCTION;
 
          if(z=rv.Init)
@@ -1310,6 +1273,73 @@ var Class=O.Class=function(nam,specs,onReady){
          if(e) v.On(e,0,v);
          if(E) v.$On(E,0,v);
          return v;
+      }
+   ,  SetupVars: function(obj, priv, pub, thisClass) {
+         var z, z2, z4, zz, k, k2, k4, stt, s2, ya
+            ,  vd, nm, jj, $fp, $fn, mb, gt, st, os={}
+            ,  tc=thisClass
+            ,  xt=(tc!==obj)?
+                     {
+                           T: obj
+                        ,  op: 0, OP: 0
+                     }
+                  :  {}
+         ;
+
+         if(tc) obj.$class=tc;
+
+         zz=Object.CopyTo({}, priv); z1={ $eval: 2 };
+         for(nm in zz){
+            z=zz[nm];
+            if(typeof z=='function' && !z.$$sys && !z.$$bound) { z1[nm]=z; zz[nm]=null; };
+         };
+         stt=O.SB.State([zz, { thisClass: tc }, xt, z1]);
+
+         zz=Object.CopyTo({}, pub); z1={};
+         k=obj.$$varDat={};
+         for(nm in zz) {
+            ya=2;
+            vd=k[nm]={};
+            z=z2=zz[nm];
+
+            if(typeof z=='function' && !z.$$sys && !z.$$bound) {
+               if(z.$isOverload) {
+                  vd.type='overload';
+                  k4=z.fns;
+                  for(mb in k4){
+                     jj=k4[mb];
+                     if(!jj.$$bound){
+                        $fp=jj.$fParent; $fn=jj.$fName;
+                        if(!jj.$$sys) jj=stt.EvalFunction(jj);
+                        k4[mb]=jj=jj.Bind(obj);
+                        jj.$fParent=$fp; jj.$fName=$fn;
+                     };
+                  };
+               }
+               else if(z.$isProp) {
+                  vd.type='property';
+                  k4=Object.Clone(z.$$v||{});
+                  s2=stt.Fork(k4.Private||{});
+                  gt=k4.Get; st=k4.Set;
+                  ya=0;
+
+                  if(gt && !gt.$$sys && !gt.$$bound) gt=s2.EvalFunction(gt);
+                  if(st && !st.$$sys && !st.$$bound) st=s2.EvalFunction(st);
+                  
+                  os.get=gt;
+                  if(!k4.readonly && st) {
+                     os.set=st;
+                     os.writable=true;
+                  };
+                  
+                  Object.defineProperty(obj, nm, os);
+               }
+               else { vd.type='property'; z2=stt.EvalFunction(z); };
+            };
+            if(ya) obj[nm]=k[nm]=z2;
+         };
+      
+         return stt;
       }
    ,  Reg:function(t,nam){
          var n= (O.IsStr(t.$name))?t.$name:(nam)?nam:'', z;
@@ -1433,7 +1463,7 @@ O.Interface=function(nam,specs) {
       }
    ,  IsIObj: function(v) {
          var nm, z;
-         for(nm in v) if(nm!='type' && mm!='args') return 0;
+         for(nm in v) if(nm!='type' && nm!='args') return 0;
          return 2;
       }
 });
@@ -1556,3 +1586,6 @@ var CC=O.CreateOptions=function(ops, settings){
    return rv;
 };
 
+if(2) {//-Set locals
+   SetupVars=Class.SetupVars;
+};
