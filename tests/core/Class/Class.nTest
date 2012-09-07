@@ -1,0 +1,34 @@
+var X=exports;
+X.name='pops.core.Class';
+X.files='pops.core.js';
+X.parts=[
+      {     name: 'construct' 
+         ,  Test: function() {
+               console.log('wowzer');
+            }
+      }
+   ,  {     name: 'construct (with privates and stuff)' 
+         ,  Test: function() {
+            
+            }
+      }
+];
+
+/*
+exports={
+      name: 'pops.core.Class'
+   ,  files: 'pops.core.js'
+   ,  parts: [
+            {     name: 'construct' 
+               ,  Test: function() {
+                     console.log('wowzer');
+                  }
+            }
+         ,  {     name: 'construct (with privates and stuff)' 
+               ,  Test: function() {
+                  
+                  }
+            }
+      ]
+};
+//*/
