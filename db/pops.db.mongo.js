@@ -18,6 +18,37 @@ X.List=Class('popsList', {
       }
 });
 
+X.Dict=Class('popsDict', {
+      options: {}
+   ,  PRIVATE: { PC: pc }
+   ,  Private: { itms: {}, count: 0 }
+   ,  FUNCTION: function() {}
+   ,  Init: function(ops, OnRdy) {
+         T.SetOptions(ops);
+      }
+   ,  Public: {
+      		Add: function(key, itm) {
+      			var z, i, l;
+      			
+      			if(typeof key=='object')
+      				for(z in key) T.Add(z, key[z]);
+					else {
+						itms[key]=itm;
+						count++;
+					};
+      			//T.Fire('itemAdded');
+      			return T;
+      		}
+			,	count: Property( { readonly: 2, Get: function() { return count; } } )
+			,	keys: Property( { readonly: 2, Get: function() {
+					var rv=[], z;
+					for(z in itms) rv.Push(z);
+					return rv;
+				}})
+
+      }
+});
+
 X.Schema=function(ops, OnRdy) {
    var rv
       ,  z=ops||{}
