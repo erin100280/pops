@@ -5,24 +5,30 @@ if(2){//-Native.
       zz=z2.Prim=function(){this.$$prim=2;return this;};zz.$$prim=zz.$$sys=2;
       zz=z2.Sys=function(){this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
       zz=z2.PrimSys=function(){this.$$prim=this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
-      z4=z.Bind=z2.Bind=function(that,meta){
-         var t=this,m=meta,mm,
-            args=arguments.length>2?Array.slice(arguments, 1):null,
-            F=function(){},
-            rv=function(){
-               var context=that,length=arguments.length;
-               if(this instanceof rv){
-                  F.prototype=t.prototype;
-                  context=new F;
-               };
-               var result=(!args&&!length)
-                  ? t.call(context)
-                  : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
-               return context==that?result:context;
-            }
+      z4=z.Bind=z2.Bind=function(that, members){
+         var t=this, m=members, mm
+         	,	args=arguments.length>2?Array.slice(arguments, 1):null
+         	,	F=function(){}
+         	,	rv=function(){
+	               var context=that,length=arguments.length;
+	               if(this instanceof rv){
+	                  F.prototype=t.prototype;
+	                  context=new F;
+	               };
+	               var result=(!args&&!length)
+	                  ? t.call(context)
+	                  : t.apply(context, args && length ? args.concat(Array.slice(arguments)) : args || arguments);
+	               return context==that?result:context;
+	            }
          ;
          rv.$$bound=2;
          if(m)for(mm in m)rv[mm]=m[mm];
+
+			Object.defineProperty(rv, '$$parent', {
+					get: function() { return t.$$parent; }
+				,	set: function(v) { t.$$parent=v; }
+			});
+
          return rv;
       };
       z4.$$prim=z4.$$sys=2;
@@ -972,7 +978,9 @@ var Class=O.Class=function(nam,specs,onReady){
          if(v.$InitState) return v.FUNCTION? v.FUNCTION.Call(args): undefined;
 
          if(2) {//-vars
-	         var exi, nm,mb,s='',z,zz,z1,z2,z3,z4,f,ff,f2,l,ll,l2,ln,$fp,$fn,$v,k,x, FUN
+	         var nm,mb,s='',z,zz,z1,z2,z3,z4,f,ff,f2,l,ll,l2,ln,$fp,$fn,$v,k,x, FUN
+	            ,	imps
+	            ,	ExtFn, ImpFn
 	            ,  a=args
 	            ,	i=(a&&a.length&&a[0])? a[0] : {}
 	            ,	noInit=i.$$noInit
@@ -992,6 +1000,8 @@ var Class=O.Class=function(nam,specs,onReady){
 	            ,  $i=v.$implements, $ii=rv.$iInst=[]
 	            ,  $pi=v.$preImp, $pii=rv.$piInst=[]
 	            ,  $if=v.$interface
+	         	,	thisClass=i.$$thisClass||v.$class
+	         	,	bindTo=i.$$bindTo||rv
 	         ;
 			};
          
@@ -999,63 +1009,23 @@ var Class=O.Class=function(nam,specs,onReady){
          rv.$inst=2;
          rv.$InitState='start';
 
-         if(2){//PreImp & Interface
-            ln=$pi.length;
-            for(ll=0;ll<ln;ll++) {
-               f=$pi[ll];
-               if(typeof f=='string') f=_(f);
-               if(f && f.$$type!='interface') {
-                  zz=new f();
-                  for(nm in zz){
-                     z=zz[nm];
-                     if((z)&&!z.$$prim){
-                        //if(O.IsFun(z) && !z.$$bound) z=z.Bind(v);
-                        rv[nm]=z;
-                        $pii.push(z);
-                     };
-                  };
-               };
-            };
-         };
-         if(ll=$e.length){
-            exi=rv.$$exInst=[];
-            for(l=0; l<ll; l++) {
-               k=$e[l];
-               zz=exi[l]=new k({ $$noInit: 2
-               	,	$$Fire: rv.Fire
-               	,	$$On: rv.On
-               	,	$$Once: rv.Once
-               	,	$$$On: rv.$On
-               	,	$$$Once: rv.$Once
-            	});
-               for(nm in zz){
-                  z=zz[nm];
-                  if((z) && !z.$$prim && nm!='Init'){
-                     //if(IsFun(z)&&!z.$$bound&&!z.$$sys) z=z.Bind(v);
-                     rv[nm]=z;
-                  };
-               };
-            };
-         };
-         if(ln=$i.length){
-            for(ll=0;ll<ln;ll++){
-               f=$i[ll];
-               if(typeof f=='string')f=_(f);
-               if(f && f.$$type!='interface'){
-                  zz=new f();
-                  for(nm in zz){
-                     z=zz[nm];
-                     if((z) && !z.$$prim && nm!='Init') {
-                        //if(IsFun(z)&&!z.$$bound)z=z.Bind(v);
-                        rv[nm]=z;
-                        $ii.push(z);
-                     };
-                  };
-               };
-            };
-         };
+			imps=Class.MakeExtends(rv, $pi, bindTo, thisClass);//-PreImp
+			if(2) {//-Extends
+				z4=Class.MakeExtends(rv, $e, bindTo, thisClass);
+				rv.$$exInst=z4.arr;
+				ExtFn=z4.Fn;
+			};
+			if(2) {//-Implements
+				z4=Class.MakeExtends(rv, $i, bindTo, thisClass, imps);
+				rv.$$imInst=z4.arr;
+				ImpFn=z4.Fn;
+			};
 
-         rv.$$state=SetupVars(rv, vs.Private, vs.Public, v.$class, v.$$PRIVstate);
+         rv.$$state=SetupVars(rv, vs.Private, vs.Public, thisClass, v.$$PRIVstate, {
+         		Extended: ExtFn
+         	,	Implemented: ImpFn
+
+   		}, bindTo);
          if(typeof rv.FUNCTION=='function') FUN=rv.FUNCTION;
 
          if(z=rv.Init)
@@ -1103,19 +1073,6 @@ var Class=O.Class=function(nam,specs,onReady){
          if(pb)delete v.Public; else pb={};
          if(s)delete v.Shared; else s={};
       
-/*
-         if(p2) {
-            p2=Object.Clone(p2);
-            if(z=p2.EXPAND) {
-               Array.Merge($p, z);
-               Array.Merge($ps, z);
-               delete p2.EXPAND;
-            };
-            Object.CopyTo(p, p2);
-            Object.CopyTo(ps, p2);
-         };
-//*/
-
          if(z=s.Private) {
             if(z.EXPAND) {
                Array.Merge($ps, Array.From(z.EXPAND));
@@ -1168,6 +1125,38 @@ var Class=O.Class=function(nam,specs,onReady){
          else if(xt&&!notRecursive)rv=O.Class.$$RunFn(xt,nam,a,0,0);
          return rv;
       }
+	,	MakeExtends: function(v, $e, bindTo, thisClass, existingRv) {
+			var z, z2, zz, k, ff, i, i2, l, ll, ln, ln2, nm
+				,	rv=existingRv||{ arr: [], }
+				,	arr=rv.arr
+				,	arr2
+				,	fn=rv.Fn=(rv.Fn || function(i) { return arr[(i&&i==0)? i : 0] })
+			;
+
+         if(ll=$e.length){
+            for(l=0; l<ll; l++) {
+               k=$e[l];
+               zz=arr[l]=new k({
+               		$$noInit: 2
+               	,	$$bindTo: bindTo
+               	,	$$thisClass: thisClass
+               	,	$$Fire: v.Fire
+               	,	$$On: v.On
+               	,	$$Once: v.Once
+               	,	$$$On: v.$On
+               	,	$$$Once: v.$Once
+            	});
+               for(nm in zz){
+                  z=zz[nm];
+                  if((z) && !z.$$prim) v[nm]=z;
+               };
+            };
+         };
+
+			
+
+			return rv;
+		}
    ,  SetOptions:function(v,op,op2){
          if(!op2&&(v.$op||v.options)) {op2=op;op=v.$op?v.$op:v.options;};
          v.op=v.options=Object.Merge(op,op2);
@@ -1177,8 +1166,8 @@ var Class=O.Class=function(nam,specs,onReady){
          if(E) v.$On(E,0,v);
          return v;
       }
-   ,  SetupVars: function(obj, priv, pub, thisClass, forkState) {
-         var z, z2, z4, zz, k, k2, k4, stt, s2, ya
+   ,  SetupVars: function(obj, priv, pub, thisClass, forkState, vars, bindTo) {
+         var z, z2, z4, zz, k, k2, k4, op, stt, s2, ya
             ,  vd, nm, jj, $fp, $fn, mb, gt, st, os={}
             ,  tc=thisClass
             ,  xt=(tc!==obj)?
@@ -1188,7 +1177,7 @@ var Class=O.Class=function(nam,specs,onReady){
                      }
                   :  {}
          ;
-
+			op=obj.$$props=obj.$$props||{};
          if(tc) obj.$class=tc;
 
          zz=Object.CopyTo({}, priv); z1={ $eval: 2 };
@@ -1198,7 +1187,7 @@ var Class=O.Class=function(nam,specs,onReady){
          };
          //stt=O.SB.State([zz, { thisClass: tc }, xt, z1]);
          stt=(forkState)? forkState.Fork() : O.SB.State();
-         stt.Add([zz, { thisClass: tc }, xt, z1]);
+         stt.Add([zz, { thisClass: tc }, vars||{}, xt, z1]);
 
          zz=Object.CopyTo({}, pub); z1={};
          k=obj.$$varDat={};
@@ -1207,16 +1196,16 @@ var Class=O.Class=function(nam,specs,onReady){
             vd=k[nm]={};
             z=z2=zz[nm];
 
-            if(typeof z=='function' && !z.$$sys && !z.$$bound) {
+            if(typeof z=='function' && !z.$$sys && (!z.$$bound||z.$$cBound)) {
                if(z.$isOverload) {
                   vd.type='overload';
                   k4=z.fns;
                   for(mb in k4){
                      jj=k4[mb];
-                     if(!jj.$$bound){
+                     if(!jj.$$bound||jj.$$cBound){
                         $fp=jj.$fParent; $fn=jj.$fName;
-                        if(!jj.$$sys) jj=stt.EvalFunction(jj);
-                        k4[mb]=jj=jj.Bind(obj);
+                        if(!jj.$$sys&&!jj.$$bound) jj=stt.EvalFunction(jj);
+                        k4[mb]=jj=jj.Bind(bindTo||obj, {$$cBound: 2});
                         jj.$fParent=$fp; jj.$fName=$fn;
                      };
                   };
@@ -1228,8 +1217,15 @@ var Class=O.Class=function(nam,specs,onReady){
                   gt=k4.Get; st=k4.Set;
                   ya=0;
 
-                  if(gt && !gt.$$sys && !gt.$$bound) gt=s2.EvalFunction(gt);
-                  if(st && !st.$$sys && !st.$$bound) st=s2.EvalFunction(st);
+                  if(gt && !gt.$$sys && (!gt.$$bound||gt.$$cBound)) {
+                  	if(!gt.$$bound) gt=s2.EvalFunction(gt);
+                  	gt=gt.Bind(bindTo||obj, {$$cBound: 2});
+               	};
+                  if(st && !st.$$sys && (!st.$$bound||st.$$cBound)) {
+                  	if(!st.$$bound) st=s2.EvalFunction(st);
+                  	st=st.Bind(bindTo||obj, {$$cBound: 2});
+               	};
+                  //if(st && !st.$$sys && !st.$$bound) st=s2.EvalFunction(st);
                   
                   os.get=gt;
                   if(!k4.readonly && st) {
@@ -1237,11 +1233,20 @@ var Class=O.Class=function(nam,specs,onReady){
                      os.writable=true;
                   };
                   
+                  op[nm]=os;
                   Object.defineProperty(obj, nm, os);
                }
-               else { vd.type='property'; z2=stt.EvalFunction(z); };
+               else {
+            		vd.type='function';
+            		if(!z.$$bound) z2=stt.EvalFunction(z);
+            		z2=z2.Bind(bindTo||obj, {$$cBound: 2});
+         		};
             };
-            if(ya) obj[nm]=k[nm]=z2;
+            if(ya) {
+            	ya=obj[nm];
+            	if(ya) z2.$$parent=ya;
+            	obj[nm]=k[nm]=z2;
+         	};
          };
       
          return stt;
@@ -1254,7 +1259,7 @@ var Class=O.Class=function(nam,specs,onReady){
       }
 });
 O.Parent=function(){
-   var a=arguments/*,cl=a.callee.caller*/,z=a.callee.caller.$pFn;
+   var a=arguments, z=a.callee.caller.$$parent;
    return(z)?z.Call(a):undefined;
 };
 

@@ -1,0 +1,82 @@
+exports=function(e) {
+   var z, c, c2, c3, cc, ci, c2i, c3i, cci
+      ,  pc=require('pops/pops.core')
+   ;
+	LOG('_'.Repeat(60) + '\n inherit\n' + '_'.Repeat(60));
+
+   c=pc.Class('core_Class_inherit_test_1', {
+			PRIVATE: { EXPAND: [pc] }
+      ,  Public: {
+					cow: function() { return 'cow'; }
+				,	pow: function() { return 'pow'; }
+				,	wow: function() { return 'wow'; }
+         }
+   
+   });
+   cc=pc.Class('core_Class_inherit_test_1_2', {
+			PRIVATE: { EXPAND: [pc] }
+      ,  Public: {
+					dow: function() { return 'dow - 2'; }
+				,	pow: function() { return 'pow - 2'; }
+				,	wow: function() { return 'wow - 2'; }
+         }
+   
+   });
+   c2=pc.Class('core_Class_inherit_test_2', {
+			PRIVATE: { EXPAND: [pc] }
+		,	Extends: c
+      ,  Public: {
+//					pow: function() { return 'pow'; }
+//				,	wow: function() { return 'wow'; }
+         }
+   
+   });
+   c3=pc.Class('core_Class_inherit_test_3', {
+			PRIVATE: { pc: pc, EXPAND: [pc] }
+		,	Extends: c
+      ,  Public: {
+					pow: function() { return 'Parent()='+pc.Parent(); }
+				,	wow: function() { return 'Extended().wow()='+Extended().wow(); }
+         }
+   
+   });
+
+	if(2) {//-base class <c / cci & c / cci> ##01
+		LOG('-'.Repeat(40) + '\n base class <c / cci & c / cci> ##01\n' + '-'.Repeat(40));
+		ci=new c();
+		TestFn(ci.pow, 0, e, 'RVAL!="pow"', '##:01/a1', 'ci.pow()=RVAL');//##a1
+		TestFn(ci.wow, 0, e, 'RVAL!="wow"', '##:01/a2', 'ci.wow()=RVAL');//##a2
+		TestFn(ci.cow, 0, e, 'RVAL!="cow"', '##:01/a3', 'ci.cow()=RVAL');//##a3
+
+		cci=new cc();
+		TestFn(cci.pow, 0, e, 'RVAL!="pow - 2"', '##:01/b1', 'cci.pow()=RVAL');//##b1
+		TestFn(cci.wow, 0, e, 'RVAL!="wow - 2"', '##:01/b2', 'cci.wow()=RVAL');//##b2
+		TestFn(cci.dow, 0, e, 'RVAL!="dow - 2"', '##:01/b3', 'cci.dow()=RVAL');//##b3
+	};
+
+	c2i=new c2;
+	if(2) {//-base class <c / ci>
+		LOG('-'.Repeat(40) + '\n child class <c2 / c2i>\n' + '-'.Repeat(40));
+
+		z=c2i.pow();
+		if(z!='pow') e.Fail('line 29');
+		pc.cout('c2i.pow()='+z);
+
+		z=c2i.wow();
+		if(z!='wow') e.Fail('line 34');
+		pc.cout('c2i.wow()='+z);
+	};
+
+	c3i=new c3;
+	if(2) {//-single-inherit class <c3 / c3i>
+		LOG('-'.Repeat(40) + '\n single-inherit class <c3 / c3i>\n' + '-'.Repeat(40));
+
+		z=c3i.pow();
+		if(z!='Parent()=pow') e.Fail('line 65');
+		pc.cout('c3i.pow()='+z);
+
+		z=c3i.wow();
+		if(z!='Extended().wow()=wow') e.Fail('line 69');
+		pc.cout('c3i.wow()='+z);
+	};
+};

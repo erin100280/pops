@@ -20,7 +20,7 @@ exports=function() {
    
    });
 
-	ci=new(c);
+	ci=new c;
 
 	if(2) {//-basic | std & sys
 		LOG('-'.Repeat(40) + '\n basic | std & sys\n' + '-'.Repeat(40));

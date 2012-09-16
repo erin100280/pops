@@ -3,6 +3,8 @@ exports=function() {
       ,  pc=require('pops/pops.core')
    ;
 
+	LOG('_'.Repeat(60) + '\n PRIVATE\n' + '_'.Repeat(60));
+
    c=pc.Class('PRIVATE_test', {
 			PRIVATE: {
 				EXPAND: [pc]

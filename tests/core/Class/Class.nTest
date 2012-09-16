@@ -12,6 +12,7 @@ exports={
                   
                   }
             }
+         ,  { name: 'inherit', Test: { file: MyPath('inherit.nTestPart') } }
          ,  { name: 'PRIVATE', Test: { file: MyPath('PRIVATE.nTestPart') } }
          ,  { name: 'events', Test: { file: MyPath('events.nTestPart') } }
       ]
