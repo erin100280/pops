@@ -18,33 +18,54 @@ X.List=Class('popsList', {
       }
 });
 
-X.Dict=Class('popsDict', {
+var Dict=X.Dict=Class('popsDict', {
       options: {}
    ,  PRIVATE: { PC: pc }
    ,  Private: { itms: {}, count: 0 }
-   ,  FUNCTION: function() {}
+   ,  FUNCTION: function(key) { return itms[key]; }
    ,  Init: function(ops, OnRdy) {
+         var z;
          T.SetOptions(ops);
+         if(z=OP.items) T.Add(z);
       }
    ,  Public: {
       		Add: function(key, itm) {
-      			var z, i, l;
+      			var z, i, l, c, t=this;
       			
-      			if(typeof key=='object')
-      				for(z in key) T.Add(z, key[z]);
+      			if(typeof key=='object') for(z in key) t.Add(z, key[z]);
 					else {
+   					c=(typeof itms[key]=='undefined')? 1 : 0;
 						itms[key]=itm;
-						count++;
+   					count+=c;
+	      			T.Fire('itemAdded', [{ key: key, item: itm }]);
 					};
-      			//T.Fire('itemAdded');
-      			return T;
+      			return t;
       		}
+			,	Clear: function() {
+					var t=this, k=t.keys, i, l=k.length, z;
+					for(i=0; i<l; i++) delete itms[k[i]];
+					return t;
+				}
 			,	count: Property( { readonly: 2, Get: function() { return count; } } )
+			,	Item: function(key) { return itms[key]; }
 			,	keys: Property( { readonly: 2, Get: function() {
-					var rv=[], z;
-					for(z in itms) rv.Push(z);
-					return rv;
+					var rvv=[], z;
+					for(z in itms) rvv.Push(z);
+					return rvv;
 				}})
+			,	Remove: function(key) {
+					var t=this, c, i, l, z;
+					if(key instanceof Array) for(i=0, l=key.length; i<l; i++) t.Remove(key[i]);
+					else {
+						z=itms[key];
+						if(typeof z!='undefined') {
+							count--;
+							delete itms[key];
+		      			T.Fire('itemRemoved', [{ key: key, item: z }]);
+						};
+					};
+					return t;
+				}
 
       }
 });
@@ -94,21 +115,6 @@ X.Schema=function(ops, OnRdy) {
 
             SetupFields();
 
-/*
-               for(nm in o) {
-                  z=o[nm];
-                  if(0){}
-                  else {
-                     z=(pc.IsObj(z))?Object.CopyTo({}, z, 2) : { type: z };
-                     if(!z.type) z.type=String;
-                     if(!z.Default) z.Default=undefined;
-                  };
-                  f[nm]=z;
-   
-                  k=z.Default;
-                  t[nm]=k;
-               }
-//*/
             t.$isSchema=2;
          }
       ,  Public: {
@@ -118,37 +124,6 @@ X.Schema=function(ops, OnRdy) {
 
    return rv;
 }.Extend({});
-/*
-   X.Schema=function(ops, OnRdy) {
-      var k
-         ,  z=ops||{}
-         ,  oo=(z.$isSCHEMA)?z.$ops:z
-         ,  o=CreateOptions({ $db: 0, $fields: [] }, oo)
-         ,  f=o.$fields
-         ,  rv=function(ops, OnRdy) {
-               return X.Schema.NewSchema(this, ops, OnRdy);
-            }.Extend({
-                  $isSCHEMA: 2
-               ,  $ops: o
-               ,  $options: oo
-            });
-      ;
-      
-      
-      rv.prototype.$$SCHEMA=rv;
-      //rv.implement({$$SCHEMA:rv});
-
-      return rv;
-   }.Extend({
-         NewSchema:function(v, ops, OnRdy) {
-            var rv, z, o=v.$ops;
-            
-            rv=new X.schema();
-            
-            return rv;
-         }
-   });
-//*/
 var schema=X.schema=Class({
       options: {
          
@@ -199,30 +174,33 @@ X.db=Class('popsDbMongo', {
          ,  name: ''
          ,  port: -2
       }
-   ,  Private: {
-            X: X, pc: pc, mdb: mdb
-         ,  $db: 0
+   ,	PRIVATE: { X: X, pc: pc, mdb: mdb }
+   ,  Private: { Dict:Dict
+         ,	$db: 0
          ,  $server: 0
          ,  $connected: 0
          ,  $connecting: 0
          ,  $host: ''
          ,  $name: ''
          ,  $port: -2
+			,	$schemas: 0
 
          ,  $SetupSchemas: function() {
             
             }
       }
    ,  Shared: {
-            Private: {X: X, pc: pc, pow: function() { pc.cout('pow'); } }
+            Private: { pow: function() { pc.cout('pow'); } }
          ,  POW: function() { pow(); }
       }
    ,  Interface: dbb.dbInterface
    ,  Init: function(ops,onRdy) {
          var t=this.SetOptions(ops), o=t.op, ac=o.autoConnect;
+         $schemas=new Dict();
          
          $SetupSchemas();
          if(ac)t.Connect();
+      	
       }
    ,  Public: {   
          Schemas: function(nam) {
@@ -263,6 +241,7 @@ X.db=Class('popsDbMongo', {
          }
       }   
    ,  connected: Property({ readonly: 2, Get: function(){return $connected} })
+   ,	schemas: Property({ readonly: 2, Get: function(){return $schemas} })
    ,  type: Property({ readonly: 2, Get: function(){return 'popsDbMongo'} })
    ,  host: Property({ readonly: 2, Get: function(){return $host;} })
 });

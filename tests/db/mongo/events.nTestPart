@@ -1,0 +1,52 @@
+exports=function() {
+   var z, c, ci
+      ,  pc=require('pops/pops.core')
+   ;
+	LOG('_'.Repeat(60) + '\n events\n' + '_'.Repeat(60));
+
+   c=pc.Class('core_Class_events_test', {
+			PRIVATE: { EXPAND: [pc] }
+      ,  Public: {
+            Raise: function(nam, args) {
+            	var i, l, n=Array.From(nam);
+            	s=n[0];
+            	for(i=1, l=n.length; i<l; i++) s+=', '+n[i];
+            	cout('Raising: '+s);
+            	T.Fire(n, args, function(e, arg1, arg2) {
+            		cout('Raised: '+s);
+            	});
+         	}
+         }
+   
+   });
+
+	ci=new c;
+
+	if(2) {//-basic | std & sys
+		LOG('-'.Repeat(40) + '\n basic | std & sys\n' + '-'.Repeat(40));
+		ci.On('pow', function(e) { cout(' - pow std1'); });
+		ci.On('pow', function(e) { cout(' - pow std2'); });
+	
+		ci.$On('pow', function(e) { cout(' - pow sys1'); });
+		ci.$On('pow', function(e) { cout(' - pow sys2'); });
+	
+		ci.Raise('pow');
+	};
+
+	if(2) {//-basic-with args | std & sys
+		LOG('-'.Repeat(40) + '\n basic-with args | std & sys\n' + '-'.Repeat(40));
+		ci.On('wow', function(e) {
+			var a=arguments, i, l=a.length;
+			cout(' - wow std1');
+			for(i=1; i<l; i++) cout('   arg['+i+'] = '+a[i]);
+		});
+		ci.$On('wow', function(e) {
+			var a=arguments, i, l=a.length;
+			cout(' - wow sys1');
+			for(i=1; i<l; i++) cout('   arg['+i+'] = '+a[i]);
+		});
+	
+		ci.Raise('wow', [4, 'hello']);
+	};
+
+};

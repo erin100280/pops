@@ -451,16 +451,6 @@ if(2) {//-SandBox
 
 };
 
-exports.SandBox=function(code,vars){
-   var _$g=global,exports=undefined,_$n,_$v=vars?vars:{};
-   for(_$n in _$g)eval('var '+_$n+'=undefined;');
-   for(_$n in _$v)eval('var '+_$n+'=v.'+_$n+';');
-   delete _$v,vars,_$g,_$n;
-   //v=vars=g=n=undefined;
-   if(typeof code=='string')eval(code);
-   else throw('pops.SandBox: code must be string.');
-};
-
 if(2) {//-vars
    var z, z2, z3, z4, zz, x, l, p, fn=Function
       ,  G=global
@@ -912,7 +902,8 @@ var Class=O.Class=function(nam,specs,onReady){
    if(typeof nam!='string') { onReady=specs; specs=nam; nam=0; }
    else onReady=specs;
    if(2) {//-vars
-	   var z=2, z1, z2,zz,mm, nm,pp,l,l2,r,sh,rv,$ini, k, stt, kk,pr,ze,zr,ln,vs, spc={}
+	   var z=2, z1, z2, z4, zz,mm, nm,pp,i, l,l2,r,sh,rv,$ini, k, stt, kk,pr,ze,zr,ln,vs, spc={}
+	      ,	ExtFn, rvs, $mmb
 	      ,  is={}, dd
 	      ,  o=specs||{}
 	      ,  $if=Array.From(o.Interface)
@@ -932,18 +923,34 @@ var Class=O.Class=function(nam,specs,onReady){
             O.Class.InitClass(is, arguments)
          :  rv.Create.Call(arguments)
       );
-   };
+   }.Sys().Extend({
+   		$$members: {}
+   });
+   $mmb=rv.$$members;
 
-   if($e) {
-      z=(typeof $e=='string')? _($e) : $e;
-      if(!z) throw('Error with Extends: '+$e);
+	if(2) {//-Extends
+		z4=Class.MakeExtends(rv, $e, rv, rv, 0, 2);
+		rv.$$exInst=z4.arr;
+		ExtFn=z4.Fn;
+	};
+/*
+   for(i=o, l=$e.length; i<l; i++) {//-Add shared functions from 'Extends' classes.
+      z=$e[i];
+      if(typeof z=='string') z=_(z);
+      if(!z) throw('Error with Extends: '+$e[i]);
       
-      if(zz=z.$$shared)
-         for(nm in zz) rv[nm]=zz[nm];
+      //=========================================================================
+      //=========================================================================
+      
+      if(zz=z.$$members)
+         for(nm in zz) { 
+         	k=zz[nm];
+         	rv[nm]=$mmb[nm]=(!k.$$bound || k.$$cBound)? k.Bind(rv, { cBound: 2 }) : k;
+   		};
    };
-
+//*/
    dd=SetupVars({}, vs.PRIVATE, {}, rv);
-   rv.$$state=SetupVars(rv, vs.PrivShare, vs.Shared, rv, dd); //-Shared
+   rv.$$state=SetupVars(rv, vs.PrivShare, vs.Shared, rv, dd, { Extended: ExtFn }, rv); //-Shared
 
    is={
          $$PRIVstate: dd
@@ -993,7 +1000,7 @@ var Class=O.Class=function(nam,specs,onReady){
 	               ])
 	            ,	jj={ Fire: i.$$Fire, On: i.$$On, Once: i.$$Once, $On: i.$$$On, $Once: i.$$$Once }
 	            ,  rv=Class.Obj(jj, (pb.FUNCTION)?
-	                     function() { return FUN.Call(arguments); }
+	                     function() { return FUN.Call(arguments); }.Sys()
 	                  :  {}
 	               )
 	            ,  $e=v.$extends, $ei=rv.$eInst=[]
@@ -1125,7 +1132,44 @@ var Class=O.Class=function(nam,specs,onReady){
          else if(xt&&!notRecursive)rv=O.Class.$$RunFn(xt,nam,a,0,0);
          return rv;
       }
-	,	MakeExtends: function(v, $e, bindTo, thisClass, existingRv) {
+	,	MakeExtends: function(v, $e, bindTo, thisClass, existingRv, shared) {
+			var z, z2, zz, k, ff, i, i2, l, ll, ln, ln2, nm
+				,	rv=existingRv||{ arr: [], }
+				,	arr=rv.arr
+				,	arr2
+				,	fn=rv.Fn=(rv.Fn || function(i) { return arr[(i&&i==0)? i : 0] })
+			;
+
+         if(ll=$e.length){
+            for(l=0; l<ll; l++) {
+               k=$e[l];
+               zz=arr[l]=(shared)? k : new k({
+               		$$noInit: 2
+               	,	$$bindTo: bindTo
+               	,	$$thisClass: thisClass
+               	,	$$Fire: v.Fire
+               	,	$$On: v.On
+               	,	$$Once: v.Once
+               	,	$$$On: v.$On
+               	,	$$$Once: v.$Once
+            	});
+               for(nm in zz){
+                  z=zz[nm];
+                  
+                  if((z) && !z.$$prim) {
+                  	if(typeof z=='function' && (!z.$$bound || z.$$cBound))
+                  		z=z.Bind(bindTo||z, { cBound: 2 });
+                  	v[nm]=z;
+               	};
+               };
+            };
+         };
+
+			
+
+			return rv;
+		}
+	,	MakeExtends2: function(v, $e, bindTo, thisClass, existingRv, shared) {
 			var z, z2, zz, k, ff, i, i2, l, ll, ln, ln2, nm
 				,	rv=existingRv||{ arr: [], }
 				,	arr=rv.arr
@@ -1167,7 +1211,7 @@ var Class=O.Class=function(nam,specs,onReady){
          return v;
       }
    ,  SetupVars: function(obj, priv, pub, thisClass, forkState, vars, bindTo) {
-         var z, z2, z4, zz, k, k2, k4, op, stt, s2, ya
+         var z, z2, z4, zz, k, k2, k4, kk, op, stt, s2, ya
             ,  vd, nm, jj, $fp, $fn, mb, gt, st, os={}
             ,  tc=thisClass
             ,  xt=(tc!==obj)?
@@ -1190,7 +1234,8 @@ var Class=O.Class=function(nam,specs,onReady){
          stt.Add([zz, { thisClass: tc }, vars||{}, xt, z1]);
 
          zz=Object.CopyTo({}, pub); z1={};
-         k=obj.$$varDat={};
+         k=obj.$$varDat=(obj.$$varDat||{});
+         kk=obj.$$members=(obj.$$members||{});
          for(nm in zz) {
             ya=2;
             vd=k[nm]={};
@@ -1245,7 +1290,7 @@ var Class=O.Class=function(nam,specs,onReady){
             if(ya) {
             	ya=obj[nm];
             	if(ya) z2.$$parent=ya;
-            	obj[nm]=k[nm]=z2;
+            	obj[nm]=kk[nm]=k[nm]=z2;
          	};
          };
       

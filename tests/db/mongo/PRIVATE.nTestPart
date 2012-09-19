@@ -1,0 +1,40 @@
+exports=function() {
+   var z, c, ci
+      ,  pc=require('pops/pops.core')
+   ;
+
+	LOG('_'.Repeat(60) + '\n PRIVATE\n' + '_'.Repeat(60));
+
+   c=pc.Class('PRIVATE_test', {
+			PRIVATE: {
+				EXPAND: [pc]
+            ,  hh: 'wow'
+         }
+      ,  Shared: {
+               SetHH: function(val) { hh=val; }
+            ,  ShowHH: function() { return hh; }
+         }
+      ,  Public: {
+               SetHH: function(val) { hh=val; }
+            ,  ShowHH: function() { return hh; }
+         }
+   
+   });
+
+   ci=new c();
+   
+   pc.cout('c.ShowHH()='+c.ShowHH());
+   pc.cout('ci.ShowHH()='+ci.ShowHH());
+   
+   pc.cout('setting hh to "pow" (c)');
+   c.SetHH('pow');
+   pc.cout('c.ShowHH()='+c.ShowHH());
+   pc.cout('ci.ShowHH()='+ci.ShowHH());
+
+   pc.cout('setting hh to "cow" (ci)');
+   c.SetHH('cow');
+   pc.cout('c.ShowHH()='+c.ShowHH());
+   pc.cout('ci.ShowHH()='+ci.ShowHH());
+   
+   
+};
