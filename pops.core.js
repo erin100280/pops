@@ -933,22 +933,7 @@ var Class=O.Class=function(nam,specs,onReady){
 		rv.$$exInst=z4.arr;
 		ExtFn=z4.Fn;
 	};
-/*
-   for(i=o, l=$e.length; i<l; i++) {//-Add shared functions from 'Extends' classes.
-      z=$e[i];
-      if(typeof z=='string') z=_(z);
-      if(!z) throw('Error with Extends: '+$e[i]);
-      
-      //=========================================================================
-      //=========================================================================
-      
-      if(zz=z.$$members)
-         for(nm in zz) { 
-         	k=zz[nm];
-         	rv[nm]=$mmb[nm]=(!k.$$bound || k.$$cBound)? k.Bind(rv, { cBound: 2 }) : k;
-   		};
-   };
-//*/
+
    dd=SetupVars({}, vs.PRIVATE, {}, rv);
    rv.$$state=SetupVars(rv, vs.PrivShare, vs.Shared, rv, dd, { Extended: ExtFn }, rv); //-Shared
 
@@ -968,7 +953,7 @@ var Class=O.Class=function(nam,specs,onReady){
    rv.Extend( [
          is
       ,  {
-               $specs: o
+					$specs: o
             ,  $Reg:function(nam) { O.Class.Reg(this, nam); return this; }.Sys()
             ,  Create: function() {
                   var RV;
@@ -1013,6 +998,7 @@ var Class=O.Class=function(nam,specs,onReady){
 			};
          
          x=rv.$iid=O.$$iid++;
+			rv.$$sys=2;
          rv.$inst=2;
          rv.$InitState='start';
 
@@ -1204,7 +1190,7 @@ var Class=O.Class=function(nam,specs,onReady){
    ,  SetOptions:function(v,op,op2){
          if(!op2&&(v.$op||v.options)) {op2=op;op=v.$op?v.$op:v.options;};
          v.op=v.options=Object.Merge(op,op2);
-         var m, n, o=v.op, e=o.Events, E=o.$Events;
+         var m, n, o=v.op, e=o.On, E=o.$On;
          if(v.$$SetOp) v.$$SetOp(o);
          if(e) v.On(e,0,v);
          if(E) v.$On(E,0,v);
@@ -1227,11 +1213,18 @@ var Class=O.Class=function(nam,specs,onReady){
          zz=Object.CopyTo({}, priv); z1={ $eval: 2 };
          for(nm in zz){
             z=zz[nm];
-            if(typeof z=='function' && !z.$$sys && !z.$$bound) { z1[nm]=z; zz[nm]=null; };
+            if(typeof z=='function' && !z.$$sys && !z.$$bound) { z1[nm]=z; zz[nm]=null; }
+            else if(typeof z=='function' && !z.$$sys && z.$$cBound) { zz[nm]=z.Bind(bindTo||obj, { cBound: 2 }); };
          };
          //stt=O.SB.State([zz, { thisClass: tc }, xt, z1]);
          stt=(forkState)? forkState.Fork() : O.SB.State();
+         stt.Add({ oobbjj: bindTo||obj });
          stt.Add([zz, { thisClass: tc }, vars||{}, xt, z1]);
+			for(nm in z1) {
+				z=z1[nm];
+				//out('if(typeof '+nm+'!="undefined")'+nm+'='+nm+'.Bind(oobbjj, { $$cBound: 2 });');
+				stt.Eval('if(typeof '+nm+'!="undefined")'+nm+'='+nm+'.Bind(oobbjj, { $$cBound: 2 });');
+			};
 
          zz=Object.CopyTo({}, pub); z1={};
          k=obj.$$varDat=(obj.$$varDat||{});

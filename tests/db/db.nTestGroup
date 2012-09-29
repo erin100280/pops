@@ -1,5 +1,3 @@
 exports=[
-      MyPath('mongo/db.mongo.nTest')
-
-
+      MyPath('mongo/db.mongo.nTestGroup')
 ]
