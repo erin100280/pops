@@ -1,0 +1,4 @@
+exports=[
+		MyPath('Schema/Schema.nTest')
+	,	MyPath('db/db.nTest')
+]

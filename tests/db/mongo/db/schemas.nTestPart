@@ -1,0 +1,60 @@
+exports=function(tArgs) {
+   var z, db
+      ,  pc=require('pops/pops.core')
+   	,	pdbm=require('pops/db/pops.db.mongo')
+   ;
+	LOG('\n'+'_'.Repeat(60) + '\n pops/db/mongo|db:schemas\n' + '_'.Repeat(60));
+
+	tArgs.ASync();
+
+	LOG('-'.Repeat(40) + '\n db with schemas <db> ##01\n' + '-'.Repeat(40));
+	db=new pdbm.db({
+			name: 'test'
+		,	host: 'localhost'
+		,	port: 1002
+		,	schemas: {
+					user: {
+							id: String
+						,	firstName: String
+						,	middleName: String
+						,	lastName: String
+						,	birthday: Date
+					}
+				,	puser: {
+							pid: String
+						,	pfirstName: String
+						,	pmiddleName: String
+						,	plastName: String
+						,	pbirthday: Date
+					}
+			}
+		,	On: { 
+				connect: function(e, db) {
+					pc.cout('CONNECTED');
+
+					var s=db.schemas('user')
+						,	ss=s.Create({ firstName: 'Rachel', lastName: 'Morgan' })
+					;
+					pc.cout('s.NAME='+s.NAME);
+					pc.cout('ss.NAME='+ss.NAME);
+					pc.cout('ss.firstName='+ss.firstName);
+					pc.cout('ss.lastName='+ss.lastName);
+					
+					ss.INSERT(function(err) {
+						cout('err='+err+'\nGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG');
+						s.Find({ firstName: 'Rachel' }, function(err, cur) {
+							pc.cout('s.Find');
+							tArgs.Done();
+						});
+					});
+					
+					//pc.cout(pc.$Obj(s));
+					//for(var jj in s) cout('jj='+jj);
+					//db.Save();
+					
+
+
+				}
+			}
+	});
+};

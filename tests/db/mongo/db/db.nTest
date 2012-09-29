@@ -1,0 +1,8 @@
+exports={
+      name: 'pops.core.Class'
+   ,  files: 'pops.core.js'
+   ,  parts: [
+         	{ name: 'construct', Test: { file: MyPath('construct.nTestPart') } }
+         ,	{ name: 'schemas', Test: { file: MyPath('schemas.nTestPart') } }
+      ]
+};

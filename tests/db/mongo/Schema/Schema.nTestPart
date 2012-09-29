@@ -1,0 +1,35 @@
+exports=function(tArgs) {
+   var z, db, s1, s1i1, s1i2
+      ,  pc=require('pops/pops.core')
+   	,	pdbm=require('pops/db/pops.db.mongo')
+   ;
+	LOG('\n'+'_'.Repeat(60) + '\n pops/db/mongo|Schema:construct\n' + '_'.Repeat(60));
+
+	//tArgs.ASync();
+
+	s1=pdbm.Schema({
+			z: Number
+		,	num1: Number
+		,	num2: { type: Number, Default: 100280 }
+		,	str1: { type: String, Default: 'StRiNg1' }
+		,	str2: String
+	});
+
+	if(2) {//-no args <s1 / s1i1> ##01
+		LOG('-'.Repeat(40) + '\n no args <s1 / s1i1> ##01\n' + '-'.Repeat(40));
+		s1i1=new s1();
+		TestVal(s1i1.num1, 0, tArgs, 'RVAL!=undefined', '##:01/a1', 's1i1.num1=RVAL');//##a1
+		TestVal(s1i1.num2, 0, tArgs, 'RVAL!=100280', '##:01/a2', 's1i1.num2=RVAL');//##a2
+		TestVal(s1i1.str1, 0, tArgs, 'RVAL!="StRiNg1"', '##:01/a3', 's1i1.str1=RVAL');//##a3
+		TestVal(s1i1.str2, 0, tArgs, 'RVAL!=undefined', '##:01/a4', 's1i1.str2=RVAL');//##a4
+	};
+	if(2) {//-with args <s1 / s1i2> ##02
+		LOG('-'.Repeat(40) + '\n with args <s1 / s1i2> ##02\n' + '-'.Repeat(40));
+		s1i2=new s1({ str2: 'howdy!', num2: 2020 });
+		TestVal(s1i2.num1, 0, tArgs, 'RVAL!=undefined', '##:01/a1', 's1i2.num1=RVAL');//##a1
+		TestVal(s1i2.num2, 0, tArgs, 'RVAL!=100280', '##:01/a2', 's1i2.num2=RVAL');//##a2
+		TestVal(s1i2.str1, 0, tArgs, 'RVAL!="StRiNg1"', '##:01/a3', 's1i2.str1=RVAL');//##a3
+		TestVal(s1i2.str2, 0, tArgs, 'RVAL!="howdy!"', '##:01/a4', 's1i2.str2=RVAL');//##a4
+	};
+
+};

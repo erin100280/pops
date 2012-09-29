@@ -1,0 +1,23 @@
+exports=function(tArgs) {
+   var z, db
+      ,  pc=require('pops/pops.core')
+   	,	pdbm=require('pops/db/pops.db.mongo')
+   ;
+	LOG('\n'+'_'.Repeat(60) + '\n pops/db/mongo|db:construct\n' + '_'.Repeat(60));
+
+	tArgs.ASync();
+
+	z=new pdbm.Dict();
+
+	db=new pdbm.db({
+			name: 'test'
+		,	host: 'localhost'
+		,	port: 1002
+		,	On: { 
+				connect: function(e) {
+					pc.cout('CONNECTED');
+					tArgs.Done();
+				}
+			}
+	});
+};
