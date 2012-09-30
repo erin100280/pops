@@ -17,7 +17,6 @@ X.List=Class('popsList', {
       
       }
 });
-
 var Dict=X.Dict=Class('popsDict', {
       options: {}
    ,  PRIVATE: { PC: pc }
@@ -78,6 +77,24 @@ var Dict=X.Dict=Class('popsDict', {
       }
 });
 
+X.Cursor=function(schema, cur) {
+	
+	var rv={
+			Each: function(callback) {
+				cur.each(function(err, itm) {
+					var i=itm;
+					if(i!=null)i=new schema(itm);
+					if(callback) callback(err, i);
+				});
+			}
+	};
+	
+	Object.defineProperty(rv, '$schema', { get: function() { return schema; } });
+	Object.defineProperty(rv, '$cur', { get: function() { return cur; } });
+	
+	return rv;
+};
+
 var FixArr=function(a, clone) {
 	var a=(clone)? Array.Clone(a) : a, i, l=a.length, z;
 	for(i=0; i<l; i++) {
@@ -88,7 +105,6 @@ var FixArr=function(a, clone) {
 	
 	return a;
 };
-
 X.Schema=function(ops, OnRdy) {
    var rv, f, i, k, l, nm, o, ok={}, z
       ,  oo=FixArr(Array.From(ops || []))
@@ -99,7 +115,10 @@ X.Schema=function(ops, OnRdy) {
 	for(nm in o) {
 		z=o[nm];
 		if(nm=='NAME' || nm=='$fields' || nm=='$db' || nm=='$$db') ok[nm]=z;
-		else f[nm]=(typeof z=='object')? z : { type: z };
+		else f[nm]=((typeof z=='object')?
+				Object.CopyTo({}, [{ Default: '<{NULL}>' }, z])
+			:	{ type: z, Default: '<{NULL}>' }
+		);
 	};
 
    rv=Class('popsDbMongoSchema', {
@@ -108,32 +127,12 @@ X.Schema=function(ops, OnRdy) {
 					pc: pc, X: X
             ,  fields: f
          }
-      ,  Private: {
-            	$schema: rv
-            ,	fieldVals: {}
-            ,	ObjID: -2
-            ,  SetupFields: function(vals) {
-                  var t=this, nm, f=fields, fv=fieldVals, z;
-                  for(nm in f) {
-                     z=(vals && typeof vals[nm]!='undefined')? vals[nm] : f[nm].Default;
-                     if(z instanceof Array) z=Array.Clone(z);
-                     else if(typeof z=='object') z=Object.Clone(z);
-                     fv[nm]=z;
-
-							eval(
-									'Object.defineProperty(t, "'+nm+'", {'
-								+	'		get: function() { return fv["'+nm+'"]; }'
-								+	'	,	set: function(v) { fv["'+nm+'"]=v; }'
-								+	'});'
-							);
-                  };
-               }
-         }
       ,  Shared: {
 					Private: {
 							$db: o.$db						
 						,	$$db: o.$$db						
 						,	$collection: 0
+						,	$Cursor: X.Cursor
 						,	$T: 0
 						
 						,	$createDefInner: function() {
@@ -160,34 +159,35 @@ X.Schema=function(ops, OnRdy) {
 								return rv;
 							}
 						,	$Find: function(qry, OnRdy) {
-								var t=this;
-								$collection.find(qry, function(err, jj) {
-									if(err) { if(OnRdy) OnRdy(err); return; };
-									
-								});
-							}
-						,	$Find: function(qry, OnRdy) {
-								$collection.find(qry, function(err, cur) {
-									pc.cout('$Find - cur='+cur);
-									if(OnRdy) OnRdy(err, cur);
-								});
+								if(qry.$isSCHEMAinst) qry=qry.OBJ;
+								var err=null, rv=$Cursor(this, $collection.find(qry));
+								pc.cout('$Find - cur='+rv);
+								if(OnRdy) OnRdy(err, rv);
+								return rv;
 							}
 						,	$Insert: function(schema_inst, OnRdy) {
-								$collection.insert(schema_inst.OBJ);
-								if(OnRdy) OnRdy();
-							}							
-						,	$Find_Def: function(qry, OnRdy) {
 								var t=this;
-		         			$$db.collection(this.NAME, function(err, coll) {
-			         			//if(err) //out('****err: '+err);
-		         				if(err) { $collection=0; OnRdy(err); }
-		         				else {
-		         					$collection=coll;
-		         					t.Find=$Find;
-		         					t.Find(qry, OnRdy);
-		         				};
-		         			});
-							}
+								if(schema_inst.$isSCHEMAinst) schema_inst=schema_inst.VALUES;
+								$collection.insert(schema_inst, function(err, result) {
+									if(result)
+										for(var i=0, l=result.length; i<l; i++)
+											result[i]=new t(result[i]);
+									if(OnRdy) OnRdy(err, result);
+								});
+								return null;
+							}							
+						,	$Remove: function(qry, OnRdy) {
+//								if(qry.$isSCHEMAinst) qry=qry.OBJ;
+								if(qry.$isSCHEMAinst) qry=qry.VALUES;//{ _id: qry._id };
+								//pc.//out('JSON.stringify(qry)='+JSON.stringify(qry));
+								$collection.remove(qry, function(err, result) {
+									if(result)
+										for(var i=0, l=result.length; i<l; i++)
+											result[i]=new t(result[i]);
+									if(OnRdy) OnRdy(err, result);
+								});
+								return null;
+							}							
 					} 
 				,	$isSCHEMA: 2
 				,	$ops: o	
@@ -195,27 +195,73 @@ X.Schema=function(ops, OnRdy) {
          	,	Find: function(qry, OnRdy) {
          			var t=this;
          			t.Find=$CreateDef('Find', t, $Find, 0, ['qry', 'OnRdy']);
-         			t.Find(qry, OnRdy);
+         			return t.Find(qry, OnRdy);
          		}
          	,	Insert: function(schema_inst, OnRdy) {
          			var t=this;
          			t.Insert=$CreateDef('Insert', t, $Insert, 0, ['schema_inst', 'OnRdy']);
-         			t.Insert(schema_inst, OnRdy);
+         			return t.Insert(schema_inst, OnRdy);
          		}
+         	,	Remove: function(qry, OnRdy) {
+         			var t=this;
+         			t.Remove=$CreateDef('Remove', t, $Remove, 0, ['qry', 'OnRdy']);
+         			return t.Remove(qry, OnRdy);
+         		}
+         }
+      ,  Private: {
+            	$schema: rv
+            ,	fieldVals: {}
+            ,	ObjID: -2
+            ,  SetupFields: function(vals) {
+                  var t=this, nm, f=fields, fv=fieldVals, z;
+                  for(nm in f) {
+                     //pc.//out('nm='+nm+'  -  f[nm].Default='+f[nm].Default);
+                     z=(vals && typeof vals[nm]!='undefined')? vals[nm] : ((nm=='_id')?
+                     		vals._id||100280
+               			:	f[nm].Default
+               		);
+                     if(z instanceof Array) z=Array.Clone(z);
+                     else if(typeof z=='object') z=Object.Clone(z);
+                     fv[nm]=z;
+
+							eval(
+									'Object.defineProperty(t, "'+nm+'", {'
+								+	'		get: function() { return fv["'+nm+'"]; }'
+								+	'	,	set: function(v) { fv["'+nm+'"]=v; }'
+								+	'});'
+							);
+                  };
+               	if(vals._id) fv._id=vals._id;
+               }
          }
       ,  Init: function(ops, OnRdy) {
             var o=(ops)? Object.CopyTo({}, ops, 2) : {}, t=this;
 
+				//if(typeof o._id!='undefined') { pc.cout('o._id='+o._id); };				
 				if(typeof o.$OBJID!='undefined') { OBJID=o.$OBJID; delete o.$OBJID; };				
             SetupFields(o);
 
             t.$isSchema=2;
          }
       ,  Public: {
-         		INSERT: function(OnRdy) { thisClass.Insert(this, OnRdy); }
+         		$isSCHEMAinst: 2
+         	,	INSERT: function(OnRdy) { return thisClass.Insert(this, OnRdy); }
+         	,	REMOVE: function(OnRdy) { return thisClass.Remove(this, OnRdy); }
          	,	SAVE: function() { pc.cout('RAD!'); }
          	,	OBJ: pc.Property({ readonly: 2, Get: function(){ return Object.Clone(fieldVals); } })
-         	,	OBJID: pc.Property({ readonly: 2, Get: function(){ return ObjID; } })
+         	,	VALUES: pc.Property({ readonly: 2, Get: function(){
+         			var nm, rv={}, z, zz;
+         			
+         			for(nm in fieldVals) {
+         				z=fieldVals[nm];
+         				zz=typeof z;
+         				if(z!='<{NULL}>' && z!=null) rv[nm]=z;
+         			};
+         			
+         			return rv; 
+      			}})
+//         	,	OBJID: pc.Property({ readonly: 2, Get: function(){ return ObjID; } })
+         	,	OBJID: pc.Property({ readonly: 2, Get: function(){ return fieldVals._id; } })
          }
    });
 

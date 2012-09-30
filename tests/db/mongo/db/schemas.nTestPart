@@ -41,10 +41,20 @@ exports=function(tArgs) {
 					pc.cout('ss.lastName='+ss.lastName);
 					
 					ss.INSERT(function(err) {
+						var last=0;
 						cout('err='+err+'\nGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG');
 						s.Find({ firstName: 'Rachel' }, function(err, cur) {
 							pc.cout('s.Find');
-							tArgs.Done();
+							cur.Each(function(err, itm) {
+								if(itm==null) {
+									if(last) last.REMOVE();
+									tArgs.Done();
+									return;
+								};
+								pc.cout('itm.OBJID='+itm.OBJID);
+								last=itm;
+								//pc.cout('itm='+pc.$Str(itm.OBJ, 2, 3));
+							});
 						});
 					});
 					
