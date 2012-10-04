@@ -7,7 +7,51 @@ exports=function(tArgs) {
 
 	tArgs.ASync();
 
+	if(2) {//-stuff
+		var ConnectEvt, Find1CB, InsertCB;
+
+		ConnectEvt=function(e, db) {
+			pc.cout('CONNECTED');
+
+			LOG('\n'+'#'.Repeat(30) + '\n Creating/getting collection(schema): test. Then creating new schema document.\n'+'#'.Repeat(30));
+			var s=db.schemas('user')
+				,	ss=s.Create({ firstName: 'Rachel', lastName: 'Morgan' })
+			;
+			pc.cout('s.NAME='+s.NAME);
+			pc.cout('ss.NAME='+ss.NAME);
+			pc.cout('ss.firstName='+ss.firstName);
+			pc.cout('ss.lastName='+ss.lastName);
+			
+			LOG('\n'+'#'.Repeat(30) + '\n Inserting document into collection(schema).\n'+'#'.Repeat(30));
+			ss.INSERT(InsertCB);
+
+		}
+		InsertCB=function(err, result, db, schema) {
+			if(err) { tArgs.Fail('<db:mongo:schemas:InsertCB - '+err); tArgs.Done(); return; };
+			pc.cout('document added to collection.');
+			LOG('\n'+'#'.Repeat(30) + '\n Retrieving document from collection(schema).\n'+'#'.Repeat(30));
+			schema.Find({ firstName: 'Rachel' }, Find1CB);
+		};
+		Find1CB= function(err, cur, db, schema) {
+			if(err) { tArgs.Fail('<db:mongo:schemas:Find1CB - '+err); tArgs.Done(); return; };
+			pc.cout('s.Find');
+			var last=0;
+			cur.Each(function(err, itm, index) {
+				if(itm==null) {
+					if(last) last.REMOVE();
+					tArgs.Done();
+					return;
+				};
+				pc.cout('* item #'+index+' = '+JSON.stringify(itm.VALUES));
+				last=itm;
+				//pc.cout('itm='+pc.$Str(itm.OBJ, 2, 3));
+			});
+		};
+
+	};
+
 	LOG('-'.Repeat(40) + '\n db with schemas <db> ##01\n' + '-'.Repeat(40));
+	LOG('\n'+'#'.Repeat(30) + '\n Creating db instance and connecting.\n'+'#'.Repeat(30));
 	db=new pdbm.db({
 			name: 'test'
 		,	host: 'localhost'
@@ -29,42 +73,7 @@ exports=function(tArgs) {
 					}
 			}
 		,	On: { 
-				connect: function(e, db) {
-					pc.cout('CONNECTED');
-
-					var s=db.schemas('user')
-						,	ss=s.Create({ firstName: 'Rachel', lastName: 'Morgan' })
-					;
-					pc.cout('s.NAME='+s.NAME);
-					pc.cout('ss.NAME='+ss.NAME);
-					pc.cout('ss.firstName='+ss.firstName);
-					pc.cout('ss.lastName='+ss.lastName);
-					
-					ss.INSERT(function(err) {
-						var last=0;
-						cout('err='+err+'\nGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG');
-						s.Find({ firstName: 'Rachel' }, function(err, cur) {
-							pc.cout('s.Find');
-							cur.Each(function(err, itm) {
-								if(itm==null) {
-									if(last) last.REMOVE();
-									tArgs.Done();
-									return;
-								};
-								pc.cout('itm.OBJID='+itm.OBJID);
-								last=itm;
-								//pc.cout('itm='+pc.$Str(itm.OBJ, 2, 3));
-							});
-						});
-					});
-					
-					//pc.cout(pc.$Obj(s));
-					//for(var jj in s) cout('jj='+jj);
-					//db.Save();
-					
-
-
-				}
+				connect: ConnectEvt
 			}
 	});
 };
