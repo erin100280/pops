@@ -1,22 +1,25 @@
 var X=exports,G=global,iidd=0
    ,  pc=require('pops/pops.core')
+   ,  pdb=require('pops/pops.db')
+//   ,  pdb=require('pops/db/pops.db.mongo')
 ;
-eval(pc.$VarStr(pc,'pc'));   
+eval(pc.$VarStr(pc,'pc'));
 
 var ai=X.appInterface=Interface({z:0
    ,  Exit:'function|ops'
    ,  type:'property'
 });
 
-X.Outline=function(ops){
-   var i1=iidd++,op=Object.CopyTo({},ops||{})
+X.Outline=G.$_Outline_=function(ops){
+   //out('ops='+JSON.stringify(ops)+'\n');
+   var i1=iidd++,op=Object.Clone(ops||{})
       ,  o=G.$$gfdjgh=CreateOptions([
                {
                      appVar: 'app'
                   ,  core: {
-                           global:2
-                        ,  globalVar:2
-                        ,  varName:'core'
+                           global: 2
+                        ,  globalVar: 2
+                        ,  varName: 'core'
                      }
                   ,  databases: {
                      
@@ -63,7 +66,8 @@ X.Outline=function(ops){
          )
       ,  oc=o.core
       ,  s=function(){
-            var $_l_,$_i_,$_z_,$_zz_,$_k_,$_z1_,$_z2_,$_z3_,$_z4_, $_m_, $_nm_,$_to_,$_op_
+            var $_l_,$_i_,$_z_,$_zz_,$_k_, $_kk_, $_pk_, $_z1_,$_z2_,$_z3_,$_z4_, $_m_
+            	,	$_nm_, $_to_, $_op_
                ,  $_ops_=$$gfdjgh
                ,  $_pc_=$_P_
                ,  $_reg_=$_pc_._.Reg
@@ -83,6 +87,8 @@ X.Outline=function(ops){
                ,  $_pa_=require('pops/app/pops.app.base')
                ,  $_D_=$_pa_.Outline
             ;
+            //out('$_ops_='+JSON.stringify($_ops_)+'\n');
+
             delete global.$$gfdjgh;
             
             eval('var '+$_ops_.appVar+'=global.'+$_ops_.appVar+'=$_app_;');
@@ -159,40 +165,43 @@ X.Outline=function(ops){
                      $_reg_($_nm_, $_k_[$_nm_]);
             }
 
-            if($_z_=$_ops_.databases){//-databases
-               $_z_=Object.CopyTo({}, $_z_);
-               $_zz_=function(dbs){
-                  var z, zz, z2, z3, i=0, l, nm, d=dbs||{};
-                  for(nm in d) {
-                     i++;
-                     z=d[nm];
-                     delete d[nm];;
-                     zz=z.onConnect;
-                     z.onConnect=function() {
-                        
-                     };
-                     
-                  }
-               }
-               
-               $_z_=Array.From($_z_);
-               for($_i_=0, $_l_=$_z_.length; $_i_<$_l_; $_i_++)
-                  //if($_k_=$_z_[$_i_])
-                     //for($_nm_ in $_k_||{}){}
-                  for($_nm_ in $_k_=$_z_[$_i_]||{})
-                     $_reg_($_nm_, $_k_[$_nm_]);
-            }
+            if($_z_=$_ops_.databases) {//-databases
+               //out('-databases');
+	            //out('$_z_='+JSON.stringify($_z_)+'\n');
+               $_z_=CreateOptions(Array.From($_z_));
+	            //out('$_z_='+JSON.stringify($_z_)+'\n');
 
-            var CreateApp=function(ops,onRdy){return $_pa_.app.Create(ops,onRdy)};
+               var $_o_, $_op_=$_z_.OPTIONS || {};
+	            //out('$_op_='+JSON.stringify($_op_)+'\n');
+
+               for($_nm_ in $_z_) {
+                  if($_nm_!='OPTIONS') {
+	                  //out('$_nm_='+$_nm_);
+	                  $_k_=$_z_[$_nm_]=Object.CopyTo({}, [$_Outline_.db, $_z_[$_nm_]]);
+							$_o_=Object.CopyTo({}, [$_op_, $_k_]);
+			            //out('$_o_='+JSON.stringify($_o_)+'\n');
+							if($_o_.createVar) {//- Create local var to reference the db after construction.
+								//out('var '+($_o_.varPrefix||'')+($_o_.varName||$_nm_)+';');
+								eval('var '+($_o_.varPrefix||'')+($_o_.varName||$_nm_)+';');
+							};
+						};
+					};
+            };
+
+            var CreateApp=function(ops, onRdy) {
+            	$pops.cout('CreateApp');
+            	var rv=$_pa_.app.Create([$_ops_, ops], onRdy);
+         	};
          
          }.InnerStr()
    ;
    //G[$$gfdjgh+i1]=G.$$gfdjgh=ops||{};
+   //out('o='+JSON.stringify(o)+'\n');
    if(oc.global)Global.Pops();
    if(oc.globalVar)global[oc.varName]=pc;
 
    return s;
-}.Extend({
+}.Extend({//- Defaults.
       modules:{
             options:{
                   appRootVar:2
@@ -214,16 +223,19 @@ X.Outline=function(ops){
                ,  val:null
             }
       }
-})
+	,	db: {
+				name: '<not named>'
+			,	host: 'localhost'
+			,	port: 00
+			,	autoConnect: 2
+		}
+});
 var ap=X.app=Class('popsAppBaseApp',{
       options:{
          
       }
-   ,  Private:{
-            type:'httpServer'
-         ,  pc:pc
-         ,  X:X
-      }
+   ,  Interface: ai
+   ,  PRIVATE: { pc:pc, X:X }
    ,  Shared:{
             Private:{pc:pc,X:X}
          ,  Create:function(){
@@ -231,10 +243,44 @@ var ap=X.app=Class('popsAppBaseApp',{
                return rv;
             }
       }
-   ,  Interface: ai
-   ,  Init:function(ops,onRdy){
+   ,  Private: {
+            type:'httpServer'
+			,	$db: {}
+			,	cout: pc.cout
+			,	pdb: pdb
+
+			,	CreateDatabases: function() {
+					cout('CreateDatabases');
+					var t=T, o=t.op, nm, k, z, zz
+						,	db=o.databases||{}
+						,	dbo=db.OPTIONS||{}
+					;
+					cout('o='+JSON.stringify(o)+'\n');
+					cout('o.databases='+JSON.stringify(o.databases)+'\n');
+					cout('db='+JSON.stringify(db)+'\n');
+
+					for(nm in db) {
+						if(nm!='OPTIONS') {
+							cout('CreateDatabases - nm='+nm);
+							k=db[nm];
+							z=Object.CopyTo({}, [dbo, k])
+							db[nm]=pdb.db([k, { autoConnect: 0 }]);
+						};
+					};
+				
+				
+				}
+      }
+   ,  Init:function(ops, onRdy){
+         cout('popsAppBaseApp - Init 1');
+         $pops.cout('ops='+JSON.stringify(ops)+'\n');
          var t=this.SetOptions(ops),o=t.op,tp=o.type;
-         
+         $pops.cout('o='+JSON.stringify(o)+'\n');
+			CreateDatabases();
+			
+
+         cout('popsAppBaseApp - Init 2');
+
       }
    
    ,  Exit:function(){}

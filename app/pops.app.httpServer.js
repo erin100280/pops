@@ -13,7 +13,11 @@ X.Outline=function(ops){
       var $_z_
          ,  $_pahs_=require('pops/app/pops.app.httpServer')
          ,  $_ab_=require('pops/app/pops.app.base')
-         ,  CreateApp=function(ops,onRdy){return $_pahs_.app.Create(ops,onRdy,$_app_)}
+         ,  CreateApp=function(ops,onRdy){
+         		$pops.cout('CreateApp');
+         		$pops.cout('$_ops_='+JSON.stringify($_ops_)+'\n');
+         		return $_pahs_.app.Create([$_ops_, ops],onRdy,$_app_)
+      		}
       ;
    }.InnerStr()
 }
@@ -22,18 +26,24 @@ var ap=X.app=Class('popsAppHttpServerApp',{
       options:{
             autoRun:2
       }
+   ,	Extends: ab.app
    ,  PRIVATE:{pc:pc,X:X}
    ,  Private: {
-            $hs:hs
-         ,  autoRun:2
-         ,  server:0
-         ,  router:0
+            $hs: hs
+         ,  autoRun: 2
+         ,  server: 0
+         ,  router: 0
+      
+      	,	cout: pc.cout
       }
    ,  Shared:{}
    ,  Interface: ai
    ,  Init:function(ops,onRdy,deps){
+         cout('popsAppHttpServerApp - Init');
+         Parent(ops);
+         cout('popsAppHttpServerApp - Init 2');
          var t=this.SetOptions(ops),o=t.op,z,zz
-            ,  sv=o.server
+            ,  sv=o.erver
             ,  rt=((sv)&&sv.$type!='class'&&sv.router)?sv.router:o.router
             ,  v=o.values
          ;

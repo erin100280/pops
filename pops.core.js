@@ -459,6 +459,7 @@ if(2) {//-vars
       ,	Fire
 		,	On
       ,  SetupVars
+      ,	$CreateOptions
    ;
 };
 if(2){//-Setup system nodes.
@@ -472,7 +473,7 @@ if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
    var z,$cr=O.$cr='\n'
       ,  _t=O._t=true , _f=O._f=false
       ,  Blank=O.Blank=function(){return function(){}}
-      ,  cout=o.cout=console.log
+      ,  cout=o.cout=console.log.Sys()
       ,  Cls=console.Cls=o.Cls=function(){cout('\033[2J');}
       ,  def=o.def=function(v){return typeof v!='undefined'?_t:_f;} , udef=o.udef=undefined
       ,  sout=o.sout=function(s){
@@ -914,18 +915,19 @@ var Class=O.Class=function(nam,specs,onReady){
 	      ,  $s=o.Shared
 	      ,  nm=nam||(o.$name||'')
 	      ,  $o=o.options
+	   	,	jj={}
 	   ;
 	};   
 
    vs=Class.Pull(o);
-   rv=function(op,onld){
+   rv=Class.Obj(jj, function(op,onld){
       return ((this instanceof rv)?
             O.Class.InitClass(is, arguments)
          :  rv.Create.Call(arguments)
       );
    }.Sys().Extend({
    		$$members: {}
-   });
+   }), 2);
    $mmb=rv.$$members;
 
 	if(2) {//-Extends
@@ -1030,23 +1032,26 @@ var Class=O.Class=function(nam,specs,onReady){
 
          return rv;
       }
-   ,  Obj: function(op, v) {
+   ,  Obj: function(op, v, shared) {
 			var Fire=O.Event.Fire;
+
          if(!v) { v=op; op={} };
-         v.$inst=true;
          v.On=op.On||function(evt, fn, bnd){ return On(v, evt, fn, 0, 0, bnd); }.Sys();
          v.Once=op.Once||function(evt, fn, bnd){ return On(v, evt, fn, 0, 2, bnd); }.Sys();
          v.$On=op.$On||function(evt, fn, bnd) { return On(v, evt, fn, 2, 0, bnd); }.Sys();
          v.$Once=op.$Once||function(evt, fn, bnd){ return On(v, evt, fn, 2, 2, bnd); }.Sys();
-         v.SetOptions=op.SetOptions||function(op,op2){return O.Class.SetOptions(v,op,op2);}.Sys();
          v.Fire=op.Fire||function(e, args, onDone) { Fire(v, e, args, onDone); }.Sys();
 
-         if(typeof v!='function') {
-            var f=Function;
-            v.Extend=f.Extend;
-            v.ExtImp=f.ExtImp;
-            v.Implement=f.Implement;
-         };
+			if(!shared) {
+	         v.$inst=true;
+	         v.SetOptions=op.SetOptions||function(op,op2){return O.Class.SetOptions(v,op,op2);}.Sys();
+	         if(typeof v!='function') {
+	            var f=Function;
+	            v.Extend=f.Extend;
+	            v.ExtImp=f.ExtImp;
+	            v.Implement=f.Implement;
+	         };
+			};
 
          return v;
       }
@@ -1189,7 +1194,9 @@ var Class=O.Class=function(nam,specs,onReady){
 		}
    ,  SetOptions:function(v,op,op2){
          if(!op2&&(v.$op||v.options)) {op2=op;op=v.$op?v.$op:v.options;};
-         v.op=v.options=Object.Merge(op,op2);
+
+         //v.op=v.options=Object.Merge(op,op2);
+         v.op=v.options=$CreateOptions(op,op2);
          var m, n, o=v.op, e=o.On, E=o.$On;
          if(v.$$SetOp) v.$$SetOp(o);
          if(e) v.On(e,0,v);
@@ -1206,6 +1213,9 @@ var Class=O.Class=function(nam,specs,onReady){
                         ,  op: 0, OP: 0
                      }
                   :  {}
+         	,	st={
+         			Parent: O.Parent
+         		}
          ;
 			op=obj.$$props=obj.$$props||{};
          if(tc) obj.$class=tc;
@@ -1299,7 +1309,7 @@ var Class=O.Class=function(nam,specs,onReady){
 O.Parent=function(){
    var a=arguments, z=a.callee.caller.$$parent;
    return(z)?z.Call(a):undefined;
-};
+}.Sys();
 
 O.Interface=function(nam,specs) {
    var n=nam, s=specs, l, nm, z, zz, k, a, it={}, unk='UNKNOWN'
@@ -1516,7 +1526,7 @@ O.Val=function(val, ops){
       ,  options: Object.LCase(ops)
    }
 }
-var CC=O.CreateOptions=function(ops, settings){
+$CreateOptions=O.CreateOptions=function(ops, settings){
    var z, i, nm, z2, k, o=Array.From(ops||[]), l=o.length, s=settings||{}, rv=s.rv||{};
    
    for(i=0; i<l; i++) {
@@ -1529,6 +1539,31 @@ var CC=O.CreateOptions=function(ops, settings){
    
    
    return rv;
+};
+$CreateOptions=O.CreateOptions=function(ops, settings){
+	var a=arguments, i, k, l, lst=[], nm, rv={}, z, zz; 
+
+	for(i=0, l=a.length; i<l; i++) {
+		z=a[i];
+		if(z instanceof Array) Array.Merge(lst, z);
+		else lst.Push(z);
+	};
+
+	for(i=0, l=lst.length; i<l; i++) {
+		z=lst[i];
+		for(nm in z) {
+			k=z[nm];
+			zz=rv[nm];
+			if((typeof zz=='undefined') || !(typeof k=='object' && typeof zz=='object')) 
+				rv[nm]=k;
+			else rv[nm]=$CreateOptions(zz, k);
+		};
+	};
+
+
+
+
+	return rv;
 };
 
 if(2) {//-Set locals
