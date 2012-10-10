@@ -28,6 +28,33 @@ if(2){//-Native.
 					get: function() { return t.$$parent; }
 				,	set: function(v) { t.$$parent=v; }
 			});
+			Object.defineProperty(rv, '$$mom', {
+					get: function() { return t.$$mom; }
+				,	set: function(v) { t.$$mom=v; }
+			});
+
+         return rv;
+      };
+      z4=z.Bind=z2.Bind=function(that, members){
+			if(this.$$bound) return this.$$FN.Bind(that, members);
+         var t=this, m=members, mm
+         	,	rv=function() {
+						return t.apply(that, arguments);
+	         	}.Extend({ $$FN: t, $$bound: 2 });
+         ;
+         if(m) for(mm in m) rv[mm]=m[mm];
+
+			Object.defineProperty(rv, '$$FN', {
+					get: function() { return t; }
+			});
+			Object.defineProperty(rv, '$$parent', {
+					get: function() { return t.$$parent; }
+				,	set: function(v) { t.$$parent=v; }
+			});
+			Object.defineProperty(rv, '$$mom', {
+					get: function() { return t.$$mom; }
+				,	set: function(v) { t.$$mom=v; }
+			});
 
          return rv;
       };
@@ -325,6 +352,55 @@ if(2){//-Native.
    });
    Boolean.Sys().Implement({$class: Boolean});
    Date.Sys().Implement({$class: Date});
+   
+   var JsonSafeStr=JSON.SafeStr=function(val) {
+   	return JSON.stringify(JsonSafeStr.MakeSafeVal(val));
+   }.Extend({
+			CheckForDupe: function(val, no, ns) {
+				
+			}
+	   ,	MakeSafeVal: function(val, no, ns) {
+	   		var i, jj, k=null, k1, k2, l, nm, ns=ns || '<BASE>', rv=val, tp=typeof rv, ya=2, z;
+	   		
+	   		no=(no)? Array.Clone(no) : [];
+	   			   		
+	   		if(2) {//-CheckForDupe
+	   			for(i=0, l=no.length; i<l; i++) {
+	   				z=no[i];
+	   				if(z.val===val) return { '<duplicate of>': z.ns };
+	   			};
+   			};
+	   		
+	   		if(rv) {
+		   		if(rv instanceof Array) { k=rv=[]; }
+		   		else if(rv.$type=='class' && 0) {}
+		   		else if(tp=='function') {
+		   			rv={ 'TYPE': 'Function', 'CODE': val.Str() };
+		   			k=rv.MEMBERS={};
+		   		}
+		   		else if(tp=='object') { k=rv={}; }
+	   			else { ya=0; };
+	   		
+					if(ya) {
+		   			no.Push({ ns: ns, val: val });
+		   			for(nm in val) {
+	   					z=val[nm];
+		   				if(!k[nm]) { 
+		   					z=val[nm];
+								if((!z || (!z.$$prim && !z.$$sys)) && (nm!='Extend' && nm!='Implement')) {
+			   					//O.out('  !!^^^^^^  nm = '+nm+'  ^^^^^^!!  ');
+			   					k[nm]=JsonSafeStr.MakeSafeVal(z, no, ns+':'+nm);
+		   					};
+		   				};
+		   			};
+					};
+	   		
+	   		};
+				
+	   		return rv;
+	   	}
+   });
+   
    delete z; delete z2; delete z4; delete zz; delete Ex; delete Im; delete ExIm; 
 };
 
@@ -460,6 +536,7 @@ if(2) {//-vars
 		,	On
       ,  SetupVars
       ,	$CreateOptions
+   	,	fs=require('fs')
    ;
 };
 if(2){//-Setup system nodes.
@@ -470,10 +547,47 @@ if(2){//-Setup system nodes.
 };
 
 if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
+	if(2) {//- cout
+		var
+	      	coutAutoClear=2, coutLog=0, coutBuffer='', coutFilename=''
+	      ,  cout=o.cout=function(val) {
+	      		if(coutLog) coutBuffer+=''+val+'\n';
+	      		console.log(val);
+   			}.Sys()
+   		,	z=cout.log={
+						autoClear: 2
+					,	filename: ''
+   				,	Clear: function() { coutBuffer=''; return z }
+					,	Dump: function(ops, OnRdy) {
+							var o=ops||{}
+								,	fil=o.file||z.filename
+								,	clear=(typeof o.clear!='undefined')? o.clear : z.autoClear
+							;
+							if(fil=='') throw('filename can not be blank');
+							fs.writeFile(fil, coutBuffer, 'utf8', OnRdy);
+							if(clear) z.Clear();
+							return z;
+						}
+					,	DumpSync: function(ops) {
+							var o=ops||{}
+								,	fil=o.file||z.filename
+								,	clear=(typeof o.clear!='undefined')? o.clear : z.autoClear
+							;
+							if(fil=='') throw('filename can not be blank');
+							fs.writeFileSync(fil, coutBuffer, 'utf8');
+							if(clear) z.Clear();
+							return z;
+						}
+					,	Start: function() { coutLog=2; }
+					,	Stop: function() { coutLog=0; }
+   			}
+   	;
+		
+	};
+
    var z,$cr=O.$cr='\n'
       ,  _t=O._t=true , _f=O._f=false
       ,  Blank=O.Blank=function(){return function(){}}
-      ,  cout=o.cout=console.log.Sys()
       ,  Cls=console.Cls=o.Cls=function(){cout('\033[2J');}
       ,  def=o.def=function(v){return typeof v!='undefined'?_t:_f;} , udef=o.udef=undefined
       ,  sout=o.sout=function(s){
@@ -486,6 +600,8 @@ if(2){//-misc. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
                v.$type=='class'&&v.$name&&v.$name!=''?v.$name:v.$type:typeof v;
          }
    ;
+
+
 }
 if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
    var z
@@ -969,6 +1085,7 @@ var Class=O.Class=function(nam,specs,onReady){
    return rv;
 }.Extend({
       InitClass:function(v, args){
+		   //out(' ==== args='+JSON.SafeStr(args)+'\n');
          if(v.$InitState) return v.FUNCTION? v.FUNCTION.Call(args): undefined;
 
          if(2) {//-vars
@@ -977,6 +1094,7 @@ var Class=O.Class=function(nam,specs,onReady){
 	            ,	ExtFn, ImpFn
 	            ,  a=args
 	            ,	i=(a&&a.length&&a[0])? a[0] : {}
+	            ,	i=O.CreateOptions(i)
 	            ,	noInit=i.$$noInit
 
 	            ,  vs=v.$vs
@@ -998,6 +1116,10 @@ var Class=O.Class=function(nam,specs,onReady){
 	         	,	bindTo=i.$$bindTo||rv
 	         ;
 			};
+         
+		   cout(' ==== i='+JSON.SafeStr(i)+'\n');
+		   fs.writeFileSync('c:/dev/i.json', JSON.SafeStr(i), 'utf8');
+			if(i.$$bindTo) cout('i.$$bindTo');
          
          x=rv.$iid=O.$$iid++;
 			rv.$$sys=2;
@@ -1134,9 +1256,14 @@ var Class=O.Class=function(nam,specs,onReady){
          if(ll=$e.length){
             for(l=0; l<ll; l++) {
                k=$e[l];
+               
+               cout('\n************ shared='+((shared)? 'yes' : 'no')+' ************\n');
+               cout('bindTo: '+((bindTo)? 'yes' : 'no'));
+               cout('bindTo='+JSON.SafeStr(bindTo));
                zz=arr[l]=(shared)? k : new k({
-               		$$noInit: 2
+               		$$slam: 66
                	,	$$bindTo: bindTo
+               	,	$$noInit: 4
                	,	$$thisClass: thisClass
                	,	$$Fire: v.Fire
                	,	$$On: v.On
@@ -1149,41 +1276,9 @@ var Class=O.Class=function(nam,specs,onReady){
                   
                   if((z) && !z.$$prim) {
                   	if(typeof z=='function' && (!z.$$bound || z.$$cBound))
-                  		z=z.Bind(bindTo||z, { cBound: 2 });
-                  	v[nm]=z;
+                  		z=z.Bind(bindTo||v, { ccBound: 2 });
+                  	v[nm]=zz[nm]=z;
                	};
-               };
-            };
-         };
-
-			
-
-			return rv;
-		}
-	,	MakeExtends2: function(v, $e, bindTo, thisClass, existingRv, shared) {
-			var z, z2, zz, k, ff, i, i2, l, ll, ln, ln2, nm
-				,	rv=existingRv||{ arr: [], }
-				,	arr=rv.arr
-				,	arr2
-				,	fn=rv.Fn=(rv.Fn || function(i) { return arr[(i&&i==0)? i : 0] })
-			;
-
-         if(ll=$e.length){
-            for(l=0; l<ll; l++) {
-               k=$e[l];
-               zz=arr[l]=new k({
-               		$$noInit: 2
-               	,	$$bindTo: bindTo
-               	,	$$thisClass: thisClass
-               	,	$$Fire: v.Fire
-               	,	$$On: v.On
-               	,	$$Once: v.Once
-               	,	$$$On: v.$On
-               	,	$$$Once: v.$Once
-            	});
-               for(nm in zz){
-                  z=zz[nm];
-                  if((z) && !z.$$prim) v[nm]=z;
                };
             };
          };
@@ -1209,7 +1304,7 @@ var Class=O.Class=function(nam,specs,onReady){
             ,  tc=thisClass
             ,  xt=(tc!==obj)?
                      {
-                           T: obj
+                           T: bindTo||obj
                         ,  op: 0, OP: 0
                      }
                   :  {}
@@ -1287,12 +1382,15 @@ var Class=O.Class=function(nam,specs,onReady){
                else {
             		vd.type='function';
             		if(!z.$$bound) z2=stt.EvalFunction(z);
+            		//out('7777777777777777777777777777777777777777777777777777');
+            		z2.$$mom=obj;
             		z2=z2.Bind(bindTo||obj, {$$cBound: 2});
          		};
             };
             if(ya) {
             	ya=obj[nm];
             	if(ya) z2.$$parent=ya;
+            	
             	obj[nm]=kk[nm]=k[nm]=z2;
          	};
          };
@@ -1307,7 +1405,12 @@ var Class=O.Class=function(nam,specs,onReady){
       }
 });
 O.Parent=function(){
-   var a=arguments, z=a.callee.caller.$$parent;
+   var a=arguments, k=a.callee.caller, rv, z=k.$$parent;
+   //if(z && (!z.$$bound || z.$$cBound)) z=z.Bind(k.$$mom);
+   if(k.$$mom) cout('  k.$$mom  ');
+   z=z.Bind(k.$$mom);
+   cout('\n  z='+JSON.SafeStr(z)+'  \n');
+   eval('rv=z('+O.ArgStr(a, 'a')+');')
    return(z)?z.Call(a):undefined;
 }.Sys();
 
@@ -1527,41 +1630,18 @@ O.Val=function(val, ops){
    }
 }
 $CreateOptions=O.CreateOptions=function(ops, settings){
-   var z, i, nm, z2, k, o=Array.From(ops||[]), l=o.length, s=settings||{}, rv=s.rv||{};
-   
-   for(i=0; i<l; i++) {
-      z=o[i]||{};
-      if(z.$class==Array) z=CC(z);
-      else if(z.$type=='class') z=z.options||{};
-
-      Object.CopyTo(rv, z)
-   };
-   
-   
-   return rv;
-};
-$CreateOptions=O.CreateOptions=function(ops, settings){
-	var a=arguments, i, k, l, lst=[], nm, rv={}, z, zz; 
-
-	for(i=0, l=a.length; i<l; i++) {
-		z=a[i];
-		if(z instanceof Array) Array.Merge(lst, z);
-		else lst.Push(z);
-	};
+	var i, k, l, lst=Array.Clone(arguments).Condense(), nm, rv={}, z, zz; 
 
 	for(i=0, l=lst.length; i<l; i++) {
 		z=lst[i];
 		for(nm in z) {
 			k=z[nm];
 			zz=rv[nm];
-			if((typeof zz=='undefined') || !(typeof k=='object' && typeof zz=='object')) 
+			if(!(typeof k=='object' && typeof zz=='object')) 
 				rv[nm]=k;
 			else rv[nm]=$CreateOptions(zz, k);
 		};
 	};
-
-
-
 
 	return rv;
 };

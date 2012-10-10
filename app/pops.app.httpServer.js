@@ -1,4 +1,5 @@
 var X=exports,U=undefined,G=global,iidd=0
+   ,	fs=require('fs')
    ,  pc=require('pops/pops.core')
    ,  hs=require('pops/pops.http')
    ,  pr=rt=require('pops/pops.router')
@@ -13,12 +14,22 @@ X.Outline=function(ops){
       var $_z_
          ,  $_pahs_=require('pops/app/pops.app.httpServer')
          ,  $_ab_=require('pops/app/pops.app.base')
-         ,  CreateApp=function(ops,onRdy){
-         		$pops.cout('CreateApp');
-         		$pops.cout('$_ops_='+JSON.stringify($_ops_)+'\n');
-         		return $_pahs_.app.Create([$_ops_, ops],onRdy,$_app_)
+         ,	$_AfterCreateApp_httpServer=function(app) {
+         		$pops.cout('$_AfterCreateApp_httpServer');
+      			//$pops.cout('app='+JSON.stringify(app)+'\n');
+
+         		var rv=$_AfterCreateApp(app), o=rv.op;
+         		return rv;
+         	}
+         ,  CreateApp=$_CreateApp_httpServer=function(ops,onRdy){
+         		$pops.cout('$_CreateApp_httpServer');
+         		var rv=$_pahs_.app.Create([$_ops_, ops],onRdy,$_app_);
+      			//$pops.cout('rv='+JSON.stringify(rv)+'\n');
+      			//$pops.cout('rv.db='+JSON.stringify(rv.db)+'\n');
+
+         		return $_AfterCreateApp_httpServer(rv);
       		}
-      ;
+   	;
    }.InnerStr()
 }
 
@@ -27,7 +38,7 @@ var ap=X.app=Class('popsAppHttpServerApp',{
             autoRun:2
       }
    ,	Extends: ab.app
-   ,  PRIVATE:{pc:pc,X:X}
+   ,  PRIVATE:{pc: pc, X: X, fs: fs }
    ,  Private: {
             $hs: hs
          ,  autoRun: 2
@@ -38,17 +49,30 @@ var ap=X.app=Class('popsAppHttpServerApp',{
       }
    ,  Shared:{}
    ,  Interface: ai
-   ,  Init:function(ops,onRdy,deps){
+   ,  Init:function(ops, onRdy, deps){
          cout('popsAppHttpServerApp - Init');
          Parent(ops);
          cout('popsAppHttpServerApp - Init 2');
-         var t=this.SetOptions(ops),o=t.op,z,zz
-            ,  sv=o.erver
+         //var t=this.SetOptions(ops),o=t.op,z,zz
+         var z;
+       	if(this.op) cout('           if(this.op)              ');
+       	else cout('           if(!this.op)              ');
+         cout('ops='+JSON.SafeStr(ops)+'\n');
+         if(!this.options) this.SetOptions(ops);
+		   this.SetOptions(ops);
+		   z=JSON.SafeStr(this);
+		   fs.writeFileSync('c:/dev/this-httpapp.json', z, 'utf8');
+         pc.cout.log.DumpSync();
+         var t=this, o=this.options, z, zz
+            ,  sv=o.server
             ,  rt=((sv)&&sv.$type!='class'&&sv.router)?sv.router:o.router
             ,  v=o.values
          ;
 
-         if(2){//-Handle options
+
+cout('oooo WAM | sv='+JSON.SafeStr(sv)+' oooo');
+
+         if(0){//-Handle options
             o.options=Object.CopyTo({
                   useExitKey:2
                ,  exitKey:'escape'
@@ -69,7 +93,7 @@ var ap=X.app=Class('popsAppHttpServerApp',{
             Exit:function(){}
          ,  Run:function(){
                //require('tty').setRawMode(true);
-               var s=server,o=this.op,$o=o.options
+               var s=server,o=this.options,$o=o.options
                   ,  stdin=process.openStdin()
                   ,  tty=require('tty')
                   ,  fn=function (chunk, key) {
