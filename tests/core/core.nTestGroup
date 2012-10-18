@@ -1,5 +1,3 @@
 exports=[
-      MyPath('Class/Class.nTest')
-
-
-]
+      nTest.File($$zz='./Class/Class.nTest', require($$zz))
+];

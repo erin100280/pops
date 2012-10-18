@@ -1,10 +1,10 @@
-exports={
+Object.CopyTo(exports, {
       name: 'pops.core.Class'
    ,  files: 'pops.core.js'
    ,  parts: [
             {     name: 'construct' 
-               ,  Test: function() {
-                     console.log('wowzer');
+               ,  Test: function(v) {
+                     v.Log('wowzer');
                   }
             }
          ,  {     name: 'construct (with privates and stuff)' 
@@ -12,8 +12,6 @@ exports={
                   
                   }
             }
-         ,  { name: 'inherit', Test: { file: MyPath('inherit.nTestPart') } }
-         ,  { name: 'PRIVATE', Test: { file: MyPath('PRIVATE.nTestPart') } }
-         ,  { name: 'events', Test: { file: MyPath('events.nTestPart') } }
+         ,  { name: 'events', Test: nTest.File($$zz='./events.nTestPart', require($$zz)) }
       ]
-};
+});
