@@ -1,3 +1,4 @@
+var File=nTest.File;
 Object.CopyTo(exports, {
       name: 'pops.core.Class'
    ,  files: 'pops.core.js'
@@ -12,6 +13,6 @@ Object.CopyTo(exports, {
                   
                   }
             }
-         ,  { name: 'events', Test: nTest.File($$zz='./events.nTestPart', require($$zz)) }
+         ,  { name: 'events', Test: File($$zz='./events.nTestPart', require($$zz)) }
       ]
 });

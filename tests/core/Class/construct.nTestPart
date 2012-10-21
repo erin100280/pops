@@ -1,11 +1,11 @@
 exports.Test=function(v) {
-   var z, c, c2, ci, ci2
+   var z, c, ci
       ,  pc=require('pops/pops.core')
    ;
 
 	v.Log('==== YA ====');
 
-	c=pc.Class('ErinsClassBaseTestClass', {
+	c=pc.Class('ErinsClassConstructTestClass', {
 			OPTIONS: { a: 'A' }
 		,	PUBLIC: {
 					w: 'W'
@@ -22,23 +22,14 @@ exports.Test=function(v) {
 				,	Yo: function(name) { pc.cout('Yo '+(name||'mah')); }
 			}
 		,	INIT: function(op, OnRdy) {
+				pc.cout('this.x='+this.x);
 				this.Yo('Dude');
 				this.Yo();
 			}
 	});
 	
-	c2=pc.Class('ErinsClassInheritTestClass', {
-			OPTIONS: { a: 'A' }
-		,	EXTENDS: c
-		,	PUBLIC: {
-					x: '-X'
-			}
-		,	INIT: function(op, OnRdy) {
-				//pc.cout('c2: this = '+JSON.SafeStr(this));
-				this.Yo('Crap');
-			}
-	});
-	
 	ci=new c();
-	ci2=new c2();
+	pc.cout('ci.p1='+ci.p1);
+	ci.p1='1980';
+	pc.cout('ci.p1='+ci.p1);
 };

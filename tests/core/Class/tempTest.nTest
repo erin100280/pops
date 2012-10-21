@@ -1,0 +1,8 @@
+var File=nTest.File;
+Object.CopyTo(exports, {
+      name: 'pops.core.Class - tempTest'
+   ,  files: 'pops.core.js'
+   ,  parts: [
+			{ name: 'inherit', Test: File($$zz='./inherit.nTestPart', require($$zz)) }
+      ]
+});
