@@ -3,6 +3,7 @@ Object.CopyTo(exports, {
       name: 'pops.core.Class - tempTest'
    ,  files: 'pops.core.js'
    ,  parts: [
+			//{ name: 'events', Test: File($$zz='./events.nTestPart', require($$zz)) }
 			{ name: 'inherit', Test: File($$zz='./inherit.nTestPart', require($$zz)) }
       ]
 });

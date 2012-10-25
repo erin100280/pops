@@ -340,36 +340,47 @@ if(2){//-Native.
                }
                return rv;
             }
-         ,  UCase:function(obj, recursive){return Object.LCase(obj, recursive,2)}
-         ,  Merge:function(ob,ob2){
+         ,  UCase: function(obj, recursive){return Object.LCase(obj, recursive,2)}
+         ,  Merge: function(ob,ob2){
                var rv=ob?Object.Clone(ob):{};
                if(ob2)for(mb in ob2)rv[mb]=ob2[mb];
                return rv;
             }
+			,	Remove: function(v, names) {
+					var n=names, i, l, z;
+					for(i=0, l=n.length; i<l; i++) if(v[z=n[i]]) delete v[z];
+				}
+
       }
    });
    Boolean.Sys().Implement({$class: Boolean});
    Date.Sys().Implement({$class: Date});
    
-   var JsonSafeStr=JSON.SafeStr=function(val) {
-   	return JSON.stringify(JsonSafeStr.MakeSafeVal(val));
+   var JsonSafeStr=JSON.SafeStr=function(val, depth, dbg) {
+   	return JSON.stringify(JsonSafeStr.MakeSafeVal(val, [], 0, depth, dbg));
    }.Extend({
 			CheckForDupe: function(val, no, ns) {
 				
 			}
-	   ,	MakeSafeVal: function(val, no, ns) {
+	   ,	MakeSafeVal: function(val, no, ns, depth, dbg) {
 	   		var i, jj, k=null, k1, k2, l, nm, ns=ns || '<BASE>', rv=val, tp=typeof rv, ya=2, z;
+	   		if(typeof depth=='undefined') depth=2;
+
+				if(depth<1) return('end-of-depth');
 	   		
-	   		no=(no)? Array.Clone(no) : [];
-	   			   		
+	   		//no=(no)? Array.Clone(no) : [];
+	   		no=no||[];
+
 	   		if(2) {//-CheckForDupe
 	   			for(i=0, l=no.length; i<l; i++) {
 	   				z=no[i];
-	   				if(z.val===val) return { '<duplicate of>': z.ns };
+	   				if(z.val==val) return { '<duplicate of>': z.ns };
 	   			};
    			};
+				no.Push({ ns: ns, val: val });	   		
 	   		
 	   		if(rv) {
+		   		if(dbg) cout('  tp='+tp);
 		   		if(rv instanceof Array) { k=rv=[]; }
 		   		else if(rv.$type=='class' && 0) {}
 		   		else if(tp=='function') {
@@ -377,17 +388,17 @@ if(2){//-Native.
 		   			k=rv.MEMBERS={};
 		   		}
 		   		else if(tp=='object') { k=rv={}; }
-	   			else { ya=0; };
+	   			else { rv='TYPE: '+tp; ya=0; };
 	   		
 					if(ya) {
-		   			no.Push({ ns: ns, val: val });
 		   			for(nm in val) {
 	   					z=val[nm];
 		   				if(!k[nm]) { 
 		   					z=val[nm];
-								if((!z || (!z.$$prim && !z.$$sys)) && (nm!='Extend' && nm!='Implement')) {
+								if((!z || !(z.$$prim || z.$$sys)) && (nm!='Extend' && nm!='Implement')) {
 			   					//O.out('  !!^^^^^^  nm = '+nm+'  ^^^^^^!!  ');
-			   					k[nm]=JsonSafeStr.MakeSafeVal(z, no, ns+':'+nm);
+			   					if(dbg) cout('  nm='+nm);
+			   					k[nm]=JsonSafeStr.MakeSafeVal(z, no, ns+':'+nm, depth-1, dbg);
 		   					};
 		   				};
 		   			};
@@ -848,34 +859,50 @@ O.Overload=function(val){
 O.Property=function(val){ return Object.CopyTo({}, [val, { $$isProperty: 2 }]); };
 
 if(2) {//-Class system.
-	var C, CAddEvent, CListenersObj, COn, COnInfo, COnInfoDouble
-		,	CGetListeners, CEventArgs, CFireEvent, CAddMembers
-		,	CSetupExtenders, CSetupExtender
-	;
+	if(2) {//- locals def
+		var C, cc, CAddEvent, CAddMembers, CEventArgs, CFireEvent, CGetListeners
+			,	CListenersObj, COn, C$On, COnce, C$Once
+			, 	COnInfo, COnInfoDouble, CParent
+			,	CSetupExtender, CSetupExtenders, CSetOptions
+		;
+	};
 
 	var Class=O.Class=function(nam, specs, OnRdy) {
 		if(typeof nam!='string') { OnRdy=specs; specs=nam; nam=0; };
 		if(typeof specs=='function') { OnRdy=specs; specs={}; nam=0; };
 	
-		var a=arguments, al=a.length, ci
-				spc=O.CreateOptions(specs)
-			,	dOps=O.CreateOptions(spc.OPTIONS||{})
-			,	init=spc.INIT
-			,	nam=(nam)? nam : spc.NAME||''
-			,	shr=O.CreateOptions(spc.SHARED||{})
-			,	rv=function() { return Class.CreateInstance(ci, arguments); }
+		var a=arguments, al=a.length, k, z
+			,	spc=O.CreateOptions(specs)
+			,	nam=spc.NAME=nam||spc.NAME||''
+			,	ci=Class.PullInfo(spc)
+			,	shrd=ci.SHARED
+			,	rv=Class.Obj(function() {
+					//if(arguments.length) out('arguments[0]='+JSON.SafeStr(arguments[0]));
+					//if(arguments.length>1) out('arguments[1]='+JSON.SafeStr(arguments[1]));
+					
+					return Class.CreateInstance(ci, arguments);
+				}, shrd, 2)
 		;
 		
-		ci=Class.PullInfo(spc)
 		ci.CLASS=rv;
 		rv.Extend({
-				INST: rv()
-			,	NAME: ci.NAME
+				NAME: ci.NAME
 			,	ClassInfo: ci
 		});
+
+		if(z=ci.SHARED) {
+			CSetupExtenders(rv, z.EXTENDS, z.IMPLEMENTS, rv, 2);
+			if(k=z.PUBLIC) CAddMembers(rv, k, rv);
+			if(k=k.EVENTS) rv.On(k);
+			if(k=z.INIT) k.Apply(rv, []);
+			rv.Fire('load', function() { rv.Fire('ready'); });
+		};
+
+		rv.INST=rv();
 		
 		return rv;
-	}.Extend({
+	};
+	Class.Extend({
 			AddMembers: function(v, members, Class) {
 				var c=Class, k, kk, m=members||{}, nm, to, ya, z, zz
 					,	md=v.$$memberData=v.$$memberData||{}
@@ -892,7 +919,7 @@ if(2) {//-Class system.
 					if(md[nm]) delete v[nm];
 					md[nm]=z;
 					if(z!=null && to!='undefined' && !z.$$isClass) {
-						if(to=='function' && !z.$$isClass) {
+						if(to=='function') {
 							z.$$fName=nm;
 							z.$$inClass=Class;
 							if(shrd) z.$$shared=2;
@@ -923,10 +950,12 @@ if(2) {//-Class system.
 									:	{}
 							,	ci
 						)
+					,	c=ci.CLASS
 				;
 				//out('ci='+JSON.SafeStr(ci));
-				CSetupExtenders(rv, ci.PREIMPS, ci.EXTENDS, ci.IMPLEMENTS);
-				if(z=ci.PUBLIC) CAddMembers(rv, z, ci.CLASS);
+				if(!c.INST) c.INST=rv;
+				CSetupExtenders(rv, ci.EXTENDS, ci.IMPLEMENTS, c);
+				if(z=ci.PUBLIC) CAddMembers(rv, z, c);
 				if(z=ci.EVENTS) rv.On(z);
 				//out('rv='+JSON.SafeStr(rv));
 				if(init) init.Apply(rv, args);
@@ -934,33 +963,39 @@ if(2) {//-Class system.
 
 				return rv;
 			}
-		,	Obj: function(v, classInfo, ops, sys, shared) {
+		,	Obj: function(v, classInfo, shared) {
 				var ci;
 
 				Extend(v, {
-						$$memberData: {}
+						$$isClass: 2
+					,	$$memberData: {}
+					,	CLASSINFO: classInfo
 
-					,	Fire: function(nam, ops, args, OnRdy) {
-							if(typeof ops=='function' && !ops.$$eventArgsOps) {
-								OnRdy=ops; ops={}; args=[];
-							}
-							else if(typeof args=='function') { OnRdy=args; args=[]; };
+					,	Fire: function(nam, args, ops, OnRdy) {
+							if(typeof args=='function') { OnRdy=args; ; ops={}; args=[]; }
+							else if(typeof ops=='function' && !ops.$$eventArgsOps) {
+								OnRdy=ops; ops={};
+							};
 							
 							return CFireEvent(v, nam, 0, args, OnRdy);
 					}.Prim()
-					,	SetOptions: function() {
-							var t=this
-								,	z=t.OP=t.OPTIONS=CO([classInfo.OPTIONS||{}, arguments])
-								,	ev=z.ON||z.EVENTS
-							;
-							if(ev) t.On(ev);
-							return t;
-						}.Prim()
-					,	On: function(evt, fn) { return COn(this, evt, fn); }.Prim()
-					,	$On: function(evt, fn) { return COn(this, evt, fn, 2); }.Prim()
-
+					,	On: COn
+					,	$On: C$On
+					,	Once: COnce
+					,	$Once: C$Once
+					,	Parent: CParent
+					,	SetOptions: CSetOptions
 				});
-				
+				if(shared) {
+					Extend(v, {
+							NEW: function() { return v.apply(v, arguments); }
+					});
+				}				
+				else {
+					Extend(v, {
+							$$isInst: 2
+					});
+				};				
 				
 				return v;
 			}
@@ -977,8 +1012,8 @@ if(2) {//-Class system.
 				if(fn) { rv={}; rv[nam]=fn; };
 				return rv;
 			}
-		,	On: function(v, nam, fn, system) {
-				var i, l, nm, z, z2, z4, zz
+		,	On: function(nam, fn, system) {
+				var v=this, i, l, nm, z, z2, z4, zz
 					,	k=COnInfo(nam, fn, system)
 				;
 				
@@ -992,11 +1027,15 @@ if(2) {//-Class system.
 					for(nm in z) { zz=z[nm]; CAddEvent(v, nm, zz, 2, 2); };
 
 				return v;
-			}
-		,  Once: function(v, nam, fn, system) {
+			}.Prim()
+		,	$On: function(nam, fn) { return this.On(nam, fn, 2); }.Prim()
+		,  Once: function(nam, fn, system) {
 				if(!nam) return;
-				return COn(v, { ONCE: CListenersObj(nam, fn) }, 0, system);		   	
-		   }
+				return this.On({ ONCE: CListenersObj(nam, fn) }, 0, system);		   	
+		   }.Prim()
+		,	$Once: function(nam, fn) {
+				return this.On({ ONCE: CListenersObj(nam, fn) }, 0, 2);
+		}.Prim()
 		,	OnInfo: function(evt, fn, system) {
 				var i, l, k, nm, once, onceStd, onceSys, std, sys, z;
 				
@@ -1045,13 +1084,40 @@ if(2) {//-Class system.
 
 				return rv;
 			}
+		,	Parent: function() {
+				var a=arguments, c, cls, cmd, i, k, l, md, nam, prop, shrd, z, zz
+					,	cl=a.callee.caller
+				;
+
+				if(!cl) throw('Function does not have a parent function.');
+				else {
+					nam=cl.$$fName; cls=cl.$$inClass;
+					c=(shrd)? cls : cls.INST;
+					md=c.$$memberData[nam];
+					prop=cl.$$PROPERTY; shrd=cl.$$shared;
+
+					z=c.EXTENDS;
+					for(i=0, l=z.length; i<l; i++) {
+						k=(shrd)? z[i] : z[i].INST;
+						cmd=k.$$memberData[nam];
+						if(prop||cmd.$$isProperty) {}
+						else {
+							zz=k[nam];
+							if(typeof zz=='function') return zz.Apply(this, a);
+							else {
+								throw('parent object is not a function');
+								return;
+							};
+						};
+					}
+				};
+
+				throw('parent function or property "'+nam+'" does not exist');
+				return;
+			}.Prim()
 		,	PullInfo: function(specs) {
 				var evts, fun, init, nam, nm, ops=0, prv, rv, spc=specs, z 
 					,	ext, imp, pimp
-					,	DEL=function(v, names) {
-							var n=names, i, l, z;
-							for(i=0, l=n.length; i<l; i++) if(v[z=n[i]]) { delete v[z]; /*out('deleted '+z);*/ };
-						}
 					,	pub=CO(spc.PUBLIC||{})
 				;
 
@@ -1064,11 +1130,9 @@ if(2) {//-Class system.
 				imp=(z=pub.IMPLEMENTS)? Array.From(z) : 0;
 				init=pub.INIT||0;
 				nam=pub.NAME||0;
-				//pimp=(z=pub.PREIMP)? z : 0;
 				
 				if(z=pub.OPTIONS) ops=CO(z);
-
-				DEL(pub, ['EVENTS', 'EXTENDS', 'IMPLEMENTS', 'INIT', 'NAME', 'OPTIONS']);
+				Object.Remove(pub, ['EVENTS', 'EXTENDS', 'IMPLEMENTS', 'NAME', 'OPTIONS']);
 
 				return {
 						EVENTS: evts
@@ -1134,7 +1198,7 @@ if(2) {//-Class system.
 					,	sys=0
 					,	NextListener=function() {
 							var e, fn, i, l, s='', z;
-							
+
 							if(idx<len) {
 								fn=arr[((sys)? (len-1)-idx : idx)];
 								if(fn.$$once) fn=fn.fn;
@@ -1142,7 +1206,7 @@ if(2) {//-Class system.
 								e=CEventArgs(op);
 								if(args)
 									for(i=0, l=args.length; i<l; i++)
-										s+=','+'arg['+i+']';
+										s+=','+'args['+i+']';
 									//out('fn='+fn.Str());
 									//out('fn(e'+s+');');
 									eval('fn(e'+s+');');
@@ -1170,30 +1234,48 @@ if(2) {//-Class system.
 				NextListener();
 
 				return v;
-			}
-		,	SetupExtenders: function(v, Preimp, Extends, Implements, shared) {
+			}.Prim()
+		,	SetOptions: function() {
+				var a=arguments, al=a.length, ev, t=this, z, zz;
+					if(al&&(z=a[0])&&z.$$isClass) {
+						t=z;
+						a=(al>1)? a.slice(1) : [];
+					};
+					z=t.OP=t.OPTIONS=CO([
+							t.NEWOPS||{}
+						,	(zz=t.CLASSINFO)? zz.OPTIONS||{} : {}
+						,	a
+					]);
+					ev=z.ON||z.EVENTS;
+				;
+				if(ev) t.On(ev);
+				return t;
+			}.Prim()
+		,	SetupExtenders: function(v, Extends, Implements, Class, shared) {
 				var i, k, l, nm, z
+					,	val={}
 					,	ex=v.EXTENDS=Extends
-					,	im=v.IMPLEMENTS=Implements||[]
-					//,	pi=Array.From(Preimp||[])
+					,	im=v.IMPLEMENTS=Implements
 				;
 
-				//for(i=0, l=pi.length; i<l; i++) CSetupExtender(v, pi[i]);
-				//if(ex) CSetupExtender(v, ex);
-				if(ex) for(i=0, l=ex.length; i<l; i++) CSetupExtender(v, ex[i]);
-				if(im) for(i=0, l=im.length; i<l; i++) CSetupExtender(v, im[i]);
-				
+				if(ex) for(i=ex.length-1; i>=0; i--)
+					val=Object.CopyTo(val, CSetupExtender(v, ex[i], Class, 0, shared));
+				if(im) for(i=0, l=im.length; i<l; i++)
+					val=Object.CopyTo({}, [CSetupExtender(v, im[i], Class, 2, shared), val]);
+				v.NEWOPS=val;
+
 				return v;
 		}.Extend({
 			SetupExtender: function(v, ex, Class, isImp, shared) {
-				cout('SetupExtender=-=-=-=-');
+				//out('SetupExtender=-=-=-=-');
 				if(ex) {
-					var nm, z
+					var c=Class, nm, z
 						,	k=shared? ex : ex.INST
 						,	ei=(isImp)?
 									v.IMPLEMENTERS=v.IMPLEMENTERS||[]
 								:	v.EXTENDERS=v.EXTENDERS||[]
-							;
+						,	ci=v.CLASSINFO
+						,	op=ci.OPTIONS||{}
 					;
 
 					ei.Push(ex);
@@ -1201,7 +1283,8 @@ if(2) {//-Class system.
 					for(nm in k) {
 						z=k[nm];
 						if(
-								nm!='EXTENDS'
+								nm!='$$memberData'
+							&&	nm!='EXTENDS'
 							&&	nm!='IMPLEMENTS'
 							&&	nm!='INST'
 							&&	nm!='NAME'
@@ -1210,18 +1293,22 @@ if(2) {//-Class system.
 						) if(!z || (!z.$$prim)) v[nm]=z;
 					};
 
+					return op;
 				};
-				return v;
+				return {};
 			}
 		})
-
 	});
 
-	C=Class; CAddEvent=C.AddEvent; CListenersObj=C.ListenersObj;
-	COn=C.On; COnInfo=C.OnInfo, COnInfoDouble=C.OnInfoDouble;
-	CGetListeners=C.GetListeners; CEventArgs=C.EventArgs;
-	CFireEvent=C.FireEvent; CAddMembers=C.AddMembers;
-	CSetupExtenders=C.SetupExtenders; CSetupExtender=CSetupExtenders.SetupExtender;
+	if(2) { //- set locals
+		C=Class; CAddEvent=C.AddEvent; CListenersObj=C.ListenersObj;
+		COn=C.On; C$On=C.$On; COnce=C.Once; C$Once=C.$Once; 
+		COnInfo=C.OnInfo, COnInfoDouble=C.OnInfoDouble;
+		CParent=C.Parent; CGetListeners=C.GetListeners; CEventArgs=C.EventArgs;
+		CFireEvent=C.FireEvent; CAddMembers=C.AddMembers;
+		cc=CSetupExtenders=C.SetupExtenders; CSetupExtender=cc.SetupExtender;
+		CSetOptions=C.SetOptions
+	};
 };
 
 O.Interface=function(nam,specs) {
@@ -1346,17 +1433,19 @@ O.Val=function(val, ops){
       ,  options: Object.LCase(ops)
    }
 }
-CO=$CreateOptions=O.CreateOptions=function(ops, settings){
+CO=$CreateOptions=O.CreateOptions=function(){
 	var i, k, l, lst=Array.Clone(arguments).Condense(), nm, rv={}, z, zz; 
 
 	for(i=0, l=lst.length; i<l; i++) {
 		z=lst[i];
+		if(z&&(z instanceof Array || z['0'])) z=CO.apply(CO, z);
 		for(nm in z) {
 			k=z[nm];
+			//out('typeof k='+typeof k+'  -  nm='+nm);
 			zz=rv[nm];
 			if(!(typeof k=='object' && typeof zz=='object')) 
 				rv[nm]=k;
-			else rv[nm]=$CreateOptions(zz, k);
+			else rv[nm]=CO(zz, k);
 		};
 	};
 

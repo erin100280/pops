@@ -1,83 +1,80 @@
 var X=exports, f='mongo'
    ,  pc=require('../pops.core')
    ,  dbb=require('./pops.db.base')
-   ,  mdb=require('mongodb/')
+   ,  mongo=require('mongodb/')
+	,	mongoDb=mongo.Db
+	,	mongoServer=mongo.Server
 ;
 eval(pc.$VarStr(pc,'pc'));   
 
-X.List=Class('popsList', {
-      options: {}
-   ,  PRIVATE: { PC: pc }
-   ,  Private: { itms: [] }
-   ,  FUNCTION: function() {}
-   ,  Init: function(ops, OnRdy) {
-         T.SetOptions(ops);
-      }
-   ,  Public: {
-      
-      }
-});
 var Dict=X.Dict=Class('popsDict', {
-      options: {}
-   ,  PRIVATE: { PC: pc }
-   ,  Private: { itms: {}, count: 0 }
-   ,  FUNCTION: function(key) { return itms[key]; }
-   ,  Init: function(ops, OnRdy) {
-         var z;
-         T.SetOptions(ops);
-         if(z=OP.items) T.Add(z);
+      OPTIONS: {}
+   ,  FUNCTION: function(key) { return this.$$itms[key]; }
+   ,  INIT: function(ops, OnRdy) {
+         var z, o=this.SetOptions(ops).OP;
+         if(z=o.items) this.Add(z);
       }
-   ,  Public: {
-      		Add: function(key, itm) { return this.Set(key, itm, 2); }
-			,	All: function() { return Object.Clone(itms); }
+   ,  PUBLIC: {
+				$$count: 0
+			,	$$itms: {}
+
+      	,	Add: function(key, itm) { return this.Set(key, itm, 2); }
+			,	All: function() { return Object.Clone(this.$$itms); }
 			,	Clear: function() {
-					var t=this, k=t.keys, i, l=k.length, z;
+					var i, itms=this.$$itms, k=this.keys, l=k.length, z;
 					for(i=0; i<l; i++) delete itms[k[i]];
-					return t;
+					return this;
 				}
-			,	Item: function(key) { return itms[key]; }
+			,	Item: function(key) { return this.$$itms[key]; }
 			,	Remove: function(key) {
-					var t=this, c, i, l, z;
-					if(key instanceof Array) for(i=0, l=key.length; i<l; i++) t.Remove(key[i]);
+					var t=this, c, i, l, z, zz;
+					if(key instanceof Array)
+						for(i=0, l=key.length; i<l; i++) this.Remove(key[i]);
 					else {
-						z=itms[key];
+						z=(zz=this.$$itms)[key];
 						if(typeof z!='undefined') {
-							count--;
-							delete itms[key];
-		      			T.Fire('itemRemoved', [{ key: key, item: z }]);
+							this.$$count--;
+							delete zz[key];
+		      			this.Fire('itemRemoved', [{ key: key, item: z }]);
 						};
 					};
-					return t;
+					return this;
 				}
 			,	Set: function(key, val, asAdd) {
       			var z, i, l, c, t=this;
       			
-      			if(typeof key=='object') for(z in key) t.Set(z, key[z], asAdd);
+      			if(typeof key=='object')
+      				for(z in key) this.Set(z, key[z], asAdd);
 					else {
-   					c=(typeof itms[key]=='undefined')? 1 : 0;
+   					c=(typeof (z=this.$$itms)[key]=='undefined')? 1 : 0;
 						if(!asAdd && c)
-							throw('item with key "'+key+'" does not exist in this Dict.');
+							throw new Error(
+								'item with key "'+key+'" does not exist in this Dict.'
+							);
+						
 						else {
-							itms[key]=val;
-	   					count+=c;
-		      			T.Fire(((asAdd)? 'itemAdded' : 'itemSet'), [{ key: key, item: val }]);
+							z[key]=val;
+	   					this.$$count+=c;
+		      			this.Fire(((asAdd)? 'itemAdded' : 'itemSet'), [{ key: key, item: val }]);
 						};
 					};
 
-      			return t;
+      			return this;
 				}
 
-			,	count: Property( { readonly: 2, Get: function() { return count; } } )
+			,	count: Property( { readonly: 2, Get: function() { return this.$$count; } } )
 			,	keys: Property( { readonly: 2, Get: function() {
 					var rvv=[], z;
-					for(z in itms) rvv.Push(z);
+					for(z in this.$$itms) rvv.Push(z);
 					return rvv;
 				}})
-			,	values: Property( { readonly: 2, Get: function() { return Object.Clone(itms); } } )
+			,	values: Property({ readonly: 2, Get: function() {
+					return Object.Clone(this.$$itms);
+				} })
       }
 });
 
-X.Cursor=function(schema, cur) {
+var Cursor=X.Cursor=function(schema, cur) {
 	
 	var rv={
 			Each: function(cb) {
@@ -105,8 +102,16 @@ var FixArr=function(a, clone) {
 	
 	return a;
 };
-X.Schema=function(ops, OnRdy) {
-   var rv, f, i, k, l, nm, o, ok={}, z
+
+var CreateFields=function(val) {
+	var rv={};
+	
+	return rv;
+}
+
+
+var Schema=X.Schema=function(ops, OnRdy) {
+   var RVC, f, i, k, l, nm, o, ok={}, z
       ,  oo=FixArr(Array.From(ops || []))
       ,  o=CreateOptions([{ $db: 0, $$db: 0, $fields: {} }, oo])
       ,  f=o.$fields=Object.Clone(o.$fields)
@@ -121,130 +126,111 @@ X.Schema=function(ops, OnRdy) {
 		);
 	};
 
-   rv=Class('popsDbMongoSchema', {
-         options: {}
-      ,  PRIVATE: {
-					pc: pc, X: X
-            ,  fields: f
-         }
-      ,  Shared: {
-					Private: {
-							$db: o.$db						
-						,	$$db: o.$$db						
-						,	$collection: 0
-						,	$Cursor: X.Cursor
-						,	$T: 0
-						
-						,	$createDefInner: function() {
-		         			var ar=arguments, ONRDY=(typeof OnRdy!='undefined')? OnRdy : 0;
-		         			$db.Collection(This.NAME, function(err, coll) {
-		         				if(err) { $collection=0; if(ONRDY) ONRDY(err); }
-		         				else {
-		         					$collection=coll;
-		         					if(call) call();
-		         					This[nam]=Fn;
-		         					eval('This[nam]('+pc.ArgStr(ar, 'ar')+');')
-		         				};
-		         			});
-							}.InnerStr()
+   RVC=Class(o.NAME||'popsDbMongoSchema', {
+         OPTIONS: {}
+      ,  SHARED: {
+				PUBLIC: {
+						$db: o.$db						
+					,	$$db: o.$$db						
+					,	$collection: 0
+					,	$Cursor: X.Cursor
+					,	$T: 0
+					,	$isSCHEMA: 2
+					,	$ops: o	
+					,	$fields: f//{}
 
-						,	$CreateDef: function(nam, This, Fn, call, argNames) {
-								var an=argNames, rv, as='', i, l;
-								if($collection) rv=Fn;
-								else {
-									if(an) for(i=0, l=an.length; i<l; i++)
-										as+=((as=='')? '' : ',')+an[i];
-									//out('rv=function('+as+') {'+$createDefInner+'};');
-									eval('rv=function('+as+') {'+$createDefInner+'};');
-								};
-								return rv;
-							}
-						,	$Find: function(qry, OnRdy) {
-								if(qry.$isSCHEMAinst) qry=qry.OBJ;
-								var err=null, rv=$Cursor(this, $collection.find(qry));
-								pc.cout('$Find - cur='+rv);
-								if(OnRdy) OnRdy(err, rv);
-								return rv;
-							}
-						,	$Insert: function(schema_inst, OnRdy) {
-								var t=this;
-								if(schema_inst.$isSCHEMAinst) schema_inst=schema_inst.VALUES;
-								$collection.insert(schema_inst, function(err, result) {
-									if(result)
-										for(var i=0, l=result.length; i<l; i++)
-											result[i]=new t(result[i]);
-									if(OnRdy) OnRdy(err, result, $db, t);
-								});
-								return null;
-							}							
-						,	$Remove: function(qry, OnRdy) {
-								var t=this;
-								if(qry.$isSCHEMAinst) qry=qry.VALUES;//{ _id: qry._id };
-								$collection.remove(qry, function(err, result) {
-									if(result)
-										for(var i=0, l=result.length; i<l; i++)
-											result[i]=new t(result[i]);
-									if(OnRdy) OnRdy(err, result, $db, t);
-								});
-								return null;
-							}							
-						,	$Save: function(doc, OnRdy) {
-								var t=this;
-								if(doc.$isSCHEMAinst) doc=doc.VALUES;//{ _id: qry._id };
-								$collection.save(doc, function(err, result) {
-									if(result)
-										for(var i=0, l=result.length; i<l; i++)
-											result[i]=new t(result[i]);
-									if(OnRdy) OnRdy(err, result, $db, t);
-								});
-								return null;
-							}							
-						,	$Update: function(doc, OnRdy) {
-								var t=this;
-								if(doc.$isSCHEMAinst) doc=doc.VALUES;//{ _id: qry._id };
-								$collection.update(doc, function(err, result) {
-									if(result)
-										for(var i=0, l=result.length; i<l; i++)
-											result[i]=new t(result[i]);
-									if(OnRdy) OnRdy(err, result, $db, t);
-								});
-								return null;
-							}							
-					} 
-				,	$isSCHEMA: 2
-				,	$ops: o	
-
-         	,	Find: function(qry, OnRdy) {
-         			var t=this;
-         			t.Find=$CreateDef('Find', t, $Find, 0, ['qry', 'OnRdy']);
-         			return t.Find(qry, OnRdy);
-         		}
-         	,	Insert: function(schema_inst, OnRdy) {
-         			var t=this;
-         			t.Insert=$CreateDef('Insert', t, $Insert, 0, ['schema_inst', 'OnRdy']);
-         			return t.Insert(schema_inst, OnRdy);
-         		}
-         	,	Remove: function(qry, OnRdy) {
-         			var t=this;
-         			t.Remove=$CreateDef('Remove', t, $Remove, 0, ['qry', 'OnRdy']);
-         			return t.Remove(qry, OnRdy);
-         		}
-         	,	Save: function(doc, OnRdy) {
-         			var t=this;
-         			t.Save=$CreateDef('Save', t, $Save, 0, ['doc', 'OnRdy']);
-         			return t.Save(doc, OnRdy);
-         		}
-         	,	Update: function(doc, OnRdy) {
-         			var t=this;
-         			t.Update=$CreateDef('Update', t, $Update, 0, ['doc', 'OnRdy']);
-         			return t.Update(doc, OnRdy);
-         		}
+					,	$ConnectAndRun: function(Fn, args) {
+							var t=this;
+							this.$db.Collection(this.NAME, function(err, coll) {
+	         				if(err) { throw new Error(err); t.$collection=0; if(ONRDY) ONRDY(err); }
+	         				else {
+	         					t.$collection=coll;
+	         					//if(call) call();
+									Fn.apply(t, args);
+	         				};
+	         			});
+						}
+	
+	         	,	Find: function(qry, OnRdy) {
+							if(!this.$collection)
+								return this.$ConnectAndRun(this.Find, arguments);
+							if(qry.$isSCHEMAinst) qry=qry.OBJ;
+							var err=null, rv=Cursor(this, this.$collection.find(qry));
+							if(OnRdy) OnRdy(err, rv);
+							return rv;
+	         		}
+	         	,	Insert: function(schema_inst, OnRdy) {
+							if(!this.$collection)
+								return this.$ConnectAndRun(this.Insert, arguments);
+							var t=this;
+							if(schema_inst.$isSCHEMAinst)
+								schema_inst=schema_inst.VALUES;
+							this.$collection.insert(schema_inst, function(err, result) {
+								if(result)
+									for(var i=0, l=result.length; i<l; i++)
+										result[i]=new t(result[i]);
+								if(OnRdy) OnRdy(err, result, t.$db, t);
+							});
+							return null;
+		      		}
+	         	,	Remove: function(qry, OnRdy) {
+							if(!this.$collection)
+								return this.$ConnectAndRun(this.Remove, arguments);
+							if(qry.$isSCHEMAinst) qry=qry.VALUES;//{ _id: qry._id };
+							this.$collection.remove(qry, function(err, result) {
+								if(result)
+									for(var i=0, l=result.length; i<l; i++)
+										result[i]=new this(result[i]);
+								if(OnRdy) OnRdy(err, result, this.$db, this);
+							});
+							return null;
+	         		}
+	         	,	Save: function(doc, OnRdy) {
+							if(!this.$collection)
+								return this.$ConnectAndRun(this.Save, arguments);
+							if(doc.$isSCHEMAinst) doc=doc.VALUES;//{ _id: qry._id };
+							this.$collection.save(doc, function(err, result) {
+								if(result)
+									for(var i=0, l=result.length; i<l; i++)
+										result[i]=new this(result[i]);
+								if(OnRdy) OnRdy(err, result, this.$db, this);
+							});
+							return null;
+	         		}
+	         	,	Update: function(doc, OnRdy) {
+							if(!this.$collection)
+								return this.$ConnectAndRun(this.Update, arguments);
+							if(doc.$isSCHEMAinst) doc=doc.VALUES;//{ _id: qry._id };
+							this.$collection.update(doc, function(err, result) {
+								if(result)
+									for(var i=0, l=result.length; i<l; i++)
+										result[i]=new this(result[i]);
+								if(OnRdy) OnRdy(err, result, this.$db, this);
+							});
+							return null;
+	         		}
+				}
          }
-      ,  Private: {
-            	$schema: rv
-            ,	fieldVals: {}
-            ,	ObjID: -2
-				,	SetupArgs: function(args) {
+      ,  INIT: function(ops, OnRdy) {
+            var o=(ops)? Object.CopyTo({}, ops, 2) : {};
+
+				if(typeof o.$OBJID!='undefined') {
+					this.$OBJID=o.$OBJID;
+					delete o.$OBJID;
+				};				
+            //this.$fields=RVC.$fields;
+            this.$SetupFields(o);
+            this.$isSchema=2;
+
+         }
+      ,  PUBLIC: {
+            	$schema: RVC
+            ,	$fieldVals: {}
+            ,	$ObjID: -2
+            ,	$OBJID: -2
+         	,	$isSCHEMAinst: 2
+				,	$fields: f
+				,	$SetupArgs: function(args) {
 						var a=args, i, l=args.length, z
 							,	rv={
 										data: ((l)? a[0] : undefined)
@@ -261,53 +247,48 @@ X.Schema=function(ops, OnRdy) {
 						
 						if(l>2) rv.OnRdy=a[2];
 					
-					
+						return rv;
 					}
-            ,  SetupFields: function(vals) {
-                  var t=this, nm, f=fields, fv=fieldVals, z;
+            ,  $SetupFields: function(vals) {
+                  var nm, f=this.$fields, fv=this.$fieldVals, z;
                   for(nm in f) {
                      //pc.//out('nm='+nm+'  -  f[nm].Default='+f[nm].Default);
-                     z=(vals && typeof vals[nm]!='undefined')? vals[nm] : ((nm=='_id')?
-                     		vals._id||100280
-               			:	f[nm].Default
+                     z=(vals && typeof vals[nm]!='undefined')?
+                     		vals[nm]
+                  		:	((nm=='_id')?
+                     				vals._id||100280
+               					:	f[nm].Default
                		);
                      if(z instanceof Array) z=Array.Clone(z);
                      else if(typeof z=='object') z=Object.Clone(z);
                      fv[nm]=z;
 
 							eval(
-									'Object.defineProperty(t, "'+nm+'", {'
+									'Object.defineProperty(this, "'+nm+'", {'
 								+	'		get: function() { return fv["'+nm+'"]; }'
 								+	'	,	set: function(v) { fv["'+nm+'"]=v; }'
 								+	'});'
 							);
                   };
-               	if(vals._id) fv._id=vals._id;
+               	if((z=vals._id)) fv._id=z;
                }
-         }
-      ,  Init: function(ops, OnRdy) {
-            var o=(ops)? Object.CopyTo({}, ops, 2) : {}, t=this;
 
-				//if(typeof o._id!='undefined') { pc.cout('o._id='+o._id); };				
-				if(typeof o.$OBJID!='undefined') { OBJID=o.$OBJID; delete o.$OBJID; };				
-            SetupFields(o);
+         	,	INSERT: function(OnRdy) { return RVC.Insert(this, OnRdy); }
+         	,	REMOVE: function(OnRdy) { return RVC.Remove(this, OnRdy); }
+         	,	SAVE: function() { return RVC.Save(this, OnRdy); }
+         	,	UPDATE: function(OnRdy) { return RVC.Update(this, OnRdy); }
 
-            t.$isSchema=2;
-         }
-      ,  Public: {
-         		$isSCHEMAinst: 2
-         	,	INSERT: function(OnRdy) { return thisClass.Insert(this, OnRdy); }
-         	,	REMOVE: function(OnRdy) { return thisClass.Remove(this, OnRdy); }
-         	,	SAVE: function() { return thisClass.Save(this, OnRdy); }
-         	,	UPDATE: function(OnRdy) { return thisClass.Update(this, OnRdy); }
-
-         	,	OBJ: pc.Property({ readonly: 2, Get: function(){ return Object.Clone(fieldVals); } })
-         	,	OBJID: pc.Property({ readonly: 2, Get: function(){ return fieldVals._id; } })
-         	,	VALUES: pc.Property({ readonly: 2, Get: function(){
-         			var nm, rv={}, z, zz;
+         	,	OBJ: pc.Property({ readonly: 2, Get: function(){
+         			return Object.Clone(this.$fieldVals);
+      			} })
+         	,	OBJID: pc.Property({ readonly: 2, Get: function(){
+         			return this.$fieldVals._id;
+      			} })
+         	,	VALUES: pc.Property({ readonly: 2, Get: function() {
+         			var fv=this.$fieldVals, nm, rv={}, z, zz;
          			
-         			for(nm in fieldVals) {
-         				z=fieldVals[nm];
+         			for(nm in fv) {
+         				z=fv[nm];
          				zz=typeof z;
          				if(z!='<{NULL}>' && z!=null) rv[nm]=z;
          			};
@@ -317,20 +298,38 @@ X.Schema=function(ops, OnRdy) {
          }
    });
 
-   return rv;
+   return RVC;
 }.Extend({}).Sys();
 
 X.db=Class('popsDbMongo', {
-      options: {
-            autoConnect: 2
-         ,  host: ''
-         ,  name: ''
-         ,  port: -2
+		SHARED: {}
+   ,	OPTIONS: {
+				host: ''
+			,	name: ''
+			,	port: -2
       }
-   ,  Interface: dbb.dbInterface
-   ,	PRIVATE: { X: X, pc: pc, mdb: mdb }
-   ,  Private: { Dict:Dict, Schema: X.Schema
-         ,	$db: 0
+   ,  INTERFACE: dbb.dbInterface
+   ,  INIT: function(ops, onRdy) {
+         var o=this.SetOptions(ops).OP, ac=o.autoConnect, add, n, nm, z, zz
+         	,	sch
+         ;
+
+         this.$SetupDict();
+			sch=this.$schemas;
+         if(z=o.schemas) sch.Add(z);
+
+			zz=sch.values;
+			for(nm in zz) {
+				z=zz[nm];
+				n=z.NAME;
+				if((!n || typeof n!='string') || !n.length)
+					z.NAME=z.CLASSINFO.Public.NAME=nm;
+			};
+
+         if(ac)this.Connect();
+      }
+   ,  PUBLIC: {   
+         	$db: 0
          ,  $server: 0
          ,  $connected: 0
          ,  $connecting: 0
@@ -340,53 +339,44 @@ X.db=Class('popsDbMongo', {
 			,	$schemas: 0
 
          ,  $SetupDict: function() {
-      			var z=$schemas=new Dict(), add=z.Add, t=this;
+      			var t=this, z=this.$schemas=new Dict(), add=z.Add;
 		         z.Add=function(key, itm) {
 		         	if(typeof key=='object') for(itm in key) z.Add(itm, key[itm]);
-		         	else add(key, Schema([{NAME: key }, itm, { $db: t, $$db: $db }]));
+		         	else add.apply(z, [key, Schema([{NAME: key }, itm, {
+		         			$db: t
+	         			,	$$db: t.$db
+         			}])]);
 		         };
             }
-      }
-   ,  Shared: {}
-   ,  Init: function(ops,onRdy) {
-         var t=this.SetOptions(ops), o=t.op, ac=o.autoConnect, add, n, nm, z, zz;
 
-         $SetupDict();
-         if(z=o.schemas) $schemas.Add(z);
-
-			zz=$schemas.values;
-			for(nm in zz) {
-				z=zz[nm];
-				n=z.NAME;
-				if((!n || typeof n!='string') || !n.length) z.NAME=z.$vs.Public.NAME=nm;
-			};
-
-         if(ac)t.Connect();
-      }
-   ,  Public: {   
-				Close: function() { return ($db)? $db.close() : undefined; }
+			,	Close: function() { return (this.$db)? this.$db.close() : undefined; }
 			,	Connect: function(host, name, port, callback) {
-	            var t=this, o=t.op, cb=callback
+	            var t=this, o=this.OP, cb=callback
 	               ,  a=arguments, al=a.length
-	               ,  h=$host=(!al)?o.host:host
-	               ,  n=$name=(al<2)?o.name:name
-	               ,  p=$port=(al<3)?o.port:port
-	               ,  s=$server=new mdb.Server(h, p)
-	               ,  d=$db=new mdb.Db(n, s)
+	               ,  h=this.$host=(!al)? o.host : host
+	               ,  n=this.$name=(al<2)? o.name : name
+	               ,  p=this.$port=(al<3)? o.port : port
+	               ,  s//=this.$server=new mongoServer(h, p)
+	               ,  d//=this.$db=new mongoDb(n, s)
 	            ;
 	
-	            $connecting=2;
+					//pc.out('h='+h+'  -  n='+n+'  -  p='+p);
+					
+					s=this.$server=new mongoServer(h, p)
+					d=this.$db=new mongoDb(n, s)
+
+	
+	            this.$connecting=2;
 	            d.open(function(err, db) {
 	               if(err) {
-	                  $server=$db=$connected=$connecting=0;
-	                  $host='';
-	                  $port=-2;
-	                  throw(err);
+	                  this.$server=this.$db=this.$connected=this.$connecting=0;
+	                  this.$host='';
+	                  this.$port=-2;
+	                  throw new Error(err);
 	               }
 	               else {
-	                  $db=db;
-	                  //t.Collection=db.collection;
-	                  $connected=2;
+	                  this.$db=db;
+	                  this.$connected=2;
 	               };
 	
 	               if(cb) t.On('connect', cb);
@@ -397,21 +387,39 @@ X.db=Class('popsDbMongo', {
 	            
 	            
 	         }
+			,	Collection: Property({ readonly: 2, Get: function() {
+					var z=this.$db;
+					return z.collection.CBind(z);
+				}})
 			,	Collection: function() {
-					var rv; 
-					eval('rv=$db.collection('+pc.ArgStr(arguments, 'arguments')+');');
-					return rv;
+					var z=this.$db;
+					return z.collection.apply(z, arguments);
 				}
 			,	Drop: function(collectionName, OnRdy) {
-					return $db.dropCollection(collectionName, function(err, result) {
-						if(OnRdy) OnRdy(err, result);
+					return this.$db.dropCollection(collectionName, function(err, rslt) {
+						if(OnRdy) OnRdy(err, rslt);
 					});
 				}
 
-		   ,  connected: Property({ readonly: 2, Get: function(){return $connected} })
-		   ,	schemas: Property({ readonly: 2, Get: function(){return $schemas} })
-		   ,  type: Property({ readonly: 2, Get: function(){return 'popsDbMongo'} })
-		   ,  host: Property({ readonly: 2, Get: function(){return $host;} })
+		   ,  connected: Property({ readonly: 2, Get: function(){
+		   		return this.$connected
+	   		} })
+		   ,	schemas: Property({ readonly: 2, Get: function(){
+		   		return this.$schemas;
+	   		} })
+		   ,  type: Property({ readonly: 2, Get: function() {
+		   		return 'popsDbMongo';
+	   		} })
+		   ,  host: Property({ readonly: 2, Get: function() { return this.$host; } })
       }   
 });
+
+
+
+
+
+
+
+
+
 

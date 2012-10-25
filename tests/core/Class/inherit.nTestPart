@@ -1,12 +1,14 @@
 exports.Test=function(v) {
    var z, c, c2, ci, ci2
+      ,	fs=require('fs')
       ,  pc=require('pops/pops.core')
    ;
 
 	v.Log('==== YA ====');
 
-	c=pc.Class('ErinsClassBaseTestClass', {
-			OPTIONS: { a: 'A' }
+	pc.cout('&&&&&&&&&&&&&&&&&&&&&&&&:1');
+	c=new pc.Class('ErinsClassBaseTestClass', {
+			OPTIONS: { b: 'B' }
 		,	PUBLIC: {
 					w: 'W'
 				,	x: 'X'
@@ -22,23 +24,44 @@ exports.Test=function(v) {
 				,	Yo: function(name) { pc.cout('Yo '+(name||'mah')); }
 			}
 		,	INIT: function(op, OnRdy) {
+				this.SetOptions();
 				this.Yo('Dude');
 				this.Yo();
 			}
 	});
+	pc.cout('&&&&&&&&&&&&&&&&&&&&&&&&:2');
 	
-	c2=pc.Class('ErinsClassInheritTestClass', {
+	c2=new pc.Class('ErinsClassInheritTestClass', {
 			OPTIONS: { a: 'A' }
 		,	EXTENDS: c
+		,	SHARED: {
+					INIT: function() { pc.cout('****************************'); }
+			}
 		,	PUBLIC: {
 					x: '-X'
 			}
 		,	INIT: function(op, OnRdy) {
 				//pc.cout('c2: this = '+JSON.SafeStr(this));
+				this.Parent();
+				pc.cout('this.OPTIONS.a='+this.OPTIONS.a+'    -    this.OPTIONS.b='+this.OPTIONS.b);
 				this.Yo('Crap');
 			}
 	});
-	
+	pc.cout('&&&&&&&&&&&&&&&&&&&&&&&&:3');
+
 	ci=new c();
 	ci2=new c2();
+	pc.cout('&&&&&&&&&&&&&&&&&&&&&&&&:4');
+
+	ci=new c();
+	ci=new c2();
+	
+	pc.cout('[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]');
+	//var zz={}
+	
+	
+	
+	
+	
+	
 };

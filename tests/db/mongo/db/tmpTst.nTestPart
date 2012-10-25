@@ -1,0 +1,42 @@
+exports.Test=function(tArgs) {
+   var z, db
+      ,  pc=require('pops/pops.core')
+   	,	pdbm=require('pops/db/pops.db.mongo')
+   ;
+
+	pc.cout('BOBOBOBO');
+
+	tArgs.ASync();
+
+	LOG('-'.Repeat(40) + '\n db tst\n' + '-'.Repeat(40));
+	db=new pdbm.db({
+         autoConnect: 2
+		,	name: 'test'
+		,	host: 'localhost'
+		,	port: 1002
+		,	schemas: {
+					user: {
+							id: String
+						,	firstName: String
+						,	middleName: String
+						,	lastName: String
+						,	birthday: Date
+					}
+				,	puser: {
+							pid: String
+						,	pfirstName: String
+						,	pmiddleName: String
+						,	plastName: String
+						,	pbirthday: Date
+					}
+			}
+		,	On: { 
+				connect: function(e, db) {
+					if(e.err) { throw new Error(e.err); tArgs.Done(); }
+					else {
+						tArgs.Done();
+					};
+				}
+			}
+	});
+};

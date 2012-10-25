@@ -1,0 +1,9 @@
+var File=nTest.File, $$zz;
+Object.CopyTo(exports, {
+      name: 'pops.core.db.mongo - tempTest'
+   ,  files: ['pops.core.js', '[pops.db.js]', 'db/pops.db.mongo.js']
+   ,  parts: [
+			//{ name: 'tmpTst', Test: File($$zz='./db/tmpTst.nTestPart', require($$zz)) }
+			{ name: 'schemas', Test: File($$zz='./db/schemas.nTestPart', require($$zz)) }
+      ]
+});

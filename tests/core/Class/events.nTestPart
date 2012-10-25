@@ -28,7 +28,9 @@ exports.Test=function(v) {
 				pc.cout('QUANG!');
 			}
 	});
-	
+
+	pc.cout('yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy');
+
 	ci=new c();
 	ci.Fire('load', function() { ci.Fire('load'); });
 	ci.Fire('load');
