@@ -363,36 +363,37 @@ if(2){//-Native.
 				
 			}
 	   ,	MakeSafeVal: function(val, no, ns, depth, dbg) {
-	   		var i, jj, k=null, k1, k2, l, nm, ns=ns || '<BASE>', rv=val, tp=typeof rv, ya=2, z;
-	   		if(typeof depth=='undefined') depth=2;
-
-				if(depth<1) return('end-of-depth');
-	   		
-	   		//no=(no)? Array.Clone(no) : [];
-	   		no=no||[];
-
-	   		if(2) {//-CheckForDupe
-	   			for(i=0, l=no.length; i<l; i++) {
-	   				z=no[i];
-	   				if(z.val==val) return { '<duplicate of>': z.ns };
-	   			};
-   			};
-				no.Push({ ns: ns, val: val });	   		
+	   		var i, jj, k=null, k1, k2, l, nm, ns=ns || '<BASE>', rv=val
+	   		,	tp=typeof rv, ya=2, z, addNo=0;
 	   		
 	   		if(rv) {
+		   		if(typeof depth=='undefined') depth=2;
+					if(rv instanceof Array) tp='array';
+					if(depth<1) return('end-of-depth');
+		   		
+		   		//no=(no)? Array.Clone(no) : [];
+		   		no=no||[];
+	
+   		
 		   		if(dbg) cout('  tp='+tp);
-		   		if(rv instanceof Array) { k=rv=[]; }
 		   		else if(rv.$type=='class' && 0) {}
+		   		else if(tp=='array') { addNo=2; k=rv=[]; }
 		   		else if(tp=='function') {
+		   			addNo=2;
 		   			rv={ 'TYPE': 'Function', 'CODE': val.Str() };
 		   			k=rv.MEMBERS={};
 		   		}
-		   		else if(tp=='object') { k=rv={}; }
-	   			else { rv='TYPE: '+tp; ya=0; };
+		   		else if(tp=='object') { addNo=2; k=rv={}; }
+	   			else { rv='TYPE: '+tp+'  -  VALUE: '+val; ya=0; };
 	   		
+		   		if(addNo) {//-CheckForDupe
+		   			for(i=0, l=no.length; i<l; i++)
+		   				if((z=no[i]).val==val) return { '<duplicate of>': z.ns };
+						no.Push({ ns: ns, val: val });	   		
+	   			};
+					
 					if(ya) {
 		   			for(nm in val) {
-	   					z=val[nm];
 		   				if(!k[nm]) { 
 		   					z=val[nm];
 								if((!z || !(z.$$prim || z.$$sys)) && (nm!='Extend' && nm!='Implement')) {
