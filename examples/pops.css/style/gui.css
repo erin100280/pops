@@ -1,0 +1,15 @@
+#PAGE {
+	 display:block;
+	position:absolute;
+	     top: 0px;
+		 left: 0px;
+	  height: 100%;
+		width: 100%;
+}
+
+/*!*load('./gui/head.css')*!*/
+
+/*!*load('./gui/body.css')*!*/
+
+/*!*load('./gui/foot.css')*!*/
+

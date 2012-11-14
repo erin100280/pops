@@ -1,17 +1,18 @@
 var X=exports,xx={}
-   ,  nm='pops.router.router'
-   ,  http=require('http')
-   ,  pc=require('pops/pops.core')
-;
-eval(pc.$VarStr(pc,'pc'));
+,  nm='pops.router.router'
+,  $http=require('http')
+,  _pc=require('pops/pops.core')
+	,	cout=_pc.cout
 
-var ir=X.iRouter=Interface({
+,	ir, rt
+;
+ir=X.iRouter=Interface({
       Add:'function|itm,arr,TO'
    ,  Process:'function|req,res,OnDone,cnt'
    ,  Refresh:'function'
 });
 
-var rt=X.router=xx.rtr=Class(nm, {
+rt=X.router=xx.rtr=Class(nm, {
       OPTIONS: {
 				auto: 2
          ,  Else: function(req, res){
@@ -37,42 +38,13 @@ var rt=X.router=xx.rtr=Class(nm, {
 			,  $srv: null
 			,	$isRouter: 2
 
-			,  ProcessBak:function(req,res,OnDone,from){
-               var t=this,o=t.op,r=req,i=$items,ln=i.length,l=from?from:0,z,zp
-                  ,  mc=o.matchCase
-                  ,  u=mc?r.url:r.url.LCase()
-                  ,  od=OnDone, go=2
-               ;
-               
-               //out($nm+':  Process  | u='+u);
-               
-               
-               while(l<ln&&go){
-                  z=i[l]; zp=mc?z.path:z.path.LCase();
-                  if(z.path==u){
-                     //out('z.path='+z.path);
-                     if(z.mode=='STATIC'){go=0}
-                     else{
-                        if(z.handler){
-                           go=0;
-                           z.handler(req,res,function(){
-                              t.Process(req,res,od,l+1)
-                           })}
-                     }
-                  }
-                  l++;
-               };
-               if(go&&o.Else)o.Else(req,res);
-               if(od)od(req,res,{});
-               
-            }
          ,  Process: function(req, res, OnDone, from){
                var t=this, o=this.OP, hndlr, i=this.$items, ln=i.length, FN
-						,	l=from? from : 0, k, kk, z, z2, zz, zp, re, mod='i', rx
-						,	mc=2//o.matchCase
-						,	u=(!(z=req.url) || z=='')? '/' : (mc? z : z.LCase())
-						,	ul=u.length
-						,	od=OnDone, go=2, ya=2
+					,	l=from? from : 0, k, kk, z, z2, zz, zp, re, mod='i', rx
+					,	mc=2//o.matchCase
+					,	u=(!(z=req.url) || z=='')? '/' : (mc? z : z.LCase())
+					,	ul=u.length
+					,	od=OnDone, go=2, ya=2
                ;
                //out(this.$nm+':  Process  | u='+u);
                

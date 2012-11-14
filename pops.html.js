@@ -32,14 +32,14 @@ X.guiItem=function(type, ID, CLASS, ops, children) {
 		if(cl=='') cl=0;
 	};
 	
-	if(!op && (id || cl)) op={};
+	op=op||{};
 	if(id) op.id=id;
 	if(cl) op['class']=cl;
 
 	rv.type=tp;
-	if(op) rv.ops=op;
+	if(op) rv.props=op;
 	if(it) rv.children=it;
-	
+
 	return rv;
 };
 
@@ -59,9 +59,9 @@ $Element=X.Element=function(typ, props, children, spacer, space, ender) {
 	rv+='>';
 	
 	if(z=v.children)
-		rv+='\n'+$Elements(z, spcr, spc+spcr, end);
+		rv+='\n'+$Elements(z, spcr, spc+spcr, end)+spc;
 
-	rv+=spc+'</'+tp+'>';
+	rv+='</'+tp+'>';
 	
 	return rv;
 }

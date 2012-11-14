@@ -9,28 +9,26 @@ var X=exports
 	,	$$fs_stat=$$fs.stat
 ,	$path=require('path')
 	,	$path_dirname=$path.dirname
-	,	$path_join=$path.join
 
-,	Code
-,	FromFile
-,	LoadFile
 ,	ParseStr
 
+,	rx_cssMain=/\/\*\!\*(.*)\*\!\*\//gm
+//,	rx_cssMain=/!\*([.|!\*.*\*!])*\*!/g
+//,	rx_cssMain=/!\*([.|(!\*.*\*!)])*\*!/
+//,	rx_cssMain=/!\*(.*)\*!/g
+//,	rx_cssMain=/!\*(.*)\*!/
+//,	rx_cssMain=/\!\*(.*)\*!/g
+,	rx_comment=/\/\*(.*)\*\//g
 ,	rx_command=/(\w*)+(.*)?/
-,	rx_parenCont=/\((.*)\)/
-,	rx_quoteCont=/\'(.*)\'/
-,	rx_dblQuoteCont=/\"(.*)\"/
-
 ;
 
-Code=X.Code=function(obj, spacer, ender, initialSpace, doCurlyBrackets) {
+var cd=X.Code=function(obj, spacer, ender, initialSpace, doCurlyBrackets) {
 	var nm, k, z
 	,	dcb=doCurlyBrackets	
 	,	spc=(typeof (z=spacer)=='string')? z : '	'
 	,	end=ender||'\n'
 	,	is=initialSpace||''
 	,	rv=is+(dcb? '{' : '')+end 
-	,	$Code=Code
 	;
 
 	if(typeof obj=='object') {
@@ -41,7 +39,7 @@ Code=X.Code=function(obj, spacer, ender, initialSpace, doCurlyBrackets) {
 				for(nm in obj) {
 					z=obj[nm];
 					rv+=is+nm+' {'+end;
-					rv+=$Code(z, spc, end, is+spc);
+					rv+=cd(z, spc, end, is+spc);
 					rv+=is+'}'+end;
 				};
 				return rv;
@@ -53,31 +51,26 @@ Code=X.Code=function(obj, spacer, ender, initialSpace, doCurlyBrackets) {
 	return rv+(dcb? '}' : '')+end;
 }
 
-FromFile=X.FromFile=function(filnam, ops) {
-	return $pc_CreateOptions(ops, { $isCssFromFile: 2, filename: filnam });
-};
-
-LoadFile=X.LoadFile=function(filnam, map, cb) {
-	if(typeof map=='function') { cb=map; map={}; };
+X.FromFile=function(filnam, ops, cb) {
+	if(typeof ops=='function') { cb=ops; ops={}; };
 	var z
-	,	mp=map||{}
-	,	ops=mp.options||{}
-	,	fs=ops.fs||$fsLocal 
+	,	op=ops||{}
+	,	fs=op.fs||$fsLocal 
 	;
 
 	fs.FindFile(filnam, ops, function(err, filnam) {
 		if(err) { cout('err='+err); if(cb) cb(err); return; }
 		else {
-			//out('++ filnam='+filnam);
 			$$fs_readFile(filnam, function(err, val) {
 				//out('val='+val);
 				if(err) { if(cb) cb(err); }
 				else
 					ParseStr(
 						new String(val)
-					,	$pc_CreateOptions(mp, { options: {
+					,	$pc_CreateOptions(op, { options: {
 							fromDir: $path_dirname(filnam) 
 						} })
+
 					,	cb
 					);
 			});
@@ -86,106 +79,89 @@ LoadFile=X.LoadFile=function(filnam, map, cb) {
 };
 
 ParseStr=X.ParseStr=function(str, map, cb) {
-	if(typeof map=='function') { cb=map, map={} };
 	var rv='', z
 	,	li=0
 	,	mp=map||{}
 	,	ops=mp.options||{}
-	,	fromDir=ops.fromDir||process.cwd()
-	,	fs=ops.fs||$fsLocal 
-	
 	,	rxCommand=rx_command
-	,	rxComment=/\/\*(.*)\*\//g
-	,	rxCssMain=/\/\*\!\*(.*)\*\!\*\//gm
-	,	rxParenCont=rx_parenCont
-	,	rxQuoteCont=rx_quoteCont
-	,	rxDblQuoteCont=rx_dblQuoteCont
+	,	rxComment=rx_comment
+	,	rxCssMain=rx_cssMain
 
 	,	Fn=function() {
-			var c, i2, l2, il, ir, k, li2 
-			,	cmnt=rxCssMain.exec(str)
-			,	z, zi, zl, ZFn
-			;
+			var c, i, l, i2, l2, il, ir, k, li2, cmnt=rxCssMain.exec(str), z;
 			if(cmnt) {
 				if((k=cmnt.index)>li) rv+=str.substring(li, k);
 				li=cmnt.index+cmnt[0].length;
 				
-				//out('cmnt[0]='+cmnt[0]);
-				//out('cmnt[1]='+cmnt[1]);
+				cout('cmnt[0]='+cmnt[0]);
+				cout('cmnt[1]='+cmnt[1]);
 				//z=rxCssMain.exec(cmnt[1]);
 				z=cmnt[1].split('##');
-				zi=0; zl=z.length;
-				ZFn=function() {
-					var c, ci, cl, CFn, k, k2, k4, k2RX, NFn;
-					if(zi<zl) {
-						k=z[zi].TrimFull();
-						//out('z['+zi+']= '+(;));
-						zi++;
-						if(c=rxCommand.exec(k)) {
-							//for(ci=0, cl=c.length; ci<cl; ci++) out('+c['+ci+']= '+c[ci]);
-							if(k=c[1]) {
-								if(k=='jjkkjjkk') {}
-								else if(k=='load') {
-									//out('-==-load-==-');
-									if((k2=c[2])&&(k2RX=rxParenCont.exec(k2))&&(k4=k2RX[1])) {
-										if(k4.length) {
-											if((k2=k4.charAt(0))=='\'') {
-												if((k2=rxQuoteCont.exec(k4)) && k2[1])
-													k4={ FILENAME: 2, val: k2[1] };
-												else k4='';
-											}
-											else if(k2=='\"') {
-												if((k2=rxDblQuoteCont.exec(k4)) && k2[1])
-													k4={ FILENAME: 2, val: k2[1] };
-												else k4='';
-											};
-											
-											if(!k4.FILENAME) {
-												//out('NOT FILENAME');
-												ZFn();
-											};
-											
-											//out('FILENAME: ' +k4.val);
-											LoadFile(k4.val, mp, function(err, val) {
-												if(err) { if(cb) cb(err); }
-												else {
-													rv+=val;
-													ZFn();
-												};
-												
-											})
-										}
-										else ZFn();
-									}
-									else ZFn();
-								}
-								else ZFn();
-							}
-							else ZFn();
-						}
-						else {
-							zi++;
-							ZFn();
-						};
-					}
-					else Fn();
+				for(i=0, l=z.length; i<l; i++) {
+				//if(z=rxCssMain.exec(cmnt[1])) {
+					cout('z['+i+']= '+(k=z[i]));
+					if(c=rxCommand.exec(k)) {
+						for(var i2=0, l2=c.length; i2<l2; i2++)
+							cout('c['+i2+']= '+c[i2]);
+					};
+					//z=rxCssMain.exec(cmnt[1]);
 				};
-				ZFn();
+
+				//cout('code='+z[1]);
+				Fn();
 			}
 			else if(cb) cb(0, rv+str.substring(li, str.length));
 		}
 	;
 	//z=rx.exec(str);
 	//z=str.match(/\/\*!\*(.*)\*!\*\//);
-	//out('fromDir='+fromDir);
+	Fn(str);
 
+};
+
+ParseStrBak=X.ParseStrBak=function(str, map, cb) {
+	var rv='', z
+	,	li=0
+	,	mp=map||{}
+	,	ops=mp.options||{}
+	,	rxCommand=rx_command
+	,	rxComment=rx_comment
+	,	rxCssMain=rx_cssMain
+
+	,	Fn=function() {
+			var c, il, ir, k, li2, cmnt=rxComment.exec(str), z;
+			if(cmnt) {
+				if((k=cmnt.index)>li) rv+=str.substring(li, k);
+				li=cmnt.index+cmnt[0].length;
+				
+				cout('cmnt[0]='+cmnt[0]);
+				cout('cmnt[1]='+cmnt[1]);
+				
+				if(z=cmnt[1].match(rxCssMain)) {
+				//if(z=rxCssMain.exec(cmnt[1])) {
+					for(var i=0, l=z.length; i<l; i++) {
+						cout('z['+i+']= '+z[i]);
+						if(c=rxCommand.exec(z[i])) {
+							for(var i2=0, l2=c.length; i2<l2; i2++)
+								cout('c['+i2+']= '+c[i2]);
+						};
+					};
+				};
+
+				//cout('code='+z[1]);
+				Fn();
+			}
+			else if(cb) cb(0, rv+str.substring(li, str.length));
+		}
+	;
+	//z=rx.exec(str);
+	//z=str.match(/\/\*!\*(.*)\*!\*\//);
 	Fn(str);
 
 };
 
 X.cssReset=(
-	'/* reset script */'
-+	'html, body, div, span, applet, object, iframe,'
+	'html, body, div, span, applet, object, iframe,'
 +	'h1, h2, h3, h4, h5, h6, p, blockquote, pre,'
 +	'a, abbr, acronym, address, big, cite, code,'
 +	'del, dfn, em, img, ins, kbd, q, s, samp,'
@@ -227,5 +203,5 @@ X.cssReset=(
 +	'table {'
 +		'border-collapse: collapse;'
 +		'border-spacing: 0;'
-+	'}\n'
++	'}'
 );

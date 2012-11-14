@@ -1,20 +1,28 @@
 var X=exports
-   ,  $fs=require('./node/fs')
-		,	$fs_stat=$fs.stat
-		,	$fs_readFile=$fs.readFile
-		,	$fs_readDir=$fs.readdir
-		,	$fs_createReadStream=$fs.createReadStream
-	,	$path=require('path')
-		,	$path_join=$path.join
-		,	$path_extname=$path.extname
-   ,  nm='pops.http.server'
-   ,  http=require('http')
-   ,  pr=require('pops/pops.router')
-   ,  pc=require('pops/pops.core')
-   	,	cout=pc.cout
+,  $fs=require('./node/fs')
+	,	$fs_stat=$fs.stat
+	,	$fs_readFile=$fs.readFile
+	,	$fs_readDir=$fs.readdir
+	,	$fs_createReadStream=$fs.createReadStream
+,	$path=require('path')
+	,	$path_join=$path.join
+	,	$path_extname=$path.extname
+,  nm='pops.http.server'
+,  http=require('http')
+,  pr=require('pops/pops.router')
+,  pc=require('pops/pops.core')
+	,	cout=pc.cout
+
+,	contentTypes={
+		'.css': 'text/css'
+	,	'.htm': 'text/html'
+	,	'.html': 'text/html'
+	,	'.jpeg': 'image/jpeg'
+	,	'.jpg': 'image/jpeg'
+	,	'.js': 'text/javascript'
+	}
 ;
-eval(pc.$VarStr(pc,'pc'));
-//out('pr='+pr);
+
 var $Req=X.Req=X.Request=function(req){
    //var rv=req;
    return req;
@@ -23,16 +31,7 @@ var $Res=X.Res=X.Response=function(res){
    return res;
 };
 
-var contentTypes= {
-	'.css': 'text/css'
-,	'.htm': 'text/html'
-,	'.html': 'text/html'
-,	'.jpeg': 'image/jpeg'
-,	'.jpg': 'image/jpeg'
-,	'.js': 'text/javascript'
-};
 
-pr=require('pops/pops.router');
 var hs=X.server=Class('popsHttpServer', {
 		OPTIONS:{
 				auto: 0
@@ -42,6 +41,7 @@ var hs=X.server=Class('popsHttpServer', {
       }
    ,  INIT:function(op,onRdy){
 			var t=this.SetOptions(op), o=this.OP, l, cnt;
+			//out('server.INIT  -  o: \n'+JSON.stringify(o)+'\n');
 			this.$nm=o.name;
 			this.Refresh();
 			if(o.auto) this.Start();
