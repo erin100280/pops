@@ -17,7 +17,10 @@ if(!cSide) argus=arguments;
 	   ,	$CreateOptions
 	   ;
 		
-		if(!cSide) {
+		if(cSide) {
+			G.$=son.$=document.getElementById
+		}
+		else {
 			z=argus[2].filename;
 			O.modPath=z;
 			O.modDir=require('path').dirname(z);
@@ -32,8 +35,11 @@ if(!cSide) argus=arguments;
 		};
 	};
 	if(2){//-Native.
-	   var __$O_=O, z, z2, z4, zz, Extend, Implement, ExIm, ExtImp;
+	   var __$O_=O, z, z2, z4, zz, Extend, Implement, ExIm, ExtImp
+	   ,	prop=Object.defineProperty
+	   ;
 	   if(2){//-Function modifiers [Extend(),ExtImp(),Implement()]
+	      
 	      z=Function; z2=z.prototype;
 	      zz=z2.Prim=function(){this.$$prim=2;return this;};zz.$$prim=zz.$$sys=2;
 	      zz=z2.Sys=function(){this.$$sys=2;return this;};zz.$$prim=zz.$$sys=2;
@@ -101,8 +107,14 @@ if(!cSide) argus=arguments;
 	               else{
 	                  if(o.prim) zz.$$prim=2;
 	                  if(o.sys) zz.$$sys=2;
-	                  if(ex) t[mb]=zz;
-	                  if(im) t.prototype[mb]=zz;
+	                  if(ex) {
+	                  	if(zz.$$isProperty) prop(t, mb, zz);
+	                  	else t[mb]=zz;
+                  	};
+	                  if(im) {
+	                  	if(zz.$$isProperty) prop(t.prototype, mb, zz);
+	                  	else t.prototype[mb]=zz;
+                  	};
 	               };
 	            };
 	         };
@@ -911,7 +923,13 @@ if(!cSide) argus=arguments;
 		         return false;
 		      }
 		});
-		O.Property=function(val){ return Object.CopyTo({}, [val, { $$isProperty: 2 }]); };
+		O.Property=function(val){
+			var rv={ $$isProperty: 2 }, z;
+			if(z=val.Get||val.get) rv.get=z;
+			if(z=val.Set||val.set) rv.set=z;
+			
+			return rv;
+		};
 		O.Interface=function(nam,specs) {
 		   var n=nam, s=specs, l, nm, z, zz, k, a, it={}, unk='UNKNOWN'
 		      ,  I=O.Interface
@@ -1096,8 +1114,8 @@ if(!cSide) argus=arguments;
 								kk={ $$fName: nm, $$inClass: Class, $$PROPERTY: 2 }
 								if(shrd) kk.$$shared=2;
 								
-								if(zz=z.Get) k.get=zz.Extend(kk);
-								if(zz=z.Set) k.set=zz.Extend([kk, { $$SET: 2 }]);
+								if(zz=z.get) k.get=zz.Extend(kk);
+								if(zz=z.set) k.set=zz.Extend([kk, { $$SET: 2 }]);
 								
 								Object.defineProperty(v, nm, k);
 								ya=0;

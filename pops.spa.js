@@ -258,6 +258,10 @@ var pageBuilder=X.pageBuilder=Class('pops.spa:pageBuilder', {
 			res.write(son.elements);
 			res.write('</script>\n');
 
+         res.write('<script name="tempJS" type="text/javascript" charset="utf-8">\n');
+			res.write(this.$$tempJS);
+			res.write('</script>\n');
+
 			if(cb) cb(0, this);
 			else this.$DoHtmlEnd(req, res, op);
 		}
@@ -276,6 +280,8 @@ var pageBuilder=X.pageBuilder=Class('pops.spa:pageBuilder', {
 
 			,	GuiOutlineCb, GuiCssCb, SonCb
 			;
+
+			this.$$tempJS=$$fs_readFileSync($$path_join(pc.modDir, './son/temp.js'));
 
 			GuiOutlineCb=function(err, t) {
 				if(err) { if(cb) cb(err, t); }
