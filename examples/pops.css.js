@@ -54,7 +54,7 @@ Code=X.Code=function(obj, spacer, ender, initialSpace, doCurlyBrackets) {
 }
 
 FromFile=X.FromFile=function(filnam, ops) {
-	return $pc_CreateOptions(ops, { $isCssFromFile: 2, filename: filnam });
+	return $pc_CreateOptions(ops, { $$isCssFromFile: 2, filename: filnam });
 };
 
 LoadFile=X.LoadFile=function(filnam, map, cb) {

@@ -84,5 +84,5 @@ var elements
 
 	X.MakeGlobal=function() { Object.CopyTo(G, X); };
 
-	if(son.$$globalMods || son.$$global_elements) x.MakeGlobal();
+	if(son.$$globalMods || son.$$global_elements) X.MakeGlobal();
 }());

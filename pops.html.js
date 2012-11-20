@@ -13,9 +13,9 @@ X.CreateGui=function(gui) {
 	else throw(new Error('not supported'));
 }
 
-X.guiItem=function(type, ID, CLASS, ops, children) {
+X.GuiItem=function(type, ID, CLASS, ops, children) {
 	var rv={ $isGuiItem: 2 }, to, k, z
-		,	tp=(typeof type=='string')? type.LCase() : type
+		,	tp=type//(typeof type=='string')? type.LCase() : type
 		,	id=ID
 		,	cl=CLASS
 		,	op=ops

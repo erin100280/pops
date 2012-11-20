@@ -14,8 +14,6 @@ if(2) {//- vars
 		,	Class=pc.Class
 		,	cout=pc.cout
 		,	Property=pc.Property
-		,	ObjClone=Object.Clone
-		,	ObjCopyTo=Object.CopyTo
 	,	$css=require('./pops.css')
 		,	$css_cssReset=$css.cssReset
 		,	$css_Code=$css.Code
@@ -24,10 +22,8 @@ if(2) {//- vars
 	,  $html=require('./pops.html')
 		,	GuiItem=$html.GuiItem
 		,	$html_Element=$html.Element
-		,	$ElementProps=$html.ElementProps
 	,  $http=require('./pops.http')
 	,  pw=require('./pops.widget')
-		,  BuildWidgetGui=pw.BuildWidgetGui
 		,  widgetManager=pw.widgetManager
 	,  pfsl=require('./fs/pops.fs.local')
 	
@@ -44,19 +40,13 @@ if(2) {//- pageBuilder
 		,	pb_initialScript=function(){
 				var $$_G=window.$$_G=window;
 				(function() {
-					son.Global.Son();
-					var ap, z
+					var z
 					,	g=$$_G
-					,	ap=g.$APP={}
-					,	wman=ap.widgetMan=g.widgetMan=new son.widgets.widgetManager()
-					,	IPg=g.$$_InitPage=function() {}
+					,	IPg=g.$$_InitPage=function() {
+							
+						}
 					;
 					IPg();
-				
-					
-					
-				
-				
 				}());
 			}.InnerStr()
 
@@ -143,7 +133,7 @@ if(2) {//- pageBuilder
 				if(z=cssObj[sNam]) {
 					if(i<z.length) {
 						if(k=z[i]) {
-							if(k.$$isCssFromFile && !k.reload){
+							if(k.$isCssFromFile && !k.reload){
 								$css_LoadFile(k.filename, { fileSystem: fs }, function(err, val) {
 									if(err) { if(cb) cb(new Error(err), t); }
 									else {
@@ -190,7 +180,7 @@ if(2) {//- pageBuilder
 				if(sect) {
 					if(i<sect.length) {
 						if(k=sect[i]) {
-							if(k.$$isCssFromFile && !k.reload){
+							if(k.$isCssFromFile && !k.reload){
 								sect[i]=$css_LoadFileSync(k.filename, {
 									options: { fileSystem: fs }
 								});
@@ -312,7 +302,7 @@ if(2) {//- pageBuilder
 				if(z=cssObj[sNam]) {
 					if(i<z.length) {
 						if(k=z[i]) {
-							if(k.$$isCssFromFile && !k.reload){
+							if(k.$isCssFromFile && !k.reload){
 								$css_LoadFile(k.filename, {}, function(err, val) {
 									if(err) { if(cb) cb(new Error(err), t); }
 									else {
@@ -377,6 +367,9 @@ if(2) {//- pageBuilder
 				,	widgetManager: this.widgets
 				})
 	
+				//rv=$html_Element('div', props, children, 0, '	')+'\n';
+			
+				//out('rv:\n'+rv+'\n\n');
 				if(cb) cb(0, rv);
 				return rv;
 			}
@@ -422,8 +415,6 @@ if(2) {//- pageBuilder
 	
 		,	$DoIt: function(req, res, op, cb) {
 				var t=this
-				,	z={ $bDat: {} }
-				,	o=(op)? ObjCopyTo({}, [op, z]) : z 
 				,	htmlBeginCb, htmlEndCb
 				,	beforeHeadCb, headBeginCb, headInitialCssCb, headEndCb
 				,	initScriptCb
@@ -432,39 +423,39 @@ if(2) {//- pageBuilder
 	
 				htmlBeginCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoBeforeHead(req, res, o, beforeHeadCb);
+					else t.$DoBeforeHead(req, res, op, beforeHeadCb);
 				};
 				beforeHeadCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoHeadBegin(req, res, o, headBeginCb);
+					else t.$DoHeadBegin(req, res, op, headBeginCb);
 				};
 				headBeginCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoHead_InitialCss(req, res, o, headInitialCssCb);
+					else t.$DoHead_InitialCss(req, res, op, headInitialCssCb);
 				};
 				headInitialCssCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoHeadEnd(req, res, o, headEndCb);
+					else t.$DoHeadEnd(req, res, op, headEndCb);
 				};
 				headEndCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoBodyBegin(req, res, o, bodyBeginCb);
+					else t.$DoBodyBegin(req, res, op, bodyBeginCb);
 				};
 				bodyBeginCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoBodyContent(req, res, o, bodyContentCb);
+					else t.$DoBodyContent(req, res, op, bodyContentCb);
 				};
 				bodyContentCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoBodyEnd(req, res, o, bodyEndCb);
+					else t.$DoBodyEnd(req, res, op, bodyEndCb);
 				};
 				bodyEndCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoInitScript(req, res, o, initScriptCb);
+					else t.$DoInitScript(req, res, op, initScriptCb);
 				};
 				initScriptCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoHtmlEnd(req, res, o, htmlEndCb);
+					else t.$DoHtmlEnd(req, res, op, htmlEndCb);
 				};
 				htmlEndCb=function(err, t) {
 					res.end();
@@ -472,7 +463,8 @@ if(2) {//- pageBuilder
 				};
 	
 	
-				this.$DoHtmlBegin(req, res, o, htmlBeginCb);
+				this.$DoHtmlBegin(req, res, op, htmlBeginCb);
+	
 			}
 	
 		,	$DoHtmlBegin: function(req, res, op, cb) {
@@ -513,15 +505,6 @@ if(2) {//- pageBuilder
 				this.$CreateGuiHtml(OP, function(err, val) {
 					var z, z2, zz;
 					res.write(val.html+'\n');
-					if(OP) {
-						z=OP.$bDat=(OP.$bDat||{});
-						zz=z.applets=(z.applets||{});
-						ObjCopyTo(zz, val.applets);
-						zz=z.widgets=(z.widgets||{});
-						ObjCopyTo(zz, val.widgets);
-						zz=z.iCode||'';
-						z.iCode=zz+(val.iCode||'');
-					}
 					if(z=val.widgets) {};
 					if(z=val.applets) {};
 					
@@ -566,7 +549,7 @@ if(2) {//- pageBuilder
 								if(z) {
 					         	res.write('<style style="display: none; " type="text/css">\n');
 						      	if(typeof z=='function') z({}, Ff);
-						      	else if(z.$$isCssFromFile) $css_LoadFile(z.filename, z, Ff);
+						      	else if(z.$isCssFromFile) $css_LoadFile(z.filename, z, Ff);
 						      	else Ff(0, z);
 								}
 								else Fn();
@@ -587,53 +570,35 @@ if(2) {//- pageBuilder
 				else this.$DoBodyBegin(req, res, op);
 			}
 		,	$DoInitScript: function(req, res, op, cb) {
-				var t=this, k, k2, kk, nm, z, zz
-				,	son=this.son||{}
-				,	o=op||{}
-				,	bDat=o.$bDat
-				,	wgts=this.widgets
-				,	sFirst='<script name="'
-				,	sAfterName='" type="text/javascript" charset="utf-8">\n'
-				,	sLast='</script>\n'
-				;
+				var t=this, son=this.son||{}, z;
+				//out('DoInitScript');
 	         
-	         res.write(sFirst+'son.core'+sAfterName+son.core+sLast);
-	         res.write(sFirst+'son.elements'+sAfterName+son.elements+sLast);
-	         res.write(sFirst+'son.widgets'+sAfterName+son.widgets+sLast);
+	         res.write('<script name="InitScript" type="text/javascript" charset="utf-8">\n'
+				+		pb_initialScript
+				+	'</script>\n'
+				);
 	
-	         res.write(sFirst+'InitScript'+sAfterName+pb_initialScript+sLast);
-
-				if(bDat) {
-					if(z=bDat.widgets) {
-						zz={};
-						for(nm in z) if(z[nm]) zz[nm]=wgts(nm).clientString;
-	         		res.write(
-	         			sFirst+'setWidgets'+sAfterName
-	         		+	'(function() {\n'
-	         		+		'var g=this, nm, z\n'
-	         		+		', wm=$APP.widgetMan, ob='+JSON.stringify(zz)+'\n'
-	         		+		';\n'
-	         		+		'for(nm in ob) z=wm.$$widgets[nm]=EVAL(ob[nm]);\n'
-	         		+	'}());\n'	
-         			+	sLast
-         			);
-					};
-					
-					if((z=bDat.iCode)) 
-	         		res.write(
-	         			sFirst+'app.iCode'+sAfterName
-	         		+	'(function() {\n'
-	         		+		'var $wgt, $wgtMan=$APP.widgetMan, z;\n'
-	         		+		z
-	         		+	'}());\n'	
-         			+	sLast
-         			);
-
-					//out('zz='+zz+'  -  zz.length='+zz.length);
-				};
-				
+	         if(z=son.core)
+		         res.write('<script name="son.core" type="text/javascript" charset="utf-8">\n'
+					+		z
+					+	'</script>\n'
+					);
+				if(z=son.elements)
+		         res.write('<script name="son.elements" type="text/javascript" charset="utf-8">\n'
+					+		z
+					+	'</script>\n'
+					);
+				if(z=son.widgets)
+		         res.write('<script name="son.widgets" type="text/javascript" charset="utf-8">\n'
+					+		z
+					+	'</script>\n'
+					);
+	
 	         if(z=this.$$tempJS)
-		         res.write(sFirst+'tempJS'+sAfterName+z+sLast);
+		         res.write('<script name="tempJS" type="text/javascript" charset="utf-8">\n'
+					+	z
+					+	'</script>\n'
+					);
 
 				if(cb) cb(0, this);
 				else this.$DoHtmlEnd(req, res, op);
@@ -689,21 +654,19 @@ if(2) {//- pageBuilder
 };
 
 if(2) {//- BuildGui
-	BuildGui=X.BuildGui=function(ops, spacer, space, ender, cb) {
-		if(typeof spacer=='function') { cb=spacer; spacer=null; }
-		//out('BuildGui');
-		var rv, css, i, iCode='', itm, l, ln, n, pr, str1, str2, typ, z, z2, zz
-		,	spcr=(typeof spacer=='string')? spacer : '	'
-		,	spc=(typeof space=='string')? space : ''
-		,	end=(typeof ender=='string')? ender : '\n'
-
+	BuildGui=X.BuildGui=function(ops, cb) {
+		cout('BuildGui');
+		var i, itm, l, ln, n, typ, z, z2, zz
+		,	htm='', wgts={}, aplts={}
 		,	o=ops||{}
 		,	outlin=o.outline
-		,	htm='', wgts={}, aplts={}
 		,	wgtMan=o.widgetManager
-		,	apltMan=o.appletManager
-		;
+		,	appltMan=o.appletManager
 
+		,	baseElem=o.baseElem
+		,	addBaseEl=o.addBaseElem
+		;
+	
 		if(outlin) {
 			if(!(outlin instanceof Array)) outlin=[outlin];
 			for(i=0, l=outlin.length; i<l; i++) {
@@ -712,68 +675,21 @@ if(2) {//- BuildGui
 				else {
 					typ=itm.type;
 					z=typ.Split('|');
-					//out('typ='+typ+'  -  z='+z);
+					cout('typ='+typ+'  -  z='+z);
 					if((n=z.length)>1) {
-						//out('n=z.length)>1');
+						cout('n=z.length)>1');
 						if((z2=z[0])=='widget' || z2=='w') {
-							zz=BuildWidgetGui({
-								name: z[1]
-							,	guiItem: itm
-							,	widgetManager: wgtMan
-							,	appletManager: apltMan
-							,	BuildGui: BuildGui
-							});
-							htm+=zz.html;
-							iCode+=zz.iCode;
-							ObjCopyTo(aplts, zz.applets);
-							ObjCopyTo(wgts, zz.widgets);
-							css=zz.css;
-							//out('zz.html='+zz.html+'  -  zz.iCode='+zz.iCode);
+							cout('-WIDGET-');
 						};
 					}
-					else {
-						pr='';
-						if(z=itm.props) {
-							z=ObjClone(z);
-							if(str1=z.string) delete z.string; 
-							if(str2=z.endString) delete z.endString; 
-							pr=$ElementProps(z);
-						};
-						htm+=spc+'<'+typ+pr+'>'+end;
-						if(str1) htm+=spc+spcr+str1+end;
-
-						if(z=itm.children) {
-							zz=BuildGui({
-								outline: z
-							,	appletManager: apltMan
-							,	widgetManager: wgtMan
-							}, spcr, spc+spcr, end);
-						
-							htm+=zz.html;
-							iCode+=zz.iCode||'';
-							ObjCopyTo(aplts, zz.applets);
-							ObjCopyTo(wgts, zz.widgets);
-						};
-
-						if(str2) htm+=spc+spcr+str2+end;
-						htm+=spc+'</'+typ+'>'+end;
-					};
+					else
+						htm+=$html_Element(itm, 0, 0, 0, '	')+'\n';
 				};
 			};
-		};		
-	
-		//out('## iCode='+iCode);
-		rv={
-			$$isBuiltGui: 2
-		,	html: htm
-		,	widgets: wgts
-		,	applet: aplts
-		,	iCode: iCode
-		,	css: css
 		};
-		
-		if(cb) cb(0, rv);
-		return rv;
+	
+	
+		return { $$isBuiltGui: 2, html: htm };
 	};
 	
 };

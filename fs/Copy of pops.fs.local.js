@@ -1,6 +1,5 @@
 var z,X=exports
 ,  $$path=require('path')
-   ,  $$path_basename=$$path.basename
    ,  $$path_dirname=$$path.dirname
    ,  $$path_join=$$path.join
    ,  $$path_normalize=$$path.join
@@ -51,30 +50,19 @@ X.FindFile=function(filnam, ops, cb) {
 };
 
 X.FindFileSync=function(filnam, ops) {
-	//out('FindFileSync - Begin');
-	var bnm, cdir, dnm, fnm, fs=$$fs, ndir, nf, z
+	var z, fs=$$fs
 	,	rv
 	,	cb=cb||EmptyFn
 	,	op=ops||{}
 	,	cwd=ops.fromDir||$$process_cwd()
+//	,	newPath=$$path_join(cwd, filnam)
+	,	stats=fs.statSync(filnam);
 	;
 	
-	if(!filnam) {}
-	else if((nf=filnam) && fs.existsSync(nf) && (stats=fs.statSync(nf)) && stats.isFile())
-		fnm=nf;
-	else if((nf=$$path_join(cwd, filnam)) && fs.existsSync(nf) && (stats=fs.statSync(nf)) && stats.isFile())
-		fnm=nf;
-
-	if(fnm) {
-		cdir=process.cwd();
-		process.chdir(z=$$path_dirname(fnm));
-		fnm=$$path_join((dnm=process.cwd()), (bnm=$$path_basename(fnm)));
-		//out('==== bnm='+bnm+'    ==== dnm='+dnm+'    ==== fnm='+fnm);
-		rv={ path: fnm, dir: dnm, base: bnm };
-		process.chdir(cdir);
-	};
-
-	//out('FindFileSync - End');
+	if(stats && stats.isFile())
+		rv={ path: filnam, dir: $$path_dirname(filnam) };
+	else
+		rv={ path: (z=z=$$path_join(cwd, filnam)), dir: $$path_dirname(z) };
 	return rv;
 };
 

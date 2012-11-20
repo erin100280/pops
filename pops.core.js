@@ -1,6 +1,12 @@
-var argus, cSide=(typeof Document!='undefined' && typeof window!='undefined');
-if(!cSide) argus=arguments;
+var argus, cside, $$_cSide$_=(typeof Document!='undefined' && typeof window!='undefined');
+var EVAL=function($$_code$_) {
+	var global={}, exports={};
+	eval($$_code$_);
+	return exports;
+};
+if(!$$_cSide$_) argus=arguments;
 (function() {
+	cSide=$$_cSide$_;
 	if(2) {//-vars
 	   var CO, z, z2, z3, z4, zz, x, l, p, fn=Function
 		,	cSide=(typeof Document!='undefined' && typeof window!='undefined')
@@ -18,12 +24,13 @@ if(!cSide) argus=arguments;
 	   ;
 		
 		if(cSide) {
-			G.$=son.$=document.getElementById
+			G.$=son.$=function(id) { return document.getElementById(id); };
 		}
 		else {
 			z=argus[2].filename;
-			O.modPath=z;
 			O.modDir=require('path').dirname(z);
+			O.modFile=require('path').basename(z);
+			O.modPath=z;
 			
 			var
 				$fs=require('fs')
@@ -34,6 +41,7 @@ if(!cSide) argus=arguments;
 			;
 		};
 	};
+	O.EVAL=EVAL;
 	if(2){//-Native.
 	   var __$O_=O, z, z2, z4, zz, Extend, Implement, ExIm, ExtImp
 	   ,	prop=Object.defineProperty
@@ -103,23 +111,23 @@ if(!cSide) argus=arguments;
 	               op={ ext: ex, imp: im };
 	               if(mb=='Prim') { op.prim=2; t.ExtImp(zz, op); }
 	               else if(mb=='Sys') { op.sys=2; t.ExtImp(zz, op); }
-	               else if(mb=='PrimSys') { op.prim=op.sys=2; t.ExtImp(zz, op); }
+	               else if(mb=='PrimSys') { op.prim=op.sys=2; this.ExtImp(zz, op); }
 	               else{
 	                  if(o.prim) zz.$$prim=2;
 	                  if(o.sys) zz.$$sys=2;
 	                  if(ex) {
-	                  	if(zz.$$isProperty) prop(t, mb, zz);
-	                  	else t[mb]=zz;
+	                  	if(zz && zz.$$isProperty) prop(this, mb, zz);
+	                  	else this[mb]=zz;
                   	};
 	                  if(im) {
-	                  	if(zz.$$isProperty) prop(t.prototype, mb, zz);
-	                  	else t.prototype[mb]=zz;
+	                  	if(zz.$$isProperty) prop(this.prototype, mb, zz);
+	                  	else this.prototype[mb]=zz;
                   	};
 	               };
 	            };
 	         };
 	   
-	         return t;
+	         return this;
 	      }.PrimSys();
 	      z.Extend=z2.Extend=function(val) { return this.ExtImp(val, {ext: 2}); };
 	      z.Implement=z2.Implement=function(val) { return this.ExtImp(val, {imp: 2}); };
@@ -400,11 +408,17 @@ if(!cSide) argus=arguments;
 						var n=names, i, l, z;
 						for(i=0, l=n.length; i<l; i++) if(v[z=n[i]]) delete v[z];
 					}
-	
+				,	Str: function(v) {
+						var rv='{', nm, z, zz;
+						if(v) {
+							
+						};
+						return rv+'}';
+					}	
 	      }
 	   });
-	   Boolean.Sys().Implement({$class: Boolean});
-	   Date.Sys().Implement({$class: Date});
+	   Boolean.Sys().Implement({ $class: Boolean });
+	   Date.Sys().Implement({ $class: Date });
 	   
 	   if(2) {//- JSON
 			var JsonSafeStr=JSON.SafeStr=function(val, depth, dbg) {
@@ -458,28 +472,30 @@ if(!cSide) argus=arguments;
 		   		return rv;
 		   	}
 		   })
-			JSON.FromFile=function(filnam, cb) {
-				$fs_readFile(filnam, function(err, val) {
-					if(cb) { if(err) cb(err); else cb(0, JSON_parse(val)); };
-				});
-			}
-			JSON.FromFileSync=function(filnam) {
-				return JSON_parse($fs_readFileSync(filnam));
-			}
-			JSON.ToFile=function(filnam, val, cb) {
-				var z=JSON_stringify(val);
-				$fs_writeFile(filnam, z, function(err, val) {
-					if(cb) { if(err) cb(err); else cb(0, z); };
-				});
-			}
-			JSON.ToFileSync=function(filnam, val) {
-				return $fs_writeFileSync(filnam, JSON_stringify(val));
-			}
+			if(!cSide) {
+				JSON.FromFile=function(filnam, cb) {
+					$fs_readFile(filnam, function(err, val) {
+						if(cb) cb(0, JSON_parse((val)? val.toString() : ''));
+					});
+				}
+				JSON.FromFileSync=function(filnam) {
+					return JSON_parse($fs_readFileSync(filnam).toString());
+				}
+				JSON.ToFile=function(filnam, val, cb) {
+					var z=JSON_stringify(val);
+					$fs_writeFile(filnam, z, function(err, val) {
+						if(cb) { if(err) cb(err); else cb(0, z); };
+					});
+				}
+				JSON.ToFileSync=function(filnam, val) {
+					return $fs_writeFileSync(filnam, JSON_stringify(val));
+				}
+			};
 		};
 	   
 	   delete z; delete z2; delete z4; delete zz; delete Ex; delete Im; delete ExIm; 
 	};
-	
+	if(!cSide) Object.CopyTo(O, require('./core/pops.core.sSide'));
 	if(2){//-Setup system nodes.
 	   if(!G.$$modes){
 	      z=G.$$modes={};
@@ -550,6 +566,15 @@ if(!cSide) argus=arguments;
 	}
 	if(2){//-misc 2. (var'd) [cout(),sout(),Cls(),def(),Type(),typeOf(),TypeOf(),udef]
 	   var z
+	      ,	Str=function(v, or) {
+					return (''+
+						(typeof v=='object')?
+							Object.Str(v)
+						:	(v instanceof Array)?
+								Array.Str(v)
+							: (v||v===0)? v : (or||or===0)? or : ''
+					);
+	      	}
 	      ,  $Str=O.$Str=function(v,recursive,spacing,times,rMax,tim){
 	            var r=recursive,z=spacing,sp=z?z:0
 	               ,  T=typeOf(v),rv='',z=times,x=def(z)?z:3
