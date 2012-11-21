@@ -92,11 +92,18 @@ LoadFileSync=X.LoadFileSync=function(filnam, map) {
 	,	fs=ops.fileSystem||pfsl
 	;
 
-	if(fil=fs.FindFileSync(filnam, ops))
-		return ParseStrSync(fs.readFileSync(fil.path).toString(), $pc_CreateOptions(mp, {
-			options: { fromDir: $path_dirname(filnam) }
+	if(fil=fs.FindFileSync(filnam, ops)) {
+		z=fs.readFileSync(fil.path).toString();
+
+		return z;
+
+		cout(' ---- z='+z+'\n\n');
+		return ParseStrSync(z, $pc_CreateOptions(mp, {
+			options: { fromDir: fil.dir }
 		}));
+	}
 	else throw(new Error('Can\'t find file : '+filnam));
+
 };
 
 ParseStr=X.ParseStr=function(str, map, cb) {
@@ -226,7 +233,7 @@ ParseStrSync=X.ParseStrSync=function(str, map) {
 				z=cmnt[1].split('##');
 				zi=0; zl=z.length;
 				ZFn=function() {
-					var c, ci, cl, CFn, k, k2, k4, k2RX, NFn;
+					var c, ci, cl, CFn, k, k2, k4, k2RX, NFn, vv;
 					if(zi<zl) {
 						k=z[zi].TrimFull();
 						//out('z['+zi+']= '+(;));
@@ -256,14 +263,9 @@ ParseStrSync=X.ParseStrSync=function(str, map) {
 											};
 											
 											//out('FILENAME: ' +k4.val);
-											LoadFile(k4.val, mp, function(err, val) {
-												if(err) { if(cb) cb(err); }
-												else {
-													rv+=val;
-													ZFn();
-												};
-												
-											})
+											vv=LoadFileSync(k4.val, mp);
+											rv+=vv;
+											ZFn();
 										}
 										else ZFn();
 									}
@@ -290,7 +292,7 @@ ParseStrSync=X.ParseStrSync=function(str, map) {
 	//out('fromDir='+fromDir);
 
 	Fn(str);
-
+	return rv;
 };
 
 X.cssReset=(

@@ -306,6 +306,7 @@ if(!$$_cSide$_) argus=arguments;
 	            }
 	      }
 	   });
+	   Array.CopyTo=Array.Merge;
 	   Array.Implement({
 	         $class: Array
 	      ,  $type:'array'

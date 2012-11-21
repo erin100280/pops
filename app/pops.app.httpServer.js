@@ -15,14 +15,14 @@ X.Outline=function(ops){
          ,  $_pahs_=require('pops/app/pops.app.httpServer')
          ,  $_ab_=require('pops/app/pops.app.base')
          ,	$_AfterCreateApp_httpServer=function(app) {
-         		$pops.cout('$_AfterCreateApp_httpServer');
+         		//$pops.//out('$_AfterCreateApp_httpServer');
       			//$pops.cout('app='+JSON.stringify(app)+'\n');
 
          		var rv=$_AfterCreateApp(app), o=rv.op;
          		return rv;
          	}
          ,  CreateApp=$_CreateApp_httpServer=function(ops,onRdy){
-         		$pops.cout('$_CreateApp_httpServer');
+         		//$pops.out('$_CreateApp_httpServer');
          		var rv=$_pahs_.app.Create([$_ops_, ops],onRdy,$_app_);
       			//$pops.cout('rv='+JSON.stringify(rv)+'\n');
       			//$pops.cout('rv.db='+JSON.stringify(rv.db)+'\n');
@@ -50,14 +50,14 @@ var ap=X.app=Class('popsAppHttpServerApp',{
    ,  Shared:{}
    ,  Interface: ai
    ,  Init:function(ops, onRdy, deps){
-         cout('popsAppHttpServerApp - Init');
+         //out('popsAppHttpServerApp - Init');
          Parent(ops);
-         cout('popsAppHttpServerApp - Init 2');
+         //out('popsAppHttpServerApp - Init 2');
          //var t=this.SetOptions(ops),o=t.op,z,zz
          var z;
-       	if(this.op) cout('           if(this.op)              ');
-       	else cout('           if(!this.op)              ');
-         cout('ops='+JSON.SafeStr(ops)+'\n');
+       	if(this.op) {}//out('           if(this.op)              ');
+       	else {};//out('           if(!this.op)              ');
+         //out('ops='+JSON.SafeStr(ops)+'\n');
          if(!this.options) this.SetOptions(ops);
 		   this.SetOptions(ops);
 		   z=JSON.SafeStr(this);
@@ -70,7 +70,7 @@ var ap=X.app=Class('popsAppHttpServerApp',{
          ;
 
 
-cout('oooo WAM | sv='+JSON.SafeStr(sv)+' oooo');
+//out('oooo WAM | sv='+JSON.SafeStr(sv)+' oooo');
 
          if(0){//-Handle options
             o.options=Object.CopyTo({

@@ -14,6 +14,7 @@ if(2) {//- vars
 		,	Class=pc.Class
 		,	cout=pc.cout
 		,	Property=pc.Property
+		,	ArrCopyTo=Array.CopyTo
 		,	ObjClone=Object.Clone
 		,	ObjCopyTo=Object.CopyTo
 	,	$css=require('./pops.css')
@@ -425,7 +426,8 @@ if(2) {//- pageBuilder
 				,	z={ $bDat: {} }
 				,	o=(op)? ObjCopyTo({}, [op, z]) : z 
 				,	htmlBeginCb, htmlEndCb
-				,	beforeHeadCb, headBeginCb, headInitialCssCb, headEndCb
+				,	beforeHeadCb, headBeginCb, headInitialCssCb
+					,	headGuiCssCb, headEndCb
 				,	initScriptCb
 				,	bodyBeginCb, bodyContentCb, bodyEndCb
 				;
@@ -443,6 +445,10 @@ if(2) {//- pageBuilder
 					else t.$DoHead_InitialCss(req, res, o, headInitialCssCb);
 				};
 				headInitialCssCb=function(err, t) {
+					if(err) { if(cb) cb(new Error(err), t); }
+					else t.$DoHead_GuiCss(req, res, o, headGuiCssCb);
+				};
+				headGuiCssCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
 					else t.$DoHeadEnd(req, res, o, headEndCb);
 				};
@@ -471,8 +477,25 @@ if(2) {//- pageBuilder
 					if(cb) cb((err)? new Error(err) : 0, t);
 				};
 	
+				this.$CreateGuiHtml(o, function(err, val) {
+					var z, z2, zz;
+					if(o) {
+						z=o.$bDat=(o.$bDat||{});
+						zz=z.applets=(z.applets||{});
+						ObjCopyTo(zz, val.applets);
+						zz=z.widgets=(z.widgets||{});
+						ObjCopyTo(zz, val.widgets);
+						zz=z.iCode||'';
+						z.iCode=zz+(val.iCode||'');
+						zz=z.html||'';
+						z.html=zz+(val.html||'');
+						z.css=val.css;
+					};
+					
+					t.$DoHtmlBegin(req, res, o, htmlBeginCb);
+				});
 	
-				this.$DoHtmlBegin(req, res, o, htmlBeginCb);
+				
 			}
 	
 		,	$DoHtmlBegin: function(req, res, op, cb) {
@@ -508,26 +531,10 @@ if(2) {//- pageBuilder
 	    		else this.$DoBodyContent(req, res, OP);
 			}
 		,	$DoBodyContent: function(req, res, OP, cb) {
-				var t=this;
-				
-				this.$CreateGuiHtml(OP, function(err, val) {
-					var z, z2, zz;
-					res.write(val.html+'\n');
-					if(OP) {
-						z=OP.$bDat=(OP.$bDat||{});
-						zz=z.applets=(z.applets||{});
-						ObjCopyTo(zz, val.applets);
-						zz=z.widgets=(z.widgets||{});
-						ObjCopyTo(zz, val.widgets);
-						zz=z.iCode||'';
-						z.iCode=zz+(val.iCode||'');
-					}
-					if(z=val.widgets) {};
-					if(z=val.applets) {};
-					
-					if(cb) cb(err, t);
-					else t.$DoBodyEnd(req, res, OP);
-				});
+				var t=this, k, z;
+				if(OP && (k=OP.$bDat) && (z=k.html)) res.write(z+'\n');
+				if(cb) cb(0, t);
+				else t.$DoBodyEnd(req, res, OP);
 			}
 		,	$DoBodyEnd: function(req, res, OP, cb) {
 	    		res.write('</body>\n');
@@ -547,7 +554,10 @@ if(2) {//- pageBuilder
 				else this.$DoHead_InitialCss(req, res, op);
 			}
 		,	$DoHead_InitialCss: function(req, res, op, cb) {
-				var iCss=(this.$css||{}).initial;
+				var i, l, z, zz
+				,	iCss=(this.$css||{}).initial
+				;
+
 				if(iCss) {
 					var t=this, i=0, l=iCss.length
 					,	Fn=function() {
@@ -572,12 +582,43 @@ if(2) {//- pageBuilder
 								else Fn();
 							}
 							else if(cb) cb(0, t);
-							else t.$DoHeadEnd(req, res, op);
+							else t.$DoHead_GuiCss(req, res, op);
 						}
 					;
 					Fn();
 				}
 				else if(cb) cb(0, this);
+				else this.$DoHead_GuiCss(req, res, op);
+			}
+		,	$DoHead_GuiCss: function(req, res, op, cb) {
+				var i, l, nm, k, kk, str='', w, z, zz
+				,	wm=this.widgets
+				;
+				
+				if((z=op) && (z=z.$bDat) && (z=z.css)) {
+					for(nm in z) {
+						if(z[nm]) {
+							if(w=wm(nm)) {
+								if(zz=w.css) {
+									for(i=0, l=zz.length; i<l; i++) {
+										if((k=zz[i]) && k.$$isCssFromFile)
+											k=$css_LoadFileSync(k.filename);
+										if(k) str+=k+'\n';										
+									};
+									if(str) res.write(
+										'<style style="display: none; " type="text/css">\n'
+									+	str
+									+	'</style>'
+									);
+
+								};
+							}
+							else throw(new Error('widget "'+nm+'" not loaded'));//-error handler
+						};
+					};
+				};
+
+				if(cb) cb(0, this);
 				else this.$DoHeadEnd(req, res, op);
 			}
 		,	$DoHeadEnd: function(req, res, op, cb) {
@@ -727,7 +768,10 @@ if(2) {//- BuildGui
 							iCode+=zz.iCode;
 							ObjCopyTo(aplts, zz.applets);
 							ObjCopyTo(wgts, zz.widgets);
-							css=zz.css;
+							if(z=zz.css) {
+								if(!css) css={};
+								ObjCopyTo(css, zz.css);
+							};
 							//out('zz.html='+zz.html+'  -  zz.iCode='+zz.iCode);
 						};
 					}
@@ -750,9 +794,13 @@ if(2) {//- BuildGui
 							}, spcr, spc+spcr, end);
 						
 							htm+=zz.html;
-							iCode+=zz.iCode||'';
+							iCode+=zz.iCode;
 							ObjCopyTo(aplts, zz.applets);
 							ObjCopyTo(wgts, zz.widgets);
+							if(z=zz.css) {
+								if(!css) css={};
+								ObjCopyTo(css, zz.css);
+							};
 						};
 
 						if(str2) htm+=spc+spcr+str2+end;
@@ -772,6 +820,7 @@ if(2) {//- BuildGui
 		,	css: css
 		};
 		
+		JSON.ToFile('d:/dev/bgRv.JsOn', rv);
 		if(cb) cb(0, rv);
 		return rv;
 	};

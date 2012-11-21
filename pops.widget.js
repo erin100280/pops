@@ -14,6 +14,7 @@ if(2) {//- vars.
 
 	,  pc=require('pops/pops.core')
 		,	ArrClone=Array.Clone
+		,	ArrCopyTo=Array.CopyTo
 		,	Class=pc.Class
 		,	cout=pc.cout
 		,	ObjCopyTo=Object.CopyTo
@@ -82,7 +83,7 @@ LoadFile=X.LoadFile=function(flinam, ops, cb) {
 
 LoadFileSync=X.LoadFileSync=function(filnam, ops) {
 	//out('pops.widget.LoadFileSync');
-	var fil1, fil2, fromOps, i, k, k2, kk, l, z, z2, zz
+	var fil1, fil2, fromOps, i, jj, k, k2, kk, l, z, z2, zz
 	,	o=ops||{}
 	,	rv={ $$isPopsWidget: 2 }
 	,	_fs=o.fileSystem||pfsl
@@ -103,17 +104,26 @@ LoadFileSync=X.LoadFileSync=function(filnam, ops) {
 				rv.clientString=_fs.readFileSync(fil2.path).toString();
 				//out('rv.clientString <\n'+rv.clientString+'\n>\n');
 				if(k=z.css) {
+					cout('(k=z.css)');
 					if(!(k instanceof Array)) k=[k];
 					zz=rv.css=[]; kk=0;
 					for(i=0, l=k.length; i<l; i++) {
-						z2=k[i];
-						if(z2.$$isCssFromFile && !z2.reload) {
-							if(kk=_fs.FindFileSync(z2.filename, fromOps))
-								z2=pcss_LoadFileSync(kk.path);
-							else z2=0;
+						z2=jj=k[i];
+						cout('jj='+jj);
+						if(typeof z2=='string') z2={ filename: jj };
+						if(z2 && z2.filename) {
+							z2.$$isCssFromFile=2;
+							if(kk=_fs.FindFileSync(z2.filename, fromOps)) {
+								cout('kk.path='+kk.path);
+								if(z2.reload) z2.filename=kk.path; 
+								else z2=pcss_LoadFileSync(kk.path);
+								cout('z2='+z2);
+							}
+							else throw(new Error('file not found "'+z2.filename+'"'));
 						};
 						if(z2) zz.Push(z2);
 					};
+					
 				};
 				if(k=z.server) {
 					if(fil2=_fs.FindFileSync(k, fromOps)) {
@@ -225,7 +235,7 @@ if(2) {//- widgetManager
 			else if(cb) cb(0, this);
 		}
 	,	FUNCTION: function(v) {
-			cout('FUNCTION  -  v='+v);
+			//out('FUNCTION  -  v='+v);
 			var z;
 			if(z=this.$$alias[v]) v=z;
 			return this.$$widgets[v];
@@ -317,7 +327,10 @@ if(2) {//- BuildWidgetGui
 		+	');\n'
 		+	zz
 		);
-		if(css) rv.css=css;
+		if(wgtDat.css) {
+			z=rv.css={};
+			z[wName]=2;
+		};
 
 		if(cb) cb(0, rv);
 		return rv;

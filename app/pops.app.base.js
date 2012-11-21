@@ -199,9 +199,9 @@ X.Outline=G.$_Outline_=function(ops){
          		var rv=app, db, dbo, dbs, k, nm, o=rv.options, odb, odbo, odbs, z;
          		$pops.cout('$_AfterCreateApp');
          		if(2) {//- databases
-         			//$pops.cout('rv='+JSON.stringify(rv)+'\n');
-         			//$pops.cout('rv.databases='+JSON.stringify(rv.databases)+'\n');
-         			$pops.cout('o.databases='+JSON.stringify(o.databases)+'\n');
+         			//$pops.out('rv='+JSON.stringify(rv)+'\n');
+         			//$pops.out('rv.databases='+JSON.stringify(rv.databases)+'\n');
+         			//$pops.out('o.databases='+JSON.stringify(o.databases)+'\n');
          			
          			if((dbs=rv.databases) && (odbs=o.databases)) {
          				odbo=odbs.OPTIONS || {};
