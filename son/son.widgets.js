@@ -33,29 +33,35 @@ var widgets
 			$$isSonWidget: 2
 		,	$$baseElem: 0
 		
-		,	INIT: function(op, cb) {
+		,	INIT: function(el, op, cb) {
+				var k;
+				if((k=typeof el)=='function') { cb=el; op={}; el=0; };
+				if((k=='object') && !el.$$isElement) { cb=op; op=el; el=0; };
 				if(typeof op=='function') { cb=op; op={}; };
-				var el, z
+				var z
 				,	so=this.SetOptions
 				,	o=this.SetOptions(op).OP
 				;
 
-				if(!o.noElem)
-					if(el=o.elem) {
+				if(!o.noElem) {
+					if(el) {
 						if(typeof el=='string') el=$(el);
 					}
 					else {
 						el=document.createElement(o.baseType||'div');
 					};
-				this.$$elem=el;
+					el.$class=this;
+				};
+				this.$elem=this.$$elem=el;
 
 				this.SetOptions=TempSetOps;
-				if(this.$INIT2) this.$INIT2(op);
+				if(this.$INIT2) this.$INIT2(el, o, cb);
 				this.SetOptions=so;
 				
 			}
 
-		,	elem: Property({ get: function() { return this.$$elem; } })
+		,	$elem: Property({ get: function() { return this.$$elem; } })
+		,	$class: Property({ get: function() { return this; } })
 
 		});
 		

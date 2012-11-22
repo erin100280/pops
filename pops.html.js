@@ -78,7 +78,7 @@ $Elements=X.Elements=function(arr, spacer, space, ender) {
 	return rv;
 }
 
-$ElementProps=X.ElementProps=function(obj) {
+if(0) $ElementProps=X.ElementProps=function(obj) {
 	var rv=' ', nm, z;
 	
 	if(obj) {
@@ -91,6 +91,26 @@ $ElementProps=X.ElementProps=function(obj) {
 				)
 			+	'" '
 			);
+		};
+	};
+	
+	return rv;
+}
+$ElementProps=X.ElementProps=function(obj) {
+	var rv=' ', nm, z;
+	
+	if(obj) {
+		for(nm in obj) {
+			if(obj[nm]) {
+				rv+=(nm
+				+	'="'
+				+	(((z=obj[nm]) && nm=='style' && typeof z=='object')?
+						$css_Code(z, '', ' ')
+					:	z
+					)
+				+	'" '
+				);
+			};
 		};
 	};
 	

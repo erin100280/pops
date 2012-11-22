@@ -96,6 +96,10 @@ LoadFileSync=X.LoadFileSync=function(filnam, ops) {
 		rv.infoPath=zz=fil1.path; rv.infoDir=fil1.dir;
 		rv.name=z.name||'<not named>';
 		rv.version=z.version||'0';
+		rv.elem=z.elem;
+		rv.props=z.props;
+		if(k=rv.class=z.class)
+			rv.classStr=k.toString().ReplaceAll(',', ' ');
 
 		if(!z.client) throw(new Error('Widget must have client script'));
 		else {
@@ -104,20 +108,17 @@ LoadFileSync=X.LoadFileSync=function(filnam, ops) {
 				rv.clientString=_fs.readFileSync(fil2.path).toString();
 				//out('rv.clientString <\n'+rv.clientString+'\n>\n');
 				if(k=z.css) {
-					cout('(k=z.css)');
 					if(!(k instanceof Array)) k=[k];
 					zz=rv.css=[]; kk=0;
 					for(i=0, l=k.length; i<l; i++) {
 						z2=jj=k[i];
-						cout('jj='+jj);
 						if(typeof z2=='string') z2={ filename: jj };
 						if(z2 && z2.filename) {
 							z2.$$isCssFromFile=2;
 							if(kk=_fs.FindFileSync(z2.filename, fromOps)) {
-								cout('kk.path='+kk.path);
 								if(z2.reload) z2.filename=kk.path; 
 								else z2=pcss_LoadFileSync(kk.path);
-								cout('z2='+z2);
+								//else z2=pcss_LoadFileSync(kk.path);
 							}
 							else throw(new Error('file not found "'+z2.filename+'"'));
 						};
@@ -307,9 +308,12 @@ if(2) {//- BuildWidgetGui
 		wName=wgtDat.name;
 		props=(z=guiItm.props)? ObjClone(z) : {};
 		opts=props.options=(z=props.options)? ObjClone(z) : {};
+		//out('props='+JSON.stringify(props));
 		id=props.id||'AUTO_ID_'+autoId++;
 		if((z2=wgtDat.css) && z2.length) css=ArrClone(z2);
-
+		if(z=wgtDat.classStr) props.class=z;
+		
+		if(z=wgtDat.props) props=ObjCopyTo({}, [z, props]);
 		el=o.outline=GuiItem(wgtDat.elem||'div', id, props);
 		if((z=wgtDat.server) && z.SetupElem) z.SetupElem(el, props, opts);
 
@@ -320,8 +324,15 @@ if(2) {//- BuildWidgetGui
 		rv=BuildGui(o, spacer, space, ender);
 		rv.widgets[wName]=2;
 		zz=rv.iCode||'';
-		rv.iCode=(
+		if(0) rv.iCode=(
 			'$wgtMan.GetSync("'+wName+'").Create('
+		+		'$("'+id+'")'
+		+	', '+JSON.stringify(opts||{ _0929_: 'RJM!' })
+		+	');\n'
+		+	zz
+		);
+		rv.iCode=(
+			'z=new ($wgtMan.GetSync("'+wName+'").widget)('
 		+		'$("'+id+'")'
 		+	', '+JSON.stringify(opts||{ _0929_: 'RJM!' })
 		+	');\n'

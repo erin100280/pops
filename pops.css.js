@@ -92,16 +92,13 @@ LoadFileSync=X.LoadFileSync=function(filnam, map) {
 	,	fs=ops.fileSystem||pfsl
 	;
 
-	if(fil=fs.FindFileSync(filnam, ops)) {
-		z=fs.readFileSync(fil.path).toString();
-
-		return z;
-
-		cout(' ---- z='+z+'\n\n');
-		return ParseStrSync(z, $pc_CreateOptions(mp, {
-			options: { fromDir: fil.dir }
-		}));
-	}
+	if(fil=fs.FindFileSync(filnam, ops))
+		return ParseStrSync(
+			fs.readFileSync(fil.path).toString()
+		,	$pc_CreateOptions(mp, {
+				options: { fromDir: fil.dir }
+			})
+		);
 	else throw(new Error('Can\'t find file : '+filnam));
 
 };
@@ -284,15 +281,14 @@ ParseStrSync=X.ParseStrSync=function(str, map) {
 				};
 				ZFn();
 			}
-			else if(cb) cb(0, rv+str.substring(li, str.length));
+			else return rv+str.substring(li, str.length);
 		}
 	;
 	//z=rx.exec(str);
 	//z=str.match(/\/\*!\*(.*)\*!\*\//);
 	//out('fromDir='+fromDir);
 
-	Fn(str);
-	return rv;
+	return Fn(str);
 };
 
 X.cssReset=(

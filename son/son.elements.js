@@ -18,6 +18,8 @@ var elements
 		var elProto=Element.prototype;
 		Implement(Element, {
 			$$isElement: 2
+		,	$elem: Property({ readonly: 2, get: function() { return this } })
+		,	$owner: 0
 
 		,	size: Property({
 				Get: function() {

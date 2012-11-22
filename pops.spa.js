@@ -442,15 +442,15 @@ if(2) {//- pageBuilder
 				};
 				headBeginCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoHead_InitialCss(req, res, o, headInitialCssCb);
+					else t.$DoHead_GuiCss(req, res, o, headInitialCssCb);
 				};
 				headInitialCssCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoHead_GuiCss(req, res, o, headGuiCssCb);
+					else t.$DoHeadEnd(req, res, o, headGuiCssCb);
 				};
 				headGuiCssCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
-					else t.$DoHeadEnd(req, res, o, headEndCb);
+					else t.$DoHead_InitialCss(req, res, o, headEndCb);
 				};
 				headEndCb=function(err, t) {
 					if(err) { if(cb) cb(new Error(err), t); }
@@ -554,43 +554,41 @@ if(2) {//- pageBuilder
 				else this.$DoHead_InitialCss(req, res, op);
 			}
 		,	$DoHead_InitialCss: function(req, res, op, cb) {
-				var i, l, z, zz
-				,	iCss=(this.$css||{}).initial
-				;
-
-				if(iCss) {
-					var t=this, i=0, l=iCss.length
-					,	Fn=function() {
-							if(i<l) {
-								var z=iCss[i]
-								,	Ff=function(err, val) {
-					      			if(err) { if(cb) cb(err, t); }
-					      			else {
-					      				res.write(val);
-					      				res.write('\n</style>\n');
-					      				Fn();
-					      			};
-					      		}
-								;
-								i++;
-								if(z) {
-					         	res.write('<style style="display: none; " type="text/css">\n');
-						      	if(typeof z=='function') z({}, Ff);
-						      	else if(z.$$isCssFromFile) $css_LoadFile(z.filename, z, Ff);
-						      	else Ff(0, z);
-								}
-								else Fn();
-							}
-							else if(cb) cb(0, t);
-							else t.$DoHead_GuiCss(req, res, op);
-						}
-					;
-					Fn();
+				var t=this, z=this.$css;
+				if(z=z.initial) {
+					this.$DoHead_Css(req, res, op, z, function(err, obj) {
+						if(cb) cb(0, t);
+						else $DoHead_GuiCss(req, res, op, cb);
+					});
 				}
 				else if(cb) cb(0, this);
-				else this.$DoHead_GuiCss(req, res, op);
+				else $DoHead_GuiCss(req, res, op, cb);
 			}
 		,	$DoHead_GuiCss: function(req, res, op, cb) {
+				var t=this, arr=[], z=this.$css, i, l, nm, k, kk, str='', w, z, zz
+				,	wm=this.widgets
+				;
+
+				if((z=op) && (z=z.$bDat) && (z=z.css)) {
+					for(nm in z) {
+						if(z[nm]) {
+							if(w=wm(nm)) {
+								if(zz=w.css)
+									ArrCopyTo(arr, zz);
+							}
+							else throw(new Error('widget "'+nm+'" not loaded'));//-error handler
+						};
+					};
+				};
+				if(arr.length)
+					this.$DoHead_Css(req, res, op, arr, function(err, obj) {
+						if(cb) cb(err, obj);
+						else this.$DoHeadEnd(req, res, op, cb);
+					});
+				else if(cb) cb(err, this);
+				else this.$DoHeadEnd(req, res, op, cb);
+			}
+		,	$DoHead_GuiCssBAK: function(req, res, op, cb) {
 				var i, l, nm, k, kk, str='', w, z, zz
 				,	wm=this.widgets
 				;
@@ -620,6 +618,39 @@ if(2) {//- pageBuilder
 
 				if(cb) cb(0, this);
 				else this.$DoHeadEnd(req, res, op);
+			}
+		,	$DoHead_Css: function(req, res, op, css, cb) {
+				var i, l, z, zz;
+
+				if(css) {
+					var t=this, i=0, l=css.length
+					,	Fn=function() {
+							if(i<l) {
+								var z=css[i]
+								,	Ff=function(err, val) {
+					      			if(err) { if(cb) cb(err, t); }
+					      			else {
+					      				res.write(val);
+					      				res.write('\n</style>\n');
+					      				Fn();
+					      			};
+					      		}
+								;
+								i++;
+								if(z) {
+					         	res.write('<style style="display: none; " type="text/css">\n');
+						      	if(typeof z=='function') z({}, Ff);
+						      	else if(typeof z=='object') $css_LoadFile(z.filename, z, Ff);
+						      	else Ff(0, z);
+								}
+								else Fn();
+							}
+							else if(cb) cb(0, t);
+						}
+					;
+					Fn();
+				}
+				else if(cb) cb(0, this);
 			}
 		,	$DoHeadEnd: function(req, res, op, cb) {
 				var t=this;
@@ -654,8 +685,11 @@ if(2) {//- pageBuilder
 	         		+		'var g=this, nm, z\n'
 	         		+		', wm=$APP.widgetMan, ob='+JSON.stringify(zz)+'\n'
 	         		+		';\n'
-	         		+		'for(nm in ob) z=wm.$$widgets[nm]=EVAL(ob[nm]);\n'
-	         		+	'}());\n'	
+	         		+		'for(nm in ob) {\n'
+	         		+			'z=wm.$$widgets[nm]=EVAL(ob[nm]);\n'
+	         		+			'cout("$$widgets["+nm+"]="+z);'
+	         		+		'};\n'
+	         		+	'}());\n'
          			+	sLast
          			);
 					};
@@ -776,11 +810,14 @@ if(2) {//- BuildGui
 						};
 					}
 					else {
-						pr='';
+						pr=''; str1=str2='';
 						if(z=itm.props) {
 							z=ObjClone(z);
-							if(str1=z.string) delete z.string; 
-							if(str2=z.endString) delete z.endString; 
+							str1=z.string; str2=z.endString;
+							if(typeof z.string!='undefined') delete z.string; 
+							if(typeof z.endString!='undefined') delete z.endString; 
+							if(typeof z.options!='undefined') delete z.options; 
+							//if(z.options) delete z.options;
 							pr=$ElementProps(z);
 						};
 						htm+=spc+'<'+typ+pr+'>'+end;
@@ -820,7 +857,6 @@ if(2) {//- BuildGui
 		,	css: css
 		};
 		
-		JSON.ToFile('d:/dev/bgRv.JsOn', rv);
 		if(cb) cb(0, rv);
 		return rv;
 	};
