@@ -23,13 +23,13 @@ rt=X.router=xx.rtr=Class(nm, {
          ,  name: nm+'.'+IID()
       }
    ,  INTERFACE: ir
-   ,  INIT: function(op, OnRdy){
+   ,  INIT: function(op, cb){
          var o=this.SetOptions(op).OP;
 
-         this.$OnReady=OnRdy;
          this.$nm=o.name;
          this.Refresh();
 
+			if(cb) cb(0, this);
       }
    ,  PUBLIC: {
 				$nm: ''
@@ -84,10 +84,11 @@ rt=X.router=xx.rtr=Class(nm, {
          ,  Add: function(itm, arr, TO){
                var t=this,i=itm,to=TypeOf(i),a=arr?arr:this.$items, l,ll,z,zz,it;
 
-               if(to=='array')
+               if(i instanceof Array)
 						for(l=0,z=i.length;l<z;l++)
                		this.Add(i[l],a);
                else if(to=='object'){
+						if(i.type=='staticServer') a.push(i);
 						if(i.path||i.regex){
                      //out('pow');
                      i=Object.Clone(i); z=i.mode;

@@ -13,7 +13,7 @@ var X=exports
 ,  pc=require('pops/pops.core')
 	,	cout=pc.cout
 
-,	contentTypes={
+,	contentTypes = {
 		'.css': 'text/css'
 	,	'.htm': 'text/html'
 	,	'.html': 'text/html'
@@ -23,14 +23,8 @@ var X=exports
 	}
 ;
 
-var $Req=X.Req=X.Request=function(req){
-   //var rv=req;
-   return req;
-};   
-var $Res=X.Res=X.Response=function(res){
-   return res;
-};
-
+var $Req=X.Req=X.Request=function(req) { return req; };
+var $Res=X.Res=X.Response=function(res) { return res; };
 
 var hs=X.server=Class('popsHttpServer', {
 		OPTIONS:{
@@ -39,43 +33,56 @@ var hs=X.server=Class('popsHttpServer', {
 			,	port: 80
 			,	router: 0
       }
-   ,  INIT:function(op,onRdy){
+   ,  INIT:function(op, cb){
 			var t=this.SetOptions(op), o=this.OP, l, cnt;
 			//out('server.INIT  -  o: \n'+JSON.stringify(o)+'\n');
 			this.$nm=o.name;
 			this.Refresh();
-			if(o.auto) this.Start();
+			if(o.auto) this.Start(cb);
+      	else if(cb) cb(0, this);
       }
 	,	PUBLIC: {
-				$nm: ''
-			,	$OnRequest: null
-			,	$router: null
-			,	$srv: null
+			$$isPopsHttpServer: 2
+		,	$nm: ''
+		,	$OnRequest: null
+		,	$router: null
+		,	$srv: null
 
-		   ,  Start: function(){
-					var t=this;
+	   ,  Start: function(cb){
+				var t=this, i, k, l, z, z2
+				,	itms=this.$router.$items
+				,	x
+				;
 
-					this.$srv=http.createServer(function(req, res) {
-		            //out('req.url='+req.url);
-		            var z
-		               ,  rq=$Req(req)
-		               ,  rs=$Res(res)
-		            ;
-		            if(z=t.$router) z.Process(rq, rs);
-		            else if(z=o.OnRequest) z(req, res);
-		            else {
-		               rs.writeHead(200, {"Content-Type": "text/plain"});
-		               rs.end("-= NOT--HANDLED =-\n");
-		            };
-		         }).listen(this.OP.port||80);
+				for(i=0, l=itms.length; i<l; i++) {
+					z=itms[i];
+					if(z.type=='staticServer') {
+						z.mode='get';
+						z.handler=new ss(z.options);
+					};
+				};
 
-	   		}
-		   ,  Refresh:function(){
-					var o=this.OP, r=o.router;
-					if(r && !r.$isRouter) r=pr.router.NEW(r);
-					this.$OnRequest=o.OnRequest;
-					this.$router=r;
-		      }
+				this.$srv=http.createServer(function(req, res) {
+	            //out('req.url='+req.url);
+	            var z
+	               ,  rq=$Req(req)
+	               ,  rs=$Res(res)
+	            ;
+	            if(z=t.$router) z.Process(rq, rs);
+	            else if(z=o.OnRequest) z(req, res);
+	            else {
+	               rs.writeHead(200, {"Content-Type": "text/plain"});
+	               rs.end("-= NOT--HANDLED =-\n");
+	            };
+	         }).listen(this.OP.port||80);
+				if(cb) cb(0, this);
+   		}
+	   ,  Refresh:function(){
+				var o=this.OP, r=o.router;
+				if(r && !r.$isRouter) r=new pr.router(r);
+				this.$OnRequest=o.OnRequest;
+				this.$router=r;
+	      }
 		}
 });
 

@@ -114,5 +114,5 @@ $ElementProps=X.ElementProps=function(obj) {
 		};
 	};
 	
-	return rv;
+	return rv.Trim();
 }

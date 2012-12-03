@@ -27,11 +27,18 @@ if(2) {//- vars
 		,	$html_Element=$html.Element
 		,	$ElementProps=$html.ElementProps
 	,  $http=require('./pops.http')
+		,	httpServer=$http.server
+	,  pr=require('./pops.router')
+		,  router=pr.router
+	,  pwc=require('./pops.webComm')
+		,  commChannel=pwc.commChannel
+		,  commChannelManager=pwc.commChannelManager
 	,  pw=require('./pops.widget')
 		,  BuildWidgetGui=pw.BuildWidgetGui
 		,  widgetManager=pw.widgetManager
 	,  pfsl=require('./fs/pops.fs.local')
 	
+	,	spapp
 	,	pageBuilder
 		,	pbResetCss, pbResetCssSync
 		,	pbResetSon, pbResetSonSync
@@ -348,7 +355,8 @@ if(2) {//- pageBuilder
 			//if(OnRdy) OnRdy(this);
 		}
 	,	PUBLIC: {
-			$$isPageBuilder: 2, $isPageBuilder: 2
+			$$isPageBuilder: 2, $$isPopsPageBuilder: 2
+		,	$isPopsSpaPageBuilder: 2
 		
 		,	$CreateGuiHtml: function(op, cb) {
 				if(arguments.length==1 && typeof op=='function') { cb=op; op=0; };
@@ -763,6 +771,166 @@ if(2) {//- pageBuilder
 	});
 };
 
+if(2) {//- app
+	spapp=X.app=Class('pops.spa.app', {
+		OPTIONS: {
+			auto: 2
+		,	baseAddress: 0
+		,	databases: 0
+		,	gui: 0
+		,	router: 0
+		,	widgets: 0
+		}
+	,	SHARED: {}
+	,	INIT: function(ops, cb) { this.Reset(ops, cb) }	
+	,	PUBLIC: {
+			$$isPopsSpaApp: 2
+		,	$db: 0
+		
+		,	Run: function(port, cb) {
+				if(typeof port=='function') { cb=port; port=null; };
+				var itms, k, rt, z
+				,	t=this
+				,	o=this.OP
+				,	ort=o.router
+				,	prt=this.port=port||o.port||80
+				
+				,	page, router, server
+				
+				,	CreateRouter, CreateServer, CreatePage
+				;
+			
+				CreatePage=function() {
+					if(z=o.gui) {
+						page=this.pageBuilder=new pageBuilder({
+							gui: z
+						,	widgets: o.widgets
+						}, function(err, obj){
+							page=obj;
+							CreateRouter();
+						});
+					}
+					else {
+						page=function(req, res, next) { res.end('NOPE'); };
+						CreateRouter();
+					};
+				};
+
+				CreateRouter=function() {
+					if(ort) {
+						if(!(itms=ort.items)) itms=ort.items=[];
+						if(rt=o.baseAddress) {}
+						else {
+							rt='^/';
+							for(var i=0, l=itms.length; i<l; i++) {
+								z=itms[i];
+								if(z.handler=='APP') {
+									z.handler=page;
+									rt=0; i=80000;
+								};
+							};
+						};
+
+						if(rt)
+							itms.PushL({ mode: 'get', path: rt, handler: page });
+					}
+					else
+						ort={ items: [
+							{
+								mode: 'get'
+							,	path: o.baseAddress||'/'
+							,	handler: page
+							}
+						] };
+					
+					new pr.router(ort, function(err, rtr) {
+						router=t.router=rtr;
+						CreateServer();
+					});
+					
+				};
+			
+				CreateServer=function() {
+					server=new httpServer({
+						auto: 2
+					,	port: prt
+					,	router: router
+					}, function() {
+						
+					});
+				};
+			
+				CreatePage();
+			
+			}
+		,	Reset: function(ops, cb) {
+				var z
+				,	t=this
+				,	Reset=this.Reset
+				,	o=this.SetOptions(ops).OP
+				,	rt=this.$router=o.router
+				;
+				global.APP=this;
+				Reset.Gui(this, o);
+
+				if(o.auto && o.port) this.Run(o.port, cb);
+				else if(cb) cb(0, this);
+			}.Extend({
+				Db: function(v, ops) {
+					var z, nm
+					,	rv=this.$db={}
+					,	odb=ops.databases
+					;
+					
+					if(odb) for(nm in odb) {
+						if(nm=='SYSTEM') this.$systemDb=odb(nm);
+						else rv[nm]=odb[nm];
+					};
+					
+					return rv;
+				}
+			,	Css: function(v, ops) {
+					var z, nm
+					,	rv=this.$db={}
+					,	odb=ops.databases
+					;
+					
+					if(odb) for(nm in odb) {
+						if(nm=='SYSTEM') this.$systemDb=odb(nm);
+						else rv[nm]=odb[nm];
+					};
+					
+					return rv;
+				}
+			,	Widgets: function(v, ops) {
+					var z, nm
+					,	rv=this.$db={}
+					,	odb=ops.databases
+					;
+					
+					if(odb) for(nm in odb) {
+						if(nm=='SYSTEM') this.$systemDb=odb(nm);
+						else rv[nm]=odb[nm];
+					};
+					
+					return rv;
+				}
+			,	Gui: function(v, ops) {
+					var z
+					,	rv=this.$gui={}
+					,	rdb=rv.databases={}
+					,	og=ops.gui||{}
+					;
+					rv.outline=ObjClone(og.outline||ops.outline||{});
+					if(z=og.databases) {};
+					
+					return rv;
+				}
+			})
+		}
+	});
+}
+
 if(2) {//- BuildGui
 	BuildGui=X.BuildGui=function(ops, spacer, space, ender, cb) {
 		if(typeof spacer=='function') { cb=spacer; spacer=null; }
@@ -818,7 +986,7 @@ if(2) {//- BuildGui
 							if(typeof z.endString!='undefined') delete z.endString; 
 							if(typeof z.options!='undefined') delete z.options; 
 							//if(z.options) delete z.options;
-							pr=$ElementProps(z);
+							pr=' '+$ElementProps(z);
 						};
 						htm+=spc+'<'+typ+pr+'>'+end;
 						if(str1) htm+=spc+spcr+str1+end;
@@ -860,5 +1028,4 @@ if(2) {//- BuildGui
 		if(cb) cb(0, rv);
 		return rv;
 	};
-	
 };

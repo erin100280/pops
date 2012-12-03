@@ -1,4 +1,4 @@
-var elements
+var elements, DOC, Document, WIN, Window
 (function() {
 	if(2) {//- vars
 		var G=window
@@ -7,15 +7,18 @@ var elements
 	
 		,	son=G.$son
 			,	Class=son.Class
+				,	FireEvent=Class.FireEvent
 			,	cout=son.cout
 			,	Implement=son.Implement
 			,	Property=son.Property
 		,	X=elements=son.elements={}
+		,	ep=Element.prototype
+		
+		,	Doc, Win
 		;
 	};
 
 	if(2) {//- native
-		var elProto=Element.prototype;
 		Implement(Element, {
 			$$isElement: 2
 		,	$elem: Property({ readonly: 2, get: function() { return this } })
@@ -41,10 +44,10 @@ var elements
 					this.Set('height', y);
 				}
 			})
-
 		
-		,	Get: elProto.getAttribute
-		,	Set: elProto.setAttribute
+		,	Get: ep.getAttribute
+		,	Set: ep.setAttribute
+
 		,	SetStyle: function(style, val) {
 				var st=style, z; 
 				if(typeof st!='object') { st={}; st[style]=val; };
@@ -52,8 +55,67 @@ var elements
 			
 			
 			}
+
+		,	classes: Property({ get: function() { return this.Get('class')||''; } })
+		,	AddClass: function(v) {
+				//out('-val=')
+				var i, k, z
+				,	v=(v instanceof Array)? v : [v]
+				,	l=v.length
+				,	c=this.Get('class')||''
+				;
+				for(i=0; i<l; i++)
+					if(!this.HasClass(k=v[i])) c+=' '+k;
+			
+				this.Set('class', c);
+			}
+		,	HasClass: function(v) {
+				var rv=0, c, i, l, k;
+				if((v) && (c=this.Get('class'))) {
+					c=c.split(' ');
+					rv=c.Has(v, 2);
+				};
+				return rv;
+			}
+		,	RemoveClass: function(v) {
+				//out('-val=')
+				var i, k, z=''
+				,	v=(v instanceof Array)? v : [v]
+				,	c=(this.Get('class')||'').split(' ')
+				,	l=c.length
+				;
+			
+				for(i=0; i<l; i++)
+					if(!v.Has(k=c[i])) z+=' '+k;
+			
+				this.Set('class', z.Trim());
+			}
 		});
 	};
+
+	if(2) {//- Document
+		Doc=DOC=Document=X.DOC=X.Document={
+			$$isDOC: 2
+		
+		,	$On: Class.$On
+		,	$Once: Class.$Once
+		,	Fire: function(nam, args, ops, OnRdy) {
+				if(typeof args=='function') { OnRdy=args; ; ops={}; args=[]; }
+				else if(typeof ops=='function' && !ops.$$eventArgsOps) {
+					OnRdy=ops; ops={};
+				};
+				
+				return FireEvent(Doc, nam, ops, args, OnRdy);
+			}.Prim()
+		,	Once: Class.Once
+		};
+		Doc.On=Doc.addEventListener=Class.On;
+
+		doc.addEventListener('mouseup', function(e) {
+			Doc.Fire('mouseUp', 0, e);
+		}, true);
+	
+	}
 
 	X.Elem=function(typ, props) {
 		if(typeof typ=='object') { props=typ; typ=props.type; };

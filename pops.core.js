@@ -8,7 +8,7 @@ if(!$$_cSide$_) argus=arguments;
 (function() {
 	cSide=$$_cSide$_;
 	if(2) {//-vars
-	   var CO, z, z2, z3, z4, zz, x, l, p, fn=Function
+        var CO, z, z2, z3, z4, zz, x, l, p, fn=Function
 		,	cSide=(typeof Document!='undefined' && typeof window!='undefined')
 	   ,  $GLOBAL=G=(cSide)? window : global
 	   ,  o=O=pops=son=G.$_P_=G.$pops=G.$son=G.son=((cSide)? {} : exports)
@@ -1188,7 +1188,7 @@ if(!$$_cSide$_) argus=arguments;
 									OnRdy=ops; ops={};
 								};
 								
-								return CFireEvent(v, nam, 0, args, OnRdy);
+								return CFireEvent(v, nam, ops, args, OnRdy);
 						}.Prim()
 						,	On: COn
 						,	$On: C$On
@@ -1225,19 +1225,21 @@ if(!$$_cSide$_) argus=arguments;
 				}
 			,	On: function(nam, fn, system) {
 					var v=this, i, l, nm, z, z2, z4, zz
-						,	k=COnInfo(nam, fn, system)
+					,	k=COnInfo(nam, fn, system)
 					;
 					
+					//return CAddEvent(this, nam, fn, 0);
+
 					if(z=k.STD)
-						for(nm in z) { zz=z[nm]; CAddEvent(v, nm, zz, 0); };
+						for(nm in z) CAddEvent(this, nm, z[nm], 0);
 					if(z=k.onceSTD)
-						for(nm in z) { zz=z[nm]; CAddEvent(v, nm, zz, 0, 2); };
+						for(nm in z) CAddEvent(this, nm, z[nm], 0, 2);
 					if(z=k.SYS)
-						for(nm in z) { zz=z[nm]; CAddEvent(v, nm, zz, 2); };
+						for(nm in z) CAddEvent(this, nm, z[nm], 2);
 					if(z=k.onceSYS)
-						for(nm in z) { zz=z[nm]; CAddEvent(v, nm, zz, 2, 2); };
+						for(nm in z) CAddEvent(this, nm, z[nm], 2, 2);
 	
-					return v;
+					return this;
 				}.Prim()
 			,	$On: function(nam, fn) { return this.On(nam, fn, 2); }.Prim()
 			,  Once: function(nam, fn, system) {
@@ -1248,39 +1250,45 @@ if(!$$_cSide$_) argus=arguments;
 					return this.On({ ONCE: CListenersObj(nam, fn) }, 0, 2);
 			}.Prim()
 			,	OnInfo: function(evt, fn, system) {
-					var i, l, k, nm, once, onceStd, onceSys, std, sys, z;
-					
-					if(fn) evt=COnInfoDouble(evt, fn);
-	
-					evt=CO(evt);
-					once=evt.ONCE;
-					std=CO(evt.STANDARD, evt.STD);
-					onceStd=CO(std.ONCE);
-					sys=CO(evt.SYSTEM, evt.SYS);
-					onceSys=CO(sys.ONCE);
-	
-					if(std.ONCE) delete std.ONCE;
-					if(sys.ONCE) delete sys.ONCE;
-					for(i=0, l=(z=['ONCE', 'STANDARD', 'STD', 'SYSTEM', 'SYS']).length; i<l; i++) {
-						k=z[i];
-						if(typeof evt[k]!='undefined') delete evt[k];
-					};
-					
-					if(once) {
-						k=(system)? onceSys : onceStd;
-						for(nm in once) {
-							if(z=k[nm]) {
-								if(!(z instanceof Array)) z=k[nm]=[z];
-								z.Push(once[nm]);
-							}
-							else k[nm]=once[nm];
+					var rv, i, l, k, nm, once, onceStd, onceSys, std, sys, z;
+					if(typeof evt=='string') {
+						rv={};
+						z=rv[(system)? 'SYS' : 'STD']={};
+						z[evt]=fn;
+					}
+					else {
+						evt=CO(evt);
+						once=evt.ONCE;
+						std=CO(evt.STANDARD, evt.STD);
+						onceStd=CO(std.ONCE);
+						sys=CO(evt.SYSTEM, evt.SYS);
+						onceSys=CO(sys.ONCE);
+		
+						if(std.ONCE) delete std.ONCE;
+						if(sys.ONCE) delete sys.ONCE;
+						for(i=0, l=(z=['ONCE', 'STANDARD', 'STD', 'SYSTEM', 'SYS']).length; i<l; i++) {
+							k=z[i];
+							if(typeof evt[k]!='undefined') delete evt[k];
 						};
+						
+						if(once) {
+							k=(system)? onceSys : onceStd;
+							for(nm in once) {
+								if(z=k[nm]) {
+									if(!(z instanceof Array)) z=k[nm]=[z];
+									z.Push(once[nm]);
+								}
+								else k[nm]=once[nm];
+							};
+						};
+						
+						z=system? sys : std;
+						for(nm in evt) z[nm]=evt[nm];
+		
+						rv={ STD: std, SYS: sys, onceSTD: onceStd, onceSYS: onceSys };
 					};
 					
-					z=system? sys : std;
-					for(nm in evt) z[nm]=evt[nm];
-	
-					return { STD: std, SYS: sys, onceSTD: onceStd, onceSYS: onceSys };
+					return rv;
 				}
 			,	OnInfoDouble: function(evt, fn) {
 					var ee=evt, ev, i, l, k, nm, std, sys, z, z2, z4, zz
@@ -1380,7 +1388,7 @@ if(!$$_cSide$_) argus=arguments;
 								,	Done: op.Done || function() {}
 							}
 					;
-					return rv;
+					return Object.CopyTo(op, rv);
 				}
 			,	GetListeners: function(v, name) {
 					var i, k, l, nm, rv={}, z, zz
